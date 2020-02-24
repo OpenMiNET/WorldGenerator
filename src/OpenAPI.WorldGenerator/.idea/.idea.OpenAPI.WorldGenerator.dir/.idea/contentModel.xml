@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ContentModelStore">
+    <e p="$USER_HOME$/.Rider2019.3/system/extResources" t="IncludeRecursive" />
+    <e p="$USER_HOME$/.Rider2019.3/system/resharper-host/local/Transient/ReSharperHost/v193/SolutionCaches/_.19.00" t="ExcludeRecursive" />
+    <e p="$PROJECT_DIR$" t="IncludeRecursive">
+      <e p="DebugWorldProvider.cs" t="Include" />
+      <e p="Extensions.cs" t="Include" />
+      <e p="Generators" t="Include">
+        <e p="Biomes" t="Include">
+          <e p="BeachType.cs" t="Include" />
+          <e p="Biome.cs" t="Include" />
+          <e p="BiomeBase.cs" t="Include" />
+          <e p="BiomeProvider.cs" t="Include" />
+          <e p="BiomeSearch.cs" t="Include" />
+          <e p="BiomeType.cs" t="Include" />
+          <e p="Config" t="Include">
+            <e p="BiomeConfig.cs" t="Include" />
+          </e>
+          <e p="Vanilla" t="Include">
+            <e p="Beach" t="Include">
+              <e p="BeachBiome.cs" t="Include" />
+              <e p="ColdBeachBiome.cs" t="Include" />
+              <e p="StoneBeachBiome.cs" t="Include" />
+            </e>
+            <e p="Desert" t="Include">
+              <e p="DesertBiome.cs" t="Include" />
+              <e p="DesertHillsBiome.cs" t="Include" />
+            </e>
+            <e p="ExtremeHills" t="Include">
+              <e p="ExtremeHillsBiome.cs" t="Include" />
+              <e p="ExtremeHillsEdgeBiome.cs" t="Include" />
+            </e>
+            <e p="Forest" t="Include">
+              <e p="BirchForestBiome.cs" t="Include" />
+              <e p="BirchForestHillsBiome.cs" t="Include" />
+              <e p="ForestBiome.cs" t="Include" />
+              <e p="ForestHillsBiome.cs" t="Include" />
+            </e>
+            <e p="FrozenRiverBiome.cs" t="Include" />
+            <e p="Jungle" t="Include">
+              <e p="JungleBiome.cs" t="Include" />
+              <e p="JungleEdgeBiome.cs" t="Include" />
+              <e p="JungleHillsBiome.cs" t="Include" />
+            </e>
+            <e p="Mesa" t="Include">
+              <e p="MesaBiome.cs" t="Include" />
+              <e p="MesaPlateauBiome.cs" t="Include" />
+              <e p="MesaPlateauFBiome.cs" t="Include" />
+            </e>
+            <e p="Mushroom" t="Include">
+              <e p="MushroomIslandBiome.cs" t="Include" />
+              <e p="MushroomIslandShoreBiome.cs" t="Include" />
+            </e>
+            <e p="Ocean" t="Include">
+              <e p="DeepOceanBiome.cs" t="Include" />
+              <e p="FrozenOceanBiome.cs" t="Include" />
+              <e p="OceanBiome.cs" t="Include" />
+            </e>
+            <e p="Plains" t="Include">
+              <e p="IcePlainsBiome.cs" t="Include" />
+              <e p="PlainsBiome.cs" t="Include" />
+            </e>
+            <e p="RiverBiome.cs" t="Include" />
+            <e p="Savanna" t="Include">
+              <e p="SavannaBiome.cs" t="Include" />
+              <e p="SavannaPlateauBiome.cs" t="Include" />
+            </e>
+            <e p="Swamp" t="Include">
+              <e p="SwamplandBiome.cs" t="Include" />
+            </e>
+            <e p="Taiga" t="Include">
+              <e p="TaigaBiome.cs" t="Include" />
+              <e p="TaigaHillsBiome.cs" t="Include" />
+            </e>
+          </e>
+        </e>
+        <e p="ChunkLandscape.cs" t="Include" />
+        <e p="Decorators" t="Include">
+          <e p="ChunkDecorator.cs" t="Include" />
+          <e p="FoliageDecorator.cs" t="Include" />
+          <e p="WaterDecorator.cs" t="Include" />
+        </e>
+        <e p="Effects" t="Include">
+          <e p="GroundEffect.cs" t="Include" />
+          <e p="HeightEffect.cs" t="Include" />
+          <e p="JitterEffect.cs" t="Include" />
+          <e p="RaiseEffect.cs" t="Include" />
+          <e p="SpikeEverywhereEffect.cs" t="Include" />
+          <e p="VoronoiBorderEffect.cs" t="Include" />
+          <e p="VoronoiPlateauEffect.cs" t="Include" />
+        </e>
+        <e p="NoiseProvider.cs" t="Include" />
+        <e p="OverworldGenerator.cs" t="Include" />
+        <e p="OverworldGeneratorV2.cs" t="Include" />
+        <e p="Preset.cs" t="Include" />
+        <e p="Structures" t="Include">
+          <e p="AcaciaTree.cs" t="Include" />
+          <e p="BirchTree.cs" t="Include" />
+          <e p="CactusStructure.cs" t="Include" />
+          <e p="JungleTree.cs" t="Include" />
+          <e p="LargeJungleTree.cs" t="Include" />
+          <e p="OakTree.cs" t="Include" />
+          <e p="PineTree.cs" t="Include" />
+          <e p="SmallJungleTree.cs" t="Include" />
+          <e p="SpruceTree.cs" t="Include" />
+          <e p="StructureClass.cs" t="Include" />
+          <e p="TreeStructure.cs" t="Include" />
+        </e>
+        <e p="Surfaces" t="Include">
+          <e p="SurfaceBase.cs" t="Include" />
+        </e>
+        <e p="Terrain" t="Include">
+          <e p="BeachTerrain.cs" t="Include" />
+          <e p="BirchForestHillsTerrain.cs" t="Include" />
+          <e p="BirchForestTerrain.cs" t="Include" />
+          <e p="DeepOceanTerrain.cs" t="Include" />
+          <e p="DesertHillsTerrain.cs" t="Include" />
+          <e p="DesertTerrain.cs" t="Include" />
+          <e p="ForestHillsTerrains.cs" t="Include" />
+          <e p="ForestTerrain.cs" t="Include" />
+          <e p="JungleEdgeTerrain.cs" t="Include" />
+          <e p="JungleHillsTerrain.cs" t="Include" />
+          <e p="JungleTerrain.cs" t="Include" />
+          <e p="MesaPlateauTerrain.cs" t="Include" />
+          <e p="MesaTerrain.cs" t="Include" />
+          <e p="OceanTerrain.cs" t="Include" />
+          <e p="PlainsTerrain.cs" t="Include" />
+          <e p="RidgedExtremeHillsTerrain.cs" t="Include" />
+          <e p="SavannaPlateauTerrain.cs" t="Include" />
+          <e p="SavannaTerrain.cs" t="Include" />
+          <e p="TaigaHillsTerrain.cs" t="Include" />
+          <e p="TaigaTerrain.cs" t="Include" />
+          <e p="TerrainBase.cs" t="Include" />
+        </e>
+        <e p="Utils" t="Include">
+          <e p="PlateauUtil.cs" t="Include" />
+        </e>
+      </e>
+      <e p="OpenAPI.WorldGenerator.csproj" t="IncludeRecursive" />
+      <e p="Utils" t="Include">
+        <e p="CustomBiomeUtils.cs" t="Include" />
+        <e p="MathUtils.cs" t="Include" />
+        <e p="Noise" t="Include">
+          <e p="Api" t="Include">
+            <e p="ISimplexData2D.cs" t="Include" />
+          </e>
+          <e p="Attributes" t="Include">
+            <e p="ModifierAttribute.cs" t="Include" />
+          </e>
+          <e p="BetterTurbulence.cs" t="Include" />
+          <e p="Cellular" t="Include">
+            <e p="SpacedCellularNoise.cs" t="Include" />
+            <e p="VoronoiResult.cs" t="Include" />
+            <e p="VoronoiSettings.cs" t="Include" />
+          </e>
+          <e p="INoiseModule.cs" t="Include" />
+          <e p="INoiseProvider.cs" t="Include" />
+          <e p="Modules" t="Include">
+            <e p="BillowNoiseModule.cs" t="Include" />
+            <e p="FilterNoiseModule.cs" t="Include" />
+            <e p="MultiFractalNoiseModule.cs" t="Include" />
+            <e p="PipeNoiseModule.cs" t="Include" />
+            <e p="RidgedMultiFractalNoiseModule.cs" t="Include" />
+            <e p="ScaledNoiseModule.cs" t="Include" />
+            <e p="SmoothNoiseModule.cs" t="Include" />
+            <e p="VoronoiNoseModule.cs" t="Include" />
+          </e>
+          <e p="NoiseMap.cs" t="Include" />
+          <e p="OctaveGenerator.cs" t="Include" />
+          <e p="Primitives" t="Include">
+            <e p="ImprovedPerlin.cs" t="Include" />
+            <e p="PrimitiveModule.cs" t="Include" />
+            <e p="SimplexNoise.cs" t="Include" />
+          </e>
+          <e p="Providers" t="Include">
+            <e p="InterpolatedNoiseProvider.cs" t="Include" />
+            <e p="NoiseProvider.cs" t="Include" />
+          </e>
+          <e p="ScaleableNoise.cs" t="Include" />
+          <e p="Selectors" t="Include">
+            <e p="SelectNoiseModule.cs" t="Include" />
+            <e p="SelectorModule.cs" t="Include" />
+          </e>
+          <e p="SimplexData2D.cs" t="Include" />
+          <e p="SimplexOctaveGenerator.cs" t="Include" />
+          <e p="Transformers" t="Include">
+            <e p="TransformerModule.cs" t="Include" />
+            <e p="TurbulenceNoiseModule.cs" t="Include" />
+          </e>
+          <e p="VoronoiNose.cs" t="Include" />
+        </e>
+      </e>
+      <e p="WorldGeneratorPlugin.cs" t="Include" />
+      <e p="obj" t="ExcludeRecursive">
+        <e p="Debug" t="Include">
+          <e p="netcoreapp3.1" t="Include">
+            <e p="OpenAPI.WorldGenerator.AssemblyInfo.cs" t="Include" />
+          </e>
+        </e>
+      </e>
+      <e p="packages" t="ExcludeRecursive" />
+    </e>
+    <e p="$PROJECT_DIR$/../../../build/debug/Plugins/netcoreapp3.1" t="ExcludeRecursive" />
+  </component>
+</project>

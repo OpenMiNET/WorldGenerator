@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenAPI.WorldGenerator", "OpenAPI.WorldGenerator\OpenAPI.WorldGenerator.csproj", "{FBADFB00-7F29-47C0-A37F-21CAD7AB297D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorldGenerator.Tweaking", "WorldGenerator.Tweaking\WorldGenerator.Tweaking.csproj", "{2AB15C83-8F60-4D20-A8E0-2158B1C01E25}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FBADFB00-7F29-47C0-A37F-21CAD7AB297D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBADFB00-7F29-47C0-A37F-21CAD7AB297D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBADFB00-7F29-47C0-A37F-21CAD7AB297D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBADFB00-7F29-47C0-A37F-21CAD7AB297D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2AB15C83-8F60-4D20-A8E0-2158B1C01E25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AB15C83-8F60-4D20-A8E0-2158B1C01E25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AB15C83-8F60-4D20-A8E0-2158B1C01E25}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AB15C83-8F60-4D20-A8E0-2158B1C01E25}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
