@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
@@ -21,6 +22,7 @@ using BiomeUtils = OpenAPI.WorldGenerator.Utils.BiomeUtils;
 
 namespace OpenAPI.WorldGenerator.Generators
 {
+    [DisplayName("FastGen")]
     public class OverworldGenerator : IWorldGenerator
     {
         /*private readonly IModule3D _depthNoise;

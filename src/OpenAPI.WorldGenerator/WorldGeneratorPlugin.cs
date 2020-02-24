@@ -64,29 +64,37 @@ namespace OpenAPI.WorldGenerator
         public override void Enabled(OpenApi api)
         {
             Api = api;
-            IWorldGenerator generator;
-            
-           /* generator = new MiNET.Worlds.SuperflatGenerator(Dimension.Overworld)
+            if (Config.GetProperty("WorldGen.IsDefault", false))
             {
-                BlockLayers = new List<Block>()
-                {
-                    new Bedrock(),
-                    new Dirt(),
-                    new Dirt(),
-                    new Grass()
-                }
-            };*/
-           
-            generator = new OverworldGeneratorV2();
-            
-            var level = new OpenLevel(api, api.LevelManager, Dimension.Overworld.ToString(), new DebugWorldProvider(generator), api.LevelManager.EntityManager, GameMode.Creative, Difficulty.Peaceful);
+                IWorldGenerator generator;
 
-            api.LevelManager.LoadLevel(level);
-            api.LevelManager.SetDefaultLevel(level);
-            
+                /* generator = new MiNET.Worlds.SuperflatGenerator(Dimension.Overworld)
+                 {
+                     BlockLayers = new List<Block>()
+                     {
+                         new Bedrock(),
+                         new Dirt(),
+                         new Dirt(),
+                         new Grass()
+                     }
+                 };*/
+
+                generator = new OverworldGeneratorV2();
+
+                var level = new OpenLevel(api, api.LevelManager, Dimension.Overworld.ToString(),
+                    new DebugWorldProvider(generator), api.LevelManager.EntityManager, GameMode.Creative,
+                    Difficulty.Peaceful);
+
+                api.LevelManager.LoadLevel(level);
+                api.LevelManager.SetDefaultLevel(level);
+            }
+
             api.EventDispatcher.RegisterEvents(this);
-            
-            _timer = new Timer(Callback, null, TimeSpan.Zero, TimeSpan.FromSeconds(1.25));
+
+            if (Config.GetProperty("WorldGen.Debug", false))
+            {
+                _timer = new Timer(Callback, null, TimeSpan.Zero, TimeSpan.FromSeconds(1.25));
+            }
         }
 
         public override void Disabled(OpenApi api)

@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Linq;
 using LibNoise;
 using MiNET.Blocks;
@@ -17,6 +18,7 @@ using BiomeUtils = OpenAPI.WorldGenerator.Utils.BiomeUtils;
 
 namespace OpenAPI.WorldGenerator.Generators
 {
+    [DisplayName("Overworld")]
     public class OverworldGeneratorV2 : IWorldGenerator
     {
         public static readonly float ActualRiverProportion = 150f / 1600f;//This value is also used in BiomeAnalyser#riverAdjusted
