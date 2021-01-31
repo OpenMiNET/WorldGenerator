@@ -70,6 +70,12 @@ namespace OpenAPI.WorldGenerator.Generators
             
         }
 
+        /// <inheritdoc />
+        public void Initialize(IWorldProvider worldProvider)
+        {
+            
+        }
+
         public ChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
         {
             return GenerateChunk(chunkCoordinates).Result;

@@ -23,12 +23,12 @@ namespace WorldGenerator.Tweaking
         private static ConcurrentQueue<ChunkColumn> Finished = new ConcurrentQueue<ChunkColumn>();
         static void Main(string[] args)
         {
-            int chunks = 64;
+            int chunks = 32;
             int width = chunks * 16;
             int height = chunks * 16;
 
             OverworldGeneratorV2 gen = new OverworldGeneratorV2();
-            gen.ApplyBlocks = true;
+          //  gen.ApplyBlocks = true;
             
             bool done = false;
           //  ChunkColumn[] generatedChunks = new ChunkColumn[chunks * chunks];
@@ -107,7 +107,7 @@ namespace WorldGenerator.Tweaking
             Console.Clear();
             
             Console.WriteLine($"Generating {chunks * chunks} chunks took: {timer.Elapsed}");
-            Console.WriteLine($"Min Height: {gen.MinHeight} Max Height: {gen.MaxHeight}");
+            //Console.WriteLine($"Min Height: {gen.MinHeight} Max Height: {gen.MaxHeight}");
         }
 
         public static int Imaged { get; set; } = 0;
@@ -129,14 +129,16 @@ namespace WorldGenerator.Tweaking
                         for (int cz = 0; cz < 16; cz++)
                         {
                             var rz = (column.Z * 16) + cz;
-
+                            
                             var biome = BiomeUtils.GetBiomeById(column.GetBiome(cx, cz));
+                            
                             var temp = (int) Math.Max(0,
-                                Math.Min(255, (255 * MathUtils.ConvertRange(-1f, 2f, 0f, 1f, biome.Temperature))));
-                            var humid = (int) Math.Max(32,
+                                Math.Min(255, (255 * (biome.Temperature / 2f))));
+                            
+                            var humid = (int) Math.Max(0,
                                 Math.Min(255, (255 * biome.Downfall)));
 
-                            bitmap.SetPixel(rx, rz, Color.FromArgb(humid, temp, 0, 255 - temp));
+                            bitmap.SetPixel(rx, rz, Color.FromArgb(255, temp, 0, humid));
 
                             int height = column.GetHeight(cx, cz);
 

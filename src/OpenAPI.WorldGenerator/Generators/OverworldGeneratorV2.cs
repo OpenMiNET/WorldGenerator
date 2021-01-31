@@ -143,11 +143,6 @@ namespace OpenAPI.WorldGenerator.Generators
             }
             return this._cellularNoiseInstances[index];
         }
-
-        public void Initialize()
-        {
-            
-        }
         
         private void InitBiomeProviders(int seed)
         {
@@ -155,14 +150,14 @@ namespace OpenAPI.WorldGenerator.Generators
 
            var biomeScale = 8f * Preset.BiomeSize;
            
-            SimplexPerlin temperaturePerlin  = new SimplexPerlin(seed + seed * seed, NoiseQuality.Fast);
-            INoiseModule temperatureNoise = new OctaveNoise(temperaturePerlin, 4)
-            {
-                Amplitude = 3f,
-                Frequency = 0.535f
-            };
+           INoiseModule temperatureNoise = new SimplexPerlin(seed + seed * seed, NoiseQuality.Fast);
+            //INoiseModule temperatureNoise = new OctaveNoise(temperaturePerlin, 1)
+            //{
+             //   Amplitude = 3f,
+            //    Frequency = 0.535f
+           // };
 
-            temperatureNoise = new ScaledNoiseModule(temperatureNoise)
+           temperatureNoise = new ScaledNoiseModule(temperatureNoise)
             {
                 ScaleX = 1f / biomeScale,
                 ScaleZ = 1f / biomeScale,
@@ -173,16 +168,18 @@ namespace OpenAPI.WorldGenerator.Generators
             {
                 Primitive = temperatureNoise,
                 Distance = false,
-                Frequency = 0.2325f,
-            //    SpectralExponent = 0.25f
+                Frequency = 0.5325f,
+                OctaveCount = 4
+
+                //    SpectralExponent = 0.25f
             };
 
-          INoiseModule rainNoise = new SimplexPerlin(seed - seed * seed, NoiseQuality.Fast);
-            rainNoise = new OctaveNoise(rainNoise, 4)
+          INoiseModule rainNoise = new SimplexPerlin(seed + seed * seed, NoiseQuality.Fast);
+            /*rainNoise = new OctaveNoise(rainNoise, 4)
             {
                 Amplitude = 3f,
                 Frequency = 0.345f
-            };
+            };*/
             
             rainNoise = new ScaledNoiseModule(rainNoise)
             {
@@ -195,7 +192,8 @@ namespace OpenAPI.WorldGenerator.Generators
             {
                 Primitive = rainNoise,
                 Distance = false,
-                Frequency = 0.25f,
+                Frequency = 0.525f,
+                OctaveCount = 4
                // SpectralExponent = 0.25f
             };
 
@@ -221,6 +219,13 @@ namespace OpenAPI.WorldGenerator.Generators
         private INoiseModule RainfallNoise { get; set; }
 
         public bool ApplyBlocks { get; set; } = true;
+
+        /// <inheritdoc />
+        public void Initialize(IWorldProvider worldProvider)
+        {
+            
+        }
+
         public ChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
         {
             ChunkColumn column = new ChunkColumn()
@@ -381,7 +386,7 @@ namespace OpenAPI.WorldGenerator.Generators
                     var river = landscape.River[index];
                     int depth = -1;
 
-                    landscape.Biome[index].Replace(chunk, coords, x, z, depth, this, landscape.Noise, river, landscape.Biome);
+                   // landscape.Biome[index].Replace(chunk, coords, x, z, depth, this, landscape.Noise, river, landscape.Biome);
                     chunk.biomeId[index] = (byte) landscape.Biome[index].Id;
                 }
             }
@@ -442,33 +447,38 @@ namespace OpenAPI.WorldGenerator.Generators
         
         public float MaxHeight { get; set; } = -1f;
         public float MinHeight { get; set; } = 0f;
-        
+
         private int[] CalculateBiomes(ChunkCoordinates coordinates, ChunkLandscape landscape)
         {
-            int worldX = coordinates.X * 16;
-            int worldZ = coordinates.Z * 16;
+           // var biomes = BiomeProvider.GetBiomes().ToArray();
+            
+            int worldX = coordinates.X << 4;
+            int worldZ = coordinates.Z << 4;
+          
             float[] weightedBiomes = new float[256];
-            var biomeData = new int[SampleArraySize * SampleArraySize];
+            var     biomeData      = new int[SampleArraySize * SampleArraySize];
             
             for (int x = -SampleSize; x < SampleSize + 5; x++) {
                 for (int z = -SampleSize; z < SampleSize + 5; z++)
                 {
-                    var temp = TemperatureNoise.GetValue(worldX + ((x * 8)), worldZ + ((z * 8)));
-                    var rain = RainfallNoise.GetValue(worldX + ((x * 8)), worldZ + ((z * 8)));
+                    var xx   = worldX + ((x * 8f));
+                    var zz   = worldZ + ((z * 8f));
+                    var temp = TemperatureNoise.GetValue(xx, zz);
+                    var rain = RainfallNoise.GetValue(xx, zz);
                     
-                    biomeData[(x + SampleSize) * SampleArraySize + (z + SampleSize)] = (BiomeProvider.GetBiome((float) temp, (float) rain).Id);
+                    biomeData[(x + SampleSize) * SampleArraySize + (z + SampleSize)] = (BiomeProvider.GetBiome((float) temp, (float) rain, MathF.Abs(_simplexNoiseInstances[0].GetValue(worldX + x, worldZ + z))).Id);
                 }
             }
             
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++)
                 {
-                    int index = NoiseMap.GetIndex(x, z);
+                    int index     = NoiseMap.GetIndex(x, z);
                     
                     float totalWeight = 0;
                     for (int mapX = 0; mapX < SampleArraySize; mapX++) {
                         for (int mapZ = 0; mapZ < SampleArraySize; mapZ++) {
-                            float weight = _weightings[mapX * SampleArraySize + mapZ][x * 16 + z];
+                            float weight = _weightings[mapX * SampleArraySize + mapZ][(x << 4) + z];
                             if (weight > 0) {
                                 totalWeight += weight;
                                 weightedBiomes[biomeData[mapX * SampleArraySize + mapZ]] += weight;
@@ -488,19 +498,41 @@ namespace OpenAPI.WorldGenerator.Generators
 
                    float river = TerrainBase.GetRiverStrength(new BlockCoordinates(worldX + x, 0, worldZ + z), this);
                    landscape.River[index] = -river;
-                   
-                    for (int i = 0; i < 256; i++)
-                    {
-                        var value = weightedBiomes[i];
-                        if (value > 0f)
-                        {
-                            var biome = BiomeProvider.GetBiome(i);
+
+                  /* for (int biomeIndex = 0; biomeIndex < weightedBiomes.Length; biomeIndex++)
+                   {
+                       var value = weightedBiomes[biomeIndex];
+                       weightRnd -= value;
+
+                       if (weightRnd < 0f)
+                       {
+                           var biome = BiomeProvider.GetBiome(biomeIndex);
                            landscape.Noise[index] += biome.RNoise(this, worldX + x, worldZ + z, value, river + 1f) * value;
                            landscape.Biome[index] = biome;
-                            // 0 for the next column
-                            weightedBiomes[i] = 0f;
-                        }
-                    }
+
+                           break;
+                       }
+                   }*/
+
+                   for (int i = 0; i < weightedBiomes.Length; i++)
+                   {
+                       var value = weightedBiomes[i];
+
+                       if (value > 0f)
+                       {
+                           var biome = BiomeProvider.GetBiome(i);
+
+                           landscape.Noise[index] += biome.RNoise(this, worldX + x, worldZ + z, value, river + 1f)
+                                                     * value;
+                           
+                           landscape.Biome[index] = biome;
+                       }
+                   }
+
+                   for (int i = 0; i < weightedBiomes.Length; i++)
+                   {
+                       weightedBiomes[i] = 0f;
+                   }
 
                    // landscape.Biome[index] = BiomeProvider.GetBiome(i);
                    //landscape.Biome[index] = BiomeProvider.GetBiome();

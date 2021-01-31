@@ -32,7 +32,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise
         
         public static int GetIndex(int x, int z)
         {
-            return (x << 4) + z;
+            return (z << 4) + x;
         }
     }
 }

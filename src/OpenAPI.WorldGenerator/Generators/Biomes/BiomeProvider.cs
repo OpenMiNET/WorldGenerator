@@ -67,7 +67,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
                 //   new MesaBryceBiome(),
                 new MesaPlateauBiome(),
                 new MesaPlateauFBiome(),
-                //  new MesaPlateauFMBiome(),
+               //   new MesaPlateauFMBiome(),
                 //  new MesaPlateauMBiome(),
                 new MushroomIslandBiome(),
                 new MushroomIslandShoreBiome(),
@@ -110,44 +110,98 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
             return Biomes.Where(x => x.Terrain != null && x.Surface != null && !x.Config.IsEdgeBiome);
         }
 
-        public BiomeBase GetBiome(float temperatures, float rainfall)
+        public BiomeBase GetBiome(float temperatures, float rainfall, float rnd)
         {
           //  var temperatures = TemperatureProvider.GetValue(x, z);
           //  var rainfall = RainfallProvider.GetValue(x, z);
 
-            var biomes = GetBiomes().ToArray();
+           
             //   height = MathUtils.ConvertRange(-1f, 1f, 0f, 1f, height);
 
-            var temp = MathUtils.ConvertRange(-1.2f, 1.2f, -0.5f, 2.2f,
-                temperatures);
+            var temp = temperatures + 1f;
+        //    var temp = MathUtils.ConvertRange(-1f, 1f, 0f, 2f,
+         //       temperatures);
 
+         var rain = Math.Clamp(rainfall, 0f, 1f);
+           // return biomes.OrderByDescending(x =>  new Vector2( x.Temperature - temp, x.Downfall - rain).Length()).FirstOrDefault();
+//Console.WriteLine($"Temperature: {temp} Rain: {rain}");
+            //var rain = MathUtils.ConvertRange(-1f, 1f, 0, 1f,
+             //   rainfall);
 
-            var rain = MathUtils.ConvertRange(-1f, 1f, 0, 1f,
-                rainfall);
-
-            float maxt = -1;
-            int maxi = 0;
-            float sum = 0;
-            var weights = new float[biomes.Length];
+             //   return Biomes.OrderBy(x => new Vector2(x.Temperature, x.Downfall).LengthSquared() - a.LengthSquared())
+            //    .FirstOrDefault();
+            
+            var   biomes  = GetBiomes().OrderBy(x => new Vector2(  x.Temperature - temp , x.Downfall - rain).LengthSquared()).ToArray();
+            
+            float maxt    = -1;
+            int   maxi    = 0;
+            float sum     = 0;
+            var   weights = new float[biomes.Length];
             for (int i = 0; i < biomes.Length; i++)
             {
-                Vector2 d = new Vector2(biomes[i].Temperature - temp, biomes[i].Downfall - rain);
-                d.X *= 5;
+                Vector2 d = new Vector2(  MathF.Abs(biomes[i].Temperature - temp) , MathF.Abs(biomes[i].Downfall - rain));
+                d.X *= 5f;
                 d.Y *= 2.5f;
 
-                weights[i] = MathF.Max(0, 1.0f - (d.X * d.X + d.Y * d.Y) * 0.1f);
+                var weight = 1f - (d.X * d.X + d.Y * d.Y) * 0.1f;
+
+                if (weight < 0)
+                {
+                    //Console.WriteLine(weight);
+                }
+
+                weights[i] = weight;
                 if (weights[i] > maxt)
                 {
                     maxi = i;
-                    maxt = weights[i];
+                    maxt = weight;
                 }
 
-                sum += weights[i];
+                sum += weight;
             }
 
+            sum = 1f / sum;
+            
             for (int i = 0; i < biomes.Length; i++)
             {
-                weights[i] /= sum;
+               // if (weights[i] > 0f)
+                {
+                    weights[i] *= sum;
+                }
+                // else if (weights[i] < 0f)
+                {
+                   // weights[i] = 0f;
+                }
+            }
+           //rnd *= sum;
+            
+           // Console.WriteLine($"Weight sum: {sum} Max: {weights.Max()} Min: {weights.Min()} Rnd: {rnd}");
+
+          /*  for (int i = 0; i < biomes.Length; i++)
+            {
+                if (weights[i] > 0f)
+                {
+                    weights[i] /= sum;
+                }
+                else if (weights[i] < 0f)
+                {
+                    weights[i] = 0f;
+                }
+            }*/
+
+            //  var rnd = MathF.Abs(selectorNoise);
+            while (rnd > 0f)
+            {
+                for (int i = 0; i < biomes.Length; i++)
+                {
+                    rnd -= weights[i];
+
+                    if (rnd <= 0f)
+                    {
+                        //   Console.WriteLine("Got it");
+                        return biomes[i];
+                    }
+                }
             }
 
             return biomes[maxi];
