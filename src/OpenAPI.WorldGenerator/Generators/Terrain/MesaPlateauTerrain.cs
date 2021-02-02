@@ -37,7 +37,8 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             float bumpiness = generator.SimplexInstance(2).GetValue(x / _bumpinessWavelength, y / _bumpinessWavelength) * _bumpinessMultiplier;
             float simplex = _plateau.Added(generator, x, y) * bordercap * rivercap + bumpiness;
             float added = PlateauUtil.StepIncrease(simplex, _stepStart, _stepFinish, _stepHeight) / border;
-            return Riverized(BaseHeight + TerrainBase.GetGroundNoise(x, y, _groundNoise, generator), river) + added;
+            
+            return Riverized(generator, BaseHeight + GetGroundNoise(x, y, _groundNoise, generator), river) + added;
         }
     }
 }

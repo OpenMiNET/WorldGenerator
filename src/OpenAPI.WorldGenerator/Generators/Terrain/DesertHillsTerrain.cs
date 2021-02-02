@@ -16,7 +16,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
         
         public override float GenerateNoise(OverworldGeneratorV2 generator, int x, int y, float border, float river)
         {
-            return TerrainHighland(x, y, generator, river, _start, _width, _height, BaseHeight - 62f);
+            return TerrainHighland(x, y, generator, river, _start, _width, _height, BaseHeight - generator.Preset.SeaLevel);
         }
     }
 }

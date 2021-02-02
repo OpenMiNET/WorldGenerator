@@ -14,7 +14,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Ocean
             MaxHeight = 0.5f;
             Terrain = new OceanTerrain();
             
-            Type = BiomeType.Ocean;
+            Type = BiomeType.Ocean | BiomeType.Snowy;
         }
     }
 }

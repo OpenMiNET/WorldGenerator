@@ -8,9 +8,9 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
 
             float m = Hills(x, y, 10f, generator);
 
-            float floNoise = 65f + GroundNoise + m;
+            float floNoise = generator.Preset.SeaLevel + 3 + GroundNoise + m;
 
-            return Riverized(floNoise, river);
+            return Riverized(generator, floNoise, river);
         }
     }
 }

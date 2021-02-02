@@ -20,16 +20,16 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 
 		public virtual int MaxHeight { get { return 0; } }
 
-		public virtual void Create(int[] blocks, int[] metadata, int x, int y, int z)
+		public virtual void Create(ChunkColumn column, int x, int y, int z)
 		{
-			if (blocks[OverworldGenerator.GetIndex(x, y + MaxHeight, z)] == (byte) 0)
+			//if (blocks[OverworldGenerator.GetIndex(x, y + MaxHeight, z)] == (byte) 0)
 			{
 				foreach (Block b in Blocks)
 				{
-					//chunk.SetBlock(x + b.Coordinates.X, y + b.Coordinates.Y, z + b.Coordinates.Z, b.Id);
+					column.SetBlock(x + b.Coordinates.X, y + b.Coordinates.Y, z + b.Coordinates.Z, b);
 					//chunk.SetMetadata(x + b.Coordinates.X, y + b.Coordinates.Y, z + b.Coordinates.Z, b.Metadata);
-					blocks[OverworldGenerator.GetIndex(x + b.Coordinates.X, y + b.Coordinates.Y, z + b.Coordinates.Z)] = b.Id;
-					metadata[OverworldGenerator.GetIndex(x + b.Coordinates.X, y + b.Coordinates.Y, z + b.Coordinates.Z)] = b.Id;
+					//blocks[OverworldGenerator.GetIndex(x + b.Coordinates.X, y + b.Coordinates.Y, z + b.Coordinates.Z)] = b.Id;
+					//metadata[OverworldGenerator.GetIndex(x + b.Coordinates.X, y + b.Coordinates.Y, z + b.Coordinates.Z)] = b.Id;
 				}
 			}
 		}

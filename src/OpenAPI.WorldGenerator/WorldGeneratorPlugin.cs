@@ -57,7 +57,7 @@ namespace OpenAPI.WorldGenerator
                 if (result == null)
                     result = BiomeUtils.GetBiomeById(biome);
                 
-                player.SendTitle($"Biome: {result.Name} | {biome}", TitleType.ActionBar, 0, 0, 25);
+                player.SendTitle($"Biome: {result.Name}, Temperature: {result.Temperature}, Downfall: {result.Downfall}", TitleType.ActionBar, 0, 0, 25);
             }
         }
 
@@ -99,6 +99,9 @@ namespace OpenAPI.WorldGenerator
 
         public override void Disabled(OpenApi api)
         {
+            _timer?.Dispose();
+            _timer = null;
+            
             Log.Info($"WorldGenerator plugin disabled!");
         }
     }

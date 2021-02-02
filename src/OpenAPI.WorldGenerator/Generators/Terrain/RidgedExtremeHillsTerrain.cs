@@ -80,11 +80,11 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             // ground effect is increased by the multiplier
             float groundEffectLevel = _groundEffect.Added(generator, (float) x, (float) y);
             float ridging = _multiplier.Added(generator, (float) x, (float) y);
-            ridging = TerrainBase.BayesianAdjustment(ridging, 2);
+            ridging = BayesianAdjustment(ridging, 2);
             float result =
                 BaseHeight + ridging * (groundEffectLevel + _heightIncrease.Added(generator, (float) x, (float) y))
                            + groundEffectLevel;
-            return TerrainBase.MountainCap(result);
+            return MountainCap(result);
         }
     }
 }

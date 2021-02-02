@@ -8,14 +8,14 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
 
         }
 
-        public BirchForestHillsTerrain(float bh, float hs) {
-            BaseHeight = bh;
-            HillStrength = hs;
+        public BirchForestHillsTerrain(float baseHeight, float hillStrength) {
+            BaseHeight = baseHeight;
+            HillStrength = hillStrength;
         }
         
         public override float GenerateNoise(OverworldGeneratorV2 generator, int x, int y, float border, float river)
         {
-            return TerrainHighland(x, y, generator, river, 10f, 68f, HillStrength, BaseHeight - 62f);
+            return TerrainHighland(x, y, generator, river, 10f, 68f, HillStrength, BaseHeight - generator.Preset.SeaLevel);
         }
     }
 }

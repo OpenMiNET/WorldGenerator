@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ContentModelStore">
-    <e p="$USER_HOME$/.cache/JetBrains/Rider2020.3/extResources" t="IncludeRecursive" />
-    <e p="$USER_HOME$/.cache/JetBrains/Rider2020.3/resharper-host/local/Transient/Rider/v203/SolutionCaches/_WorldGenerator.1363140496.00" t="ExcludeRecursive" />
+    <e p="$USER_HOME$/.cache/JetBrains/Rider2021.1/extResources" t="IncludeRecursive" />
+    <e p="$USER_HOME$/.cache/JetBrains/Rider2021.1/resharper-host/local/Transient/Rider/v211/SolutionCaches/_WorldGenerator.1363140496.00" t="ExcludeRecursive" />
     <e p="$PROJECT_DIR$" t="IncludeFlat">
       <e p="OpenAPI.WorldGenerator" t="IncludeRecursive">
         <e p="DebugWorldProvider.cs" t="Include" />
@@ -80,7 +80,6 @@
           <e p="Decorators" t="Include">
             <e p="ChunkDecorator.cs" t="Include" />
             <e p="FoliageDecorator.cs" t="Include" />
-            <e p="WaterDecorator.cs" t="Include" />
           </e>
           <e p="Effects" t="Include">
             <e p="GroundEffect.cs" t="Include" />
@@ -92,7 +91,6 @@
             <e p="VoronoiPlateauEffect.cs" t="Include" />
           </e>
           <e p="NoiseProvider.cs" t="Include" />
-          <e p="OverworldGenerator.cs" t="Include" />
           <e p="OverworldGeneratorV2.cs" t="Include" />
           <e p="Preset.cs" t="Include" />
           <e p="Structures" t="Include">
@@ -109,7 +107,20 @@
             <e p="TreeStructure.cs" t="Include" />
           </e>
           <e p="Surfaces" t="Include">
+            <e p="Jungle" t="Include">
+              <e p="JungleSurface.cs" t="Include" />
+            </e>
+            <e p="Mesa" t="Include">
+              <e p="MesaSurface.cs" t="Include" />
+            </e>
+            <e p="Savanna" t="Include">
+              <e p="SavannaPlateauSurface.cs" t="Include" />
+              <e p="SavannaSurface.cs" t="Include" />
+            </e>
             <e p="SurfaceBase.cs" t="Include" />
+            <e p="Taiga" t="Include">
+              <e p="TaigaSurface.cs" t="Include" />
+            </e>
           </e>
           <e p="Terrain" t="Include">
             <e p="BeachTerrain.cs" t="Include" />
@@ -130,6 +141,7 @@
             <e p="RidgedExtremeHillsTerrain.cs" t="Include" />
             <e p="SavannaPlateauTerrain.cs" t="Include" />
             <e p="SavannaTerrain.cs" t="Include" />
+            <e p="SwamplandTerrain.cs" t="Include" />
             <e p="TaigaHillsTerrain.cs" t="Include" />
             <e p="TaigaTerrain.cs" t="Include" />
             <e p="TerrainBase.cs" t="Include" />
@@ -158,6 +170,7 @@
             <e p="INoiseModule.cs" t="Include" />
             <e p="INoiseProvider.cs" t="Include" />
             <e p="Modules" t="Include">
+              <e p="AverageSelectorModule.cs" t="Include" />
               <e p="BillowNoiseModule.cs" t="Include" />
               <e p="FilterNoiseModule.cs" t="Include" />
               <e p="MultiFractalNoiseModule.cs" t="Include" />
@@ -203,7 +216,10 @@
         </e>
       </e>
       <e p="WorldGenerator.Tweaking" t="IncludeRecursive">
+        <e p="BiomeColorStuff.cs" t="Include" />
+        <e p="PrimitiveBatch.cs" t="Include" />
         <e p="Program.cs" t="Include" />
+        <e p="TestGame.cs" t="Include" />
         <e p="WorldGenerator.Tweaking.csproj" t="IncludeRecursive" />
         <e p="bin" t="ExcludeRecursive" />
         <e p="obj" t="ExcludeRecursive">

@@ -1,3 +1,4 @@
+using System.Drawing;
 using MiNET.Utils;
 using MiNET.Worlds;
 using OpenAPI.WorldGenerator.Generators.Biomes.Config;
@@ -23,6 +24,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
 
         public byte SoilBlock = 3;
         public byte SoilMetadata = 0;
+        
+        public Color? Color { get; set; } = null;
 
         private BiomeType ForcedType { get; set; } = BiomeType.Unknown;
         public BiomeType Type
@@ -184,7 +187,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
             Replace(primer, blockPos.X, blockPos.Z, x, y, depth, generator, noise, river, biomes);
         }
 
-        public void Replace(ChunkColumn primer, int i, int j, int x, int y, int depth, OverworldGeneratorV2 generator,
+        public void Replace(ChunkColumn primer, int blockX, int blockZ, int x, int y, int depth, OverworldGeneratorV2 generator,
             float[] noise, float river, BiomeBase[] biomes)
         {
           /*  if (RTG.surfacesDisabled() || this.getConfig().DISABLE_RTG_SURFACES.get())
@@ -196,7 +199,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
               return;
           
             float riverRegion = !this.Config.AllowRivers ? 0f : river;
-            this.Surface.PaintTerrain(primer, i, j, x, y, depth, generator, noise, riverRegion, biomes);
+            this.Surface.PaintTerrain(primer, blockX, blockZ, x, y, depth, generator, noise, riverRegion, biomes);
         }
 
         protected void ReplaceWithRiver(ChunkColumn primer, int i, int j, int x, int y, int depth, OverworldGeneratorV2 generator,
@@ -209,6 +212,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
 
             float riverRegion = !this.Config.AllowRivers ? 0f : river;
             this.Surface.PaintTerrain(primer, i, j, x, y, depth, generator, noise, riverRegion, biomes);
+            //this.surfaceRiver.paintTerrain(primer, i, j, x, y, depth, generator, noise, riverRegion, biomes);
            /* if (RTGConfig.lushRiverbanksInDesert())
             {
                 this.surfaceRiver.paintTerrain(primer, i, j, x, y, depth, generator, noise, riverRegion, biomes);
@@ -223,7 +227,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
            {
                flags |= BiomeType.Cold;
 
-               if (Temperature < 0f)
+               if (Temperature <= 0f)
                {
                    flags |= BiomeType.Snowy;
                }

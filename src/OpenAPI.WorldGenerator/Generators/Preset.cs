@@ -225,5 +225,10 @@ namespace OpenAPI.WorldGenerator.Generators
         public float RTGlakeShoreBend { get; set; } = 1f; // RTG
 
         public float SandDuneHeight { get; set; } = 4f;
+
+        public float GetTerrainBase()
+        {
+            return SeaLevel + 6;
+        }
     }
 }

@@ -24,25 +24,25 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 		private int Branches = 2;
 		private float VerticalStart = 0.32f;
 		private float VerticalRand = 0.14f;
-		public override void Create(int[] blocks, int[] metadata, int x, int y, int z)
+		public override void Create(ChunkColumn chunk, int x, int y, int z)
 	    {
-			var block = blocks[OverworldGenerator.GetIndex(x, y - 1, z)];
-			if (block != 2 && block != 3) return;
+			//var block = blocks[OverworldGenerator.GetIndex(x, y - 1, z)];
+			//if (block != 2 && block != 3) return;
 
 		    BaseSize = 3 + Rnd.Next(2);
 			if (Roots > 0f)
 			{
 				for (int k = 0; k < 3; k++)
 				{
-					GenerateBranch(blocks, metadata, x, y + Roots, z, (120 * k) - 40 + Rnd.Next(80), 1.6f + (float)Rnd.NextDouble() * 0.1f, Roots * 1.7f, 1f, 17, 3);
+					GenerateBranch(chunk, x, y + Roots, z, (120 * k) - 40 + Rnd.Next(80), 1.6f + (float)Rnd.NextDouble() * 0.1f, Roots * 1.7f, 1f, 17, 3);
 				}
 			}
 
 			for (int i = y + Roots; i < y + BaseSize; i++)
 			{
-				blocks[OverworldGenerator.GetIndex(x, i, z)] = 17;
-				metadata[OverworldGenerator.GetIndex(x, i, z)] = 3;
-			//	chunk.SetBlock(x, i, z, 17);
+				//blocks[OverworldGenerator.GetIndex(x, i, z)] = 17;
+				//metadata[OverworldGenerator.GetIndex(x, i, z)] = 3;
+				chunk.SetBlock(x, i, z, 17);
 			//	chunk.SetMetadata(x, i, z, 3);
 			}
 
@@ -59,11 +59,11 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 
 				if (CanGenerateBranch(x, y + BaseSize, z, horDir, verDir, BranchLength, 1f, 4f, 1.5f) && CanGenerateLeaves(eX, eY, eZ, 4f, 1.5f))
 				{
-					GenerateBranch(blocks, metadata, x, y + BaseSize, z, horDir, verDir, BranchLength, 1f, 17, 3);
+					GenerateBranch(chunk, x, y + BaseSize, z, horDir, verDir, BranchLength, 1f, 17, 3);
 
 					for (int m = 0; m < 1; m++)
 					{
-						GenerateLeaves(blocks, metadata, eX, eY, eZ, 4f, 1.5f, 18, 3, 17, 3);
+						GenerateLeaves(chunk, eX, eY, eZ, 4f, 1.5f, 18, 3, 17, 3);
 					}
 				}
 			}

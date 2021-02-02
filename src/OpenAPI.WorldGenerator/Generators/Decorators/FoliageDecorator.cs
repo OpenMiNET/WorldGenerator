@@ -1,4 +1,5 @@
 using System;
+using MiNET.Blocks;
 using MiNET.Worlds;
 using MiNET.Worlds.Structures;
 using OpenAPI.Utils;
@@ -12,7 +13,14 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 {
     public class FoliageDecorator : ChunkDecorator
 	{
-		public override void Decorate(int chunkX, int chunkZ, int[] blocks, int[] metadata, BiomeBase biome, float[] thresholdMap, int x, int y, int z, bool surface,
+		private WorldGeneratorPreset Preset { get; }
+		public FoliageDecorator(WorldGeneratorPreset settings)
+		{
+			Preset = settings;
+		}
+		
+		public static readonly string[] FlowerTypes = new []{"cornflower", "houstonia", "lily_of_the_valley", "allium", "tulip_pink", "tulip_red", "poppy", "tulip_white", "tulip_orange", "oxeye", "orchid"};
+		public override void Decorate(ChunkColumn column, int chunkX, int chunkZ, BiomeBase biome, float[] thresholdMap, int x, int y, int z, bool surface,
 			bool isBelowMaxHeight)
 		{
 			try
@@ -28,12 +36,13 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 				int rz = chunkZ*16 + z;
 
 				bool generated = false;
-				if (surface && y >= OverworldGenerator.WaterLevel)
+				if (surface && y >= Preset.SeaLevel)
 				{
 					var noise = Simplex.Noise(rx, rz, Math.Min(biome.Downfall * 0.32f, 0.03f), 0.5, true);
 					if (x >= 3 && x <= 13 && z >= 3 && z <= 13)
 					{
 						Structure tree = null;
+						//if (biome.Config.)
 						if (biome.Downfall <= 0f && biome.Temperature >= 2f)
 						{
 							if (GetRandom(32) == 16)
@@ -96,7 +105,7 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 						{
 							if (y + 1 < 254)
 							{
-								tree.Create(blocks, metadata, x, y + 1, z);
+								tree.Create(column, x, y + 1, z);
 							}
 							generated = true;
 						}
@@ -114,12 +123,12 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 							else*/
 							if (currentTemperature > 0.3f && currentTemperature < 1.5f && biome.Downfall > 0)
 							{
-								var blockBeneath = blocks[OverworldGenerator.GetIndex(x, y, z)];// column.GetBlock(x, y, z);
+								var blockBeneath = column.GetBlockId(x, y, z);// column.GetBlock(x, y, z);
 
 								var sugarPosibility = GetRandom(18);
 								if ( /*sugarPosibility <= 11*/ noise > 0.75f &&
 								                               (blockBeneath == 3 || blockBeneath == 2 || blockBeneath == 12) &&
-								                               IsValidSugarCaneLocation(blocks, x, y, z))
+								                               IsValidSugarCaneLocation(column, x, y, z))
 								{
 									int height = 1;
 									if (sugarPosibility <= 2)
@@ -135,16 +144,16 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 									for (int mY = y + 1; mY < y + 1 + height; mY++)
 									{
 										//column.SetBlock(x, mY, z, 83); //SugarCane
-										blocks[OverworldGenerator.GetIndex(x, mY, z)] = 83;
+										//blocks[OverworldGenerator.GetIndex(x, mY, z)] = 83;
 										
 										if (mY == y + 1 + height)
 										{
-											metadata[OverworldGenerator.GetIndex(x, mY, z)] = (byte) Rnd.Next(0, 15);
+											//metadata[OverworldGenerator.GetIndex(x, mY, z)] = (byte) Rnd.Next(0, 15);
 											//column.SetMetadata(x, mY, z, (byte) Rnd.Next(0, 15));
 										}
 										else
 										{
-											metadata[OverworldGenerator.GetIndex(x, mY, z)] = (byte) 0;
+											//metadata[OverworldGenerator.GetIndex(x, mY, z)] = (byte) 0;
 											//column.SetMetadata(x, mY, z, 0);
 										}
 									}
@@ -153,21 +162,27 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 								{
 									if (Simplex.Noise(rx, rz, 0.5f, 0.5f, true) > 0.5)
 									{
-										blocks[OverworldGenerator.GetIndex(x, y + 1, z)] = 38;
-										metadata[OverworldGenerator.GetIndex(x, y + 1, z)] = (byte) GetRandom(8);
+										column.SetBlock(x, y + 1, z, new RedFlower()
+										{
+											FlowerType = FlowerTypes[GetRandom(FlowerTypes.Length - 1)]
+										});
+										//blocks[OverworldGenerator.GetIndex(x, y + 1, z)] = 38;
+										//metadata[OverworldGenerator.GetIndex(x, y + 1, z)] = (byte) GetRandom(8);
 										//column.SetBlock(x, y + 1, z, 38); //Poppy
 										//column.SetMetadata(x, y + 1, z, (byte) GetRandom(8));
 									}
 									else
 									{
-										blocks[OverworldGenerator.GetIndex(x, y + 1, z)] = 37;
+									//	blocks[OverworldGenerator.GetIndex(x, y + 1, z)] = 37;
+									//	column.SetBlock(x, y + 1, z, new Dan());
 									//	column.SetBlock(x, y + 1, z, 37); //Dandelion
 									}
 								}
 								else if (blockBeneath == 3 || blockBeneath == 2)
 								{
-									blocks[OverworldGenerator.GetIndex(x, y + 1, z)] = 31;
-									metadata[OverworldGenerator.GetIndex(x, y + 1, z)] = (byte) 1;
+									column.SetBlock(x, y + 1, z, new Tallgrass());
+									//blocks[OverworldGenerator.GetIndex(x, y + 1, z)] = 31;
+									//metadata[OverworldGenerator.GetIndex(x, y + 1, z)] = (byte) 1;
 									//column.SetBlock(x, y + 1, z, 31); //Grass
 									//column.SetMetadata(x, y + 1, z, 1);
 								}
@@ -183,20 +198,20 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 			}
 		}
 
-		private bool IsValidSugarCaneLocation(int[] blocks, int x, int y, int z)
+		private bool IsValidSugarCaneLocation(ChunkColumn column, int x, int y, int z)
 		{
 			if (y - 1 <= 0) return false;
 			if (x - 1 >= 0 && x + 1 < 16)
 			{
 				if (z - 1 >= 0 && z + 1 < 16)
 				{
-					if (blocks[OverworldGenerator.GetIndex(x + 1, y, z)] == 8 
+					/*if (blocks[OverworldGenerator.GetIndex(x + 1, y, z)] == 8 
 						|| blocks[OverworldGenerator.GetIndex(x - 1, y, z)] == 8 
 						          || blocks[OverworldGenerator.GetIndex(x, y, z + 1)] == 8 
 						          || blocks[OverworldGenerator.GetIndex(x, y, z - 1)] == 8)
 					{
 						return true;
-					}
+					}*/
 				}
 			}
 			return false;

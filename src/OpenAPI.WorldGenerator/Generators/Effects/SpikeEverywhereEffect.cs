@@ -28,7 +28,7 @@ namespace OpenAPI.WorldGenerator.Generators.Effects
         {
 
             float noise = generator.SimplexInstance(Octave).GetValue(x / Wavelength, y / Wavelength);
-            noise = Math.Abs(noise);
+            noise = MathF.Abs(noise);
             noise = TerrainBase.BlendedHillHeight(noise, MinimumSimplex);
             noise = TerrainBase.UnsignedPower(noise, Power);
             return noise * Spiked.Added(generator, x, y);

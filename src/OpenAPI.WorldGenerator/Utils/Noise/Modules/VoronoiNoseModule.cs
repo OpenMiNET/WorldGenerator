@@ -42,6 +42,8 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
             get { return _distance; }
             set { _distance = value; }
         }
+
+        public int Size { get; set; } = 2;
         
         public float GetValue(float x, float y)
         {
@@ -58,9 +60,9 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
             // Inside each unit cube, there is a seed point at a random position.  Go
             // through each of the nearby cubes until we find a cube with a seed point
             // that is closest to the specified position.
-            for (int yCur = yInt - 2; yCur <= yInt + 2; yCur++)
+            for (int yCur = yInt - Size; yCur <= yInt + Size; yCur++)
             {
-                for (int xCur = xInt - 2; xCur <= xInt + 2; xCur++)
+                for (int xCur = xInt - Size; xCur <= xInt + Size; xCur++)
                 {
                     // Calculate the position and distance to the seed point inside of
                     // this unit cube.
@@ -91,15 +93,15 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
                 float xDist = xCandidate - x;
                 float yDist = yCandidate - y;
                 value = (MathF.Sqrt(xDist * xDist + yDist * yDist)
-                        ) * Libnoise.Sqrt3 - 1.0f;
+                        ) * Libnoise.Sqrt2 - 1.0f;
             }
             else
                 value = 0.0f;
 
             // Return the calculated distance with the displacement value applied.
             return value + (_displacement * _source.GetValue(
-                                Libnoise.FastFloor(xCandidate),
-                                Libnoise.FastFloor(yCandidate))
+                                MathF.Floor(xCandidate),
+                                MathF.Floor(yCandidate))
                    );
         }
         
@@ -129,11 +131,11 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
             // Inside each unit cube, there is a seed point at a random position.  Go
             // through each of the nearby cubes until we find a cube with a seed point
             // that is closest to the specified position.
-            for (int zCur = zInt - 2; zCur <= zInt + 2; zCur++)
+            for (int zCur = zInt - Size; zCur <= zInt + Size; zCur++)
             {
-                for (int yCur = yInt - 2; yCur <= yInt + 2; yCur++)
+                for (int yCur = yInt - Size; yCur <= yInt + Size; yCur++)
                 {
-                    for (int xCur = xInt - 2; xCur <= xInt + 2; xCur++)
+                    for (int xCur = xInt - Size; xCur <= xInt + Size; xCur++)
                     {
                         // Calculate the position and distance to the seed point inside of
                         // this unit cube.
@@ -167,7 +169,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
                 float xDist = xCandidate - x;
                 float yDist = yCandidate - y;
                 float zDist = zCandidate - z;
-                value = ((float) Math.Sqrt(xDist*xDist + yDist*yDist + zDist*zDist)
+                value = (MathF.Sqrt(xDist*xDist + yDist*yDist + zDist*zDist)
                     )*Libnoise.Sqrt3 - 1.0f;
             }
             else
@@ -175,9 +177,9 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
 
             // Return the calculated distance with the displacement value applied.
             return value + (_displacement*_source.GetValue(
-                (int) (Math.Floor(xCandidate)),
-                (int) (Math.Floor(yCandidate)),
-                (int) (Math.Floor(zCandidate)))
+                 (MathF.Floor(xCandidate)),
+                 (MathF.Floor(yCandidate)),
+                (MathF.Floor(zCandidate)))
                 );
         }
     }

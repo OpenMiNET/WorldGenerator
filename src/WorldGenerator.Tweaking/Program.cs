@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -10,6 +11,7 @@ using LibNoise;
 using MiNET.Utils;
 using MiNET.Worlds;
 using Newtonsoft.Json;
+using OpenAPI.Utils;
 using OpenAPI.WorldGenerator.Generators;
 using OpenAPI.WorldGenerator.Utils;
 using OpenAPI.WorldGenerator.Utils.Noise;
@@ -20,15 +22,15 @@ namespace WorldGenerator.Tweaking
 {
     class Program
     {
-        private static ConcurrentQueue<ChunkColumn> Finished = new ConcurrentQueue<ChunkColumn>();
+        private static TestGame Game { get; set; }
+        private const int Radius     = 256;
+        private const int Resolution = 4;
+        //private static ConcurrentQueue<ChunkColumn> Finished = new ConcurrentQueue<ChunkColumn>();
         static void Main(string[] args)
         {
-            int chunks = 32;
-            int width = chunks * 16;
-            int height = chunks * 16;
-
-            OverworldGeneratorV2 gen = new OverworldGeneratorV2();
-          //  gen.ApplyBlocks = true;
+            WorldGen = new OverworldGeneratorV2();
+            Game = new TestGame(WorldGen, Radius, Resolution);
+            //  gen.ApplyBlocks = true;
             
             bool done = false;
           //  ChunkColumn[] generatedChunks = new ChunkColumn[chunks * chunks];
@@ -38,9 +40,9 @@ namespace WorldGenerator.Tweaking
             long min = long.MaxValue;
             long max = long.MinValue;
 
-            int chunskGenerated = 0;
-            Thread[] threads = new Thread[Environment.ProcessorCount -1];
-            for (int t = 1; t < threads.Length; t++)
+            int      chunskGenerated = 0;
+            Thread[] threads         = new Thread[Environment.ProcessorCount / 2];
+            for (int t = 0; t < threads.Length; t++)
             {
                 threads[t] = new Thread(() =>
                 {
@@ -51,11 +53,34 @@ namespace WorldGenerator.Tweaking
                         {
                             timing.Restart();
                             
-                            ChunkColumn column = gen.GenerateChunkColumn(coords);
-                           // generatedChunks[(coords.X * chunks) + coords.Z] = column;
-                            Finished.Enqueue(column);
+                           // ChunkColumn column = WorldGen.GenerateChunkColumn(coords);
+                            NoiseData   nd     = new NoiseData();
+                            nd.X = coords.X;
+                            nd.Z = coords.Z;
+                            nd.Chunk = WorldGen.GenerateChunkColumn(coords);
+
+                            /*   for (int x = 0; x < 16; x++)
+                                {
+                                    for (int z = 0; z < 16; z++)
+                                    {
+                                        var index = NoiseMap.GetIndex(x, z);
+                                        var temp = WorldGen.TemperatureNoise.GetValue((coords.X * 16) + x, (coords.Z * 16) + z) + 1f;
+                                        var rain = MathF.Abs(WorldGen.RainfallNoise.GetValue((coords.X * 16) + x, (coords.Z * 16) + z));
+    
+                                        nd.Temperature[index] = temp;
+                                        nd.Humidity[index] = rain;
+                                    }
+                                }
+    */
+                            lock (Game.Lock)
+                            {
+                                Game.Chunks.Add(nd);
+                            }
+
+                            // generatedChunks[(coords.X * chunks) + coords.Z] = column;
+                           // Finished.Enqueue(column);
                             chunskGenerated++;
-                            
+
                             timing.Stop();
                             
                             average += timing.ElapsedMilliseconds;
@@ -73,11 +98,11 @@ namespace WorldGenerator.Tweaking
                 });
             }
             
-            threads[0] = new Thread(() => { GenerateBiomeMap(chunks); });
+           // threads[0] = new Thread(() => { GenerateBiomeMap(chunks); });
 
-            for (int x = 0; x < chunks; x++)
+            for (int z = 0; z < Radius; z+= Resolution)
             {
-                for(int z = 0; z < chunks; z++)
+                for(int x= 0; x < Radius; x+= Resolution)
                 {
                     chunkGeneratorQueue.Enqueue(new ChunkCoordinates(x, z));
                 }
@@ -89,126 +114,17 @@ namespace WorldGenerator.Tweaking
                 thread.Start();
             }
 
-            int threadsAlive = 0;
-            do
-            {
-                threadsAlive = threads.Count(x => x.IsAlive);
-                
-                Console.Clear();
-                
-                Console.WriteLine($"Threads: {threadsAlive} Queued: {chunkGeneratorQueue.Count} Generated: {chunskGenerated} Avg: {average / Math.Max(1, chunskGenerated)}ms Min: {min}ms Max: {max}ms");
-                Console.WriteLine($"Processed: {Imaged} Remaining: {Finished.Count}");
-                
-                Thread.Sleep(100);
-            } while (threadsAlive > 0);
+           
+                Game.Run();
 
-            timer.Stop();
+                timer.Stop();
             
             Console.Clear();
             
-            Console.WriteLine($"Generating {chunks * chunks} chunks took: {timer.Elapsed}");
+            Console.WriteLine($"Generating {Radius * Radius} chunks took: {timer.Elapsed}");
             //Console.WriteLine($"Min Height: {gen.MinHeight} Max Height: {gen.MaxHeight}");
         }
 
-        public static int Imaged { get; set; } = 0;
-
-        private static void GenerateBiomeMap(int chunks)
-        {
-            int finished = 0;
-            Bitmap bitmap = new Bitmap(chunks * 16, chunks * 16);
-            Bitmap heightmap = new Bitmap(chunks * 16, chunks * 16);
-            Bitmap chunkHeight = new Bitmap(chunks * 16, chunks * 16);
-
-            while (finished < chunks * chunks)
-            {
-                if (Finished.TryDequeue(out ChunkColumn column))
-                {
-                    for (int cx = 0; cx < 16; cx++)
-                    {
-                        var rx = (column.X * 16) + cx;
-                        for (int cz = 0; cz < 16; cz++)
-                        {
-                            var rz = (column.Z * 16) + cz;
-                            
-                            var biome = BiomeUtils.GetBiomeById(column.GetBiome(cx, cz));
-                            
-                            var temp = (int) Math.Max(0,
-                                Math.Min(255, (255 * (biome.Temperature / 2f))));
-                            
-                            var humid = (int) Math.Max(0,
-                                Math.Min(255, (255 * biome.Downfall)));
-
-                            bitmap.SetPixel(rx, rz, Color.FromArgb(255, temp, 0, humid));
-
-                            int height = column.GetHeight(cx, cz);
-
-                            chunkHeight.SetPixel(rx, rz, Color.FromArgb(height, height, height));
-
-                            height = (int) Math.Max(0,
-                                Math.Min(255,
-                                    (255 * MathUtils.ConvertRange(-2f, 2f, 0f, 1f,
-                                         ((biome.MinHeight + biome.MaxHeight) / 2f)))));
-
-                            heightmap.SetPixel(rx, rz, Color.FromArgb(height, height, height));
-                        }
-                    }
-
-                    Imaged++;
-                    finished++;
-                }
-                else
-                {
-                    Thread.Sleep(50);
-                }
-            }
-
-            bitmap.Save("heatmap.png", ImageFormat.Png);
-            heightmap.Save("height.png", ImageFormat.Png);
-            chunkHeight.Save("chunkHeight.png", ImageFormat.Png);
-        }
-
-        private static Task GenerateHeightmap(ChunkColumn[] columns, int chunks, bool chunkHeight)
-        {
-            return Task.Run(() =>
-            {
-                Bitmap bitmap = new Bitmap(chunks * 16, chunks * 16);
-                for (int x = 0; x < chunks; x++)
-                {
-                    for (int z = 0; z < chunks; z++)
-                    {
-                        ChunkColumn column = columns[(x * chunks) + z];
-                        for (int cx = 0; cx < 16; cx++)
-                        {
-                            var rx = (x * 16) + cx;
-                            for (int cz = 0; cz < 16; cz++)
-                            {
-                                var rz = (z * 16) + cz;
-
-                              //  var height = column.GetHeight(cx, cz);
-                              //  var temp = (int) Math.Max((byte)0,
-                               //     Math.Min((byte)255, height));
-
-                               var height = 0;
-
-                               if (!chunkHeight)
-                               {
-                                   height = column.GetHeight(cx, cz);
-                               }
-                               else
-                               {
-                                   var biome = BiomeUtils.GetBiomeById(column.GetBiome(cx, cz));
-                                   height = (int) Math.Max(0,
-                                       Math.Min(255, (255 * MathUtils.ConvertRange(-2f, 2f, 0f, 1f, ((biome.MinHeight + biome.MaxHeight) / 2f)))));
-                               }
-                               
-                                bitmap.SetPixel(rx, rz, Color.FromArgb(height, height, height));
-                            }
-                        }
-                    }
-                }
-
-                bitmap.Save(chunkHeight ? "chunkHeight.png" : "height.png", ImageFormat.Png);
-            });
-        }
+        public static OverworldGeneratorV2 WorldGen { get; set; }
     }
 }

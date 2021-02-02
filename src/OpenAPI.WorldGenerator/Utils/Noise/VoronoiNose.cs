@@ -37,7 +37,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise
 	/// Voronoi cells are often used to generate cracked-mud terrain
 	/// formations or crystal-like textures
 	/// </summary>
-	public class Voronoi : FilterModule, IModule3D, IModule2D
+	public class Voronoi : FilterModule, INoiseModule
 	{
 		#region Constants
 

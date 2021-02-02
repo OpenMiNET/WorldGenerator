@@ -22,18 +22,18 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 		}
 
 		private readonly int _leafRadius = 2;
-		public override void Create(int[] blocks, int[] metadata, int x, int y, int z)
+		public override void Create(ChunkColumn chunk, int x, int y, int z)
 		{
-			var block = blocks[OverworldGenerator.GetIndex(x, y - 1, z)];
-			if (block != 2 && block != 3) return;
+			//var block = blocks[OverworldGenerator.GetIndex(x, y - 1, z)];
+			//if (block != 2 && block != 3) return;
 
 			var location = new Vector3(x, y, z);
 			if (!ValidLocation(location, _leafRadius)) return;
 
 			int height = Rnd.Next(4, 5);
-			GenerateColumn(blocks, metadata, location, height, 17, 0);
+			GenerateColumn(chunk, location, height, 17, 0);
 			Vector3 leafLocation = location + new Vector3(0, height, 0);
-			GenerateVanillaLeaves(blocks, metadata, leafLocation, _leafRadius, 18, 0);
+			GenerateVanillaLeaves(chunk, leafLocation, _leafRadius, 18, 0);
 		}
 
 		public override void Create(Level level, int x, int y, int z)

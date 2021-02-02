@@ -21,7 +21,7 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 
         protected abstract void InitSeed(int seed);
 
-        public abstract void Decorate(int chunkX, int chunkZ, int[] blocks, int[] metadata, BiomeBase biome, float[] thresholdMap, int x, int y, int z, bool surface, bool isBelowMaxHeight);
+        public abstract void Decorate(ChunkColumn column, int chunkX, int chunkZ, BiomeBase biome, float[] thresholdMap, int x, int y, int z, bool surface, bool isBelowMaxHeight);
         //public virtual void Decorate(ChunkColumn column) { }
     }
 }

@@ -18,18 +18,18 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 			_height = height;
 		}
 
-		public override void Create(int[] blocks, int[] metadata, int x, int y, int z)
+		public override void Create(ChunkColumn chunk, int x, int y, int z)
 		{
-			if (blocks[OverworldGenerator.GetIndex(x, y - 1, z)] != 12) return; //Not sand, do not generate.
+			//if (blocks[OverworldGenerator.GetIndex(x, y - 1, z)] != 12) return; //Not sand, do not generate.
 
 			var growth = Rnd.Next(0x1, 0x15);
 			for (int modifiedY = y; modifiedY < y + _height; modifiedY++)
 			{
-				if (!CheckSafe(blocks, metadata, x, modifiedY, z)) break;
+				if (!CheckSafe(chunk, x, modifiedY, z)) break;
 
-				blocks[OverworldGenerator.GetIndex(x, modifiedY, z)] = 81;
-				metadata[OverworldGenerator.GetIndex(x, modifiedY, z)] = (byte) growth;
-				//chunk.SetBlock(x, modifiedY, z, 81); //Cactus block
+				//blocks[OverworldGenerator.GetIndex(x, modifiedY, z)] = 81;
+				//metadata[OverworldGenerator.GetIndex(x, modifiedY, z)] = (byte) growth;
+				chunk.SetBlock(x, modifiedY, z, 81); //Cactus block
 				//chunk.SetMetadata(x, modifiedY, z, (byte)growth);
 			}
 		}
@@ -51,13 +51,13 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 			}
 		}
 
-		private bool CheckSafe(int[] blocks, int[] metadata, int x, int y, int z)
+		private bool CheckSafe(ChunkColumn chunk, int x, int y, int z)
 		{
-			if (blocks[OverworldGenerator.GetIndex(x - 1, y , z)] != 0) return false;
-			if (blocks[OverworldGenerator.GetIndex(x + 1, y, z)] != 0) return false;
-			if (blocks[OverworldGenerator.GetIndex(x, y, z - 1)] != 0) return false;
-			if (blocks[OverworldGenerator.GetIndex(x, y, z + 1)] != 0) return false;
-
+			if (chunk.IsAir(x - 1, y, z)) return false;
+			if (chunk.IsAir(x + 1, y, z)) return false;
+			if (chunk.IsAir(x, y, z - 1)) return false;
+			if (chunk.IsAir(x, y, z + 1)) return false;
+			
 			return true;
 		}
 

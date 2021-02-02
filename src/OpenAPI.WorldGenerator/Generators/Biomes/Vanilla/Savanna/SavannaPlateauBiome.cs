@@ -1,3 +1,5 @@
+using MiNET.Blocks;
+using OpenAPI.WorldGenerator.Generators.Surfaces.Savanna;
 using OpenAPI.WorldGenerator.Generators.Terrain;
 
 namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla
@@ -15,7 +17,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla
 
             base.Config.AllowScenicLakes = false;
 
-            Terrain = new SavannaPlateauTerrain(true, 35f, 160f, 60f, 40f, 69f);
+            Terrain = new SavannaPlateauTerrain(true, 35f, 160f, 60f, 40f, 69f, false);
+            Surface = new SavannaPlateauSurface(Config, new Grass(), new Dirt());
         }
     }
 }

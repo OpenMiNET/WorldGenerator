@@ -1,3 +1,5 @@
+using MiNET.Blocks;
+using OpenAPI.WorldGenerator.Generators.Surfaces;
 using OpenAPI.WorldGenerator.Generators.Terrain;
 
 namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Mesa
@@ -13,11 +15,15 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Mesa
             MinHeight = 1.5f;
             MaxHeight = 0.25f;
 
-            SurfaceBlock = 12; //Surface = Red Sand
-            SurfaceMetadata = 1;
+          //  SurfaceBlock = 12; //Surface = Red Sand
+          //  SurfaceMetadata = 1;
 
-            SoilBlock = 179; //Soil = Red Sandstone
+         //   SoilBlock = 179; //Soil = Red Sandstone
             Terrain = new MesaPlateauTerrain(67);
+            Surface = new SurfaceBase(Config, new Sand()
+            {
+                SandType = "red"
+            }, new RedSandstone());
         }
     }
 }

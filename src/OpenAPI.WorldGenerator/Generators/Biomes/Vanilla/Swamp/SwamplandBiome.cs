@@ -1,3 +1,5 @@
+using OpenAPI.WorldGenerator.Generators.Terrain;
+
 namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Swamp
 {
     public class SwamplandBiome : BiomeBase
@@ -10,6 +12,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Swamp
             Downfall = 0.9f;
             MinHeight = -0.2f;
             MaxHeight = 0.1f;
+
+            Terrain = new SwamplandTerrain();
         }    
     }
 }
