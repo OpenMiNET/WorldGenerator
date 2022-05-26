@@ -1,5 +1,6 @@
 ﻿using MiNET.Blocks;
 using MiNET.Utils;
+using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
 namespace OpenAPI.WorldGenerator.Generators.Structures
@@ -31,23 +32,6 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 				//metadata[OverworldGenerator.GetIndex(x, modifiedY, z)] = (byte) growth;
 				chunk.SetBlock(x, modifiedY, z, 81); //Cactus block
 				//chunk.SetMetadata(x, modifiedY, z, (byte)growth);
-			}
-		}
-
-		public override void Create(Level level, int x, int y, int z)
-		{
-			if (level.GetBlock(x, y - 1, z).Id != 12) return; //Not sand, do not generate.
-
-			var growth = Rnd.Next(1, 15);
-			for (int modifiedY = y; modifiedY < y + _height; modifiedY++)
-			{
-				if (!CheckSafe(level, x, modifiedY, z)) break;
-
-				Block b = BlockFactory.GetBlockById(81);
-				b.Metadata = (byte) growth;
-				b.Coordinates = new BlockCoordinates(x, modifiedY, z);
-
-				level.SetBlock(b);
 			}
 		}
 

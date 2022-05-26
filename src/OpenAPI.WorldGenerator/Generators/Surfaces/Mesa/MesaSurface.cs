@@ -10,44 +10,44 @@ namespace OpenAPI.WorldGenerator.Generators.Surfaces.Mesa
 	public class MesaSurface : SurfaceBase
 	{
 		private int   grassRaise = 0;
-		private Block mixBlock;
-		private Block mix2Block;
+		private int mixBlock;
+		private int mix2Block;
 
-		private static Block[] PlateauBlocks { get; } = new Block[]
+		private static int[] PlateauBlocks { get; } = new int[]
 		{
-			new StainedHardenedClay(){Color = "yellow"},
-			new StainedHardenedClay(){Color = "yellow"},
-			new StainedHardenedClay(){Color = "yellow"},
-			new HardenedClay(),
-			new HardenedClay(),
-			new StainedHardenedClay(){Color = "orange"},
-			new StainedHardenedClay(){Color = "red"},
-			new StainedHardenedClay(){Color = "red"},
-			new HardenedClay(),
-			new StainedHardenedClay(){Color = "silver"},
-			new StainedHardenedClay(){Color = "white"},
-			new HardenedClay(),
-			new HardenedClay(),
-			new HardenedClay(),
-			new StainedHardenedClay(){Color = "orange"},
-			new HardenedClay(), 
-			new HardenedClay(),
-			new HardenedClay(),
-			new StainedHardenedClay(){Color = "orange"},
-			new StainedHardenedClay(){Color = "silver"},
-			new StainedHardenedClay(){Color = "white"},
-			new StainedHardenedClay(){Color = "brown"},
-			new StainedHardenedClay(){Color = "brown"},
-			new StainedHardenedClay(){Color = "brown"},
-			new HardenedClay(),
-			new StainedHardenedClay(){Color = "orange"},
-			new HardenedClay(), 
-			new StainedHardenedClay(){Color = "orange"},
-			new HardenedClay(),
-			new StainedHardenedClay(){Color = "orange"},
-			new HardenedClay(),
-			new HardenedClay(),
-			new HardenedClay(),
+			new StainedHardenedClay(){Color = "yellow"}.GetRuntimeId(),
+			new StainedHardenedClay(){Color = "yellow"}.GetRuntimeId(),
+			new StainedHardenedClay(){Color = "yellow"}.GetRuntimeId(),
+			new HardenedClay().GetRuntimeId(),
+			new HardenedClay().GetRuntimeId(),
+			new StainedHardenedClay(){Color = "orange"}.GetRuntimeId(),
+			new StainedHardenedClay(){Color = "red"}.GetRuntimeId(),
+			new StainedHardenedClay(){Color = "red"}.GetRuntimeId(),
+			new HardenedClay().GetRuntimeId(),
+			new StainedHardenedClay(){Color = "silver"}.GetRuntimeId(),
+			new StainedHardenedClay(){Color = "white"}.GetRuntimeId(),
+			new HardenedClay().GetRuntimeId(),
+			new HardenedClay().GetRuntimeId(),
+			new HardenedClay().GetRuntimeId(),
+			new StainedHardenedClay(){Color = "orange"}.GetRuntimeId(),
+			new HardenedClay().GetRuntimeId(), 
+			new HardenedClay().GetRuntimeId(),
+			new HardenedClay().GetRuntimeId(),
+			new StainedHardenedClay(){Color = "orange"}.GetRuntimeId(),
+			new StainedHardenedClay(){Color = "silver"}.GetRuntimeId(),
+			new StainedHardenedClay(){Color = "white"}.GetRuntimeId(),
+			new StainedHardenedClay(){Color = "brown"}.GetRuntimeId(),
+			new StainedHardenedClay(){Color = "brown"}.GetRuntimeId(),
+			new StainedHardenedClay(){Color = "brown"}.GetRuntimeId(),
+			new HardenedClay().GetRuntimeId(),
+			new StainedHardenedClay(){Color = "orange"}.GetRuntimeId(),
+			new HardenedClay().GetRuntimeId(), 
+			new StainedHardenedClay(){Color = "orange"}.GetRuntimeId(),
+			new HardenedClay().GetRuntimeId(),
+			new StainedHardenedClay(){Color = "orange"}.GetRuntimeId(),
+			new HardenedClay().GetRuntimeId(),
+			new HardenedClay().GetRuntimeId(),
+			new HardenedClay().GetRuntimeId(),
 		};
 		
 		/// <inheritdoc />
@@ -56,9 +56,9 @@ namespace OpenAPI.WorldGenerator.Generators.Surfaces.Mesa
 			mixBlock = new StainedHardenedClay()
 			{
 				Color = "orange"
-			};
+			}.GetRuntimeId();
 
-			mix2Block = new RedSandstone();
+			mix2Block = new RedSandstone().GetRuntimeId();
 		}
 
 		/// <inheritdoc />
@@ -75,48 +75,48 @@ namespace OpenAPI.WorldGenerator.Generators.Surfaces.Mesa
 		{
 			float c = TerrainBase.CalcCliff(x, z, noise);
             bool cliff = c > 1.3f;
-            Block b;
+            int b;
 
             for (int k = 255; k > -1; k--) {
-                b = column.GetBlockObject(x, k, z);
-                if (b is Air) {
+                b = column.GetBlockId(x, k, z);
+                if (b == AirId) {
                     depth = -1;
                 }
-                else if (b is Stone) {
+                else if (b == StoneId) {
                     depth++;
 
                     if (cliff) {
-                        column.SetBlock(x, k, z, PlateauBlocks[k % PlateauBlocks.Length]);
+                        column.SetBlockByRuntimeId(x, k, z, PlateauBlocks[k % PlateauBlocks.Length]);
                     }
                     else {
 
                         if (k > 74 + grassRaise) {
                             if (depth == 0) {
                                 if (Rnd.Next(5) == 0) {
-                                    column.SetBlock(x, k, z, mix2Block);
+                                    column.SetBlockByRuntimeId(x, k, z, mix2Block);
                                 }
                                 else {
-                                    column.SetBlock(x, k, z, TopBlock);
+                                    column.SetBlockByRuntimeId(x, k, z, TopBlock);
                                 }
                             }
                             else if (depth < 4) {
-                                column.SetBlock(x, k, z, FillerBlock);
+                                column.SetBlockByRuntimeId(x, k, z, FillerBlock);
                             }
                         }
                         else if (depth == 0 && k > 61) {
                             int r = (int) ((k - (62 + grassRaise)) / 2f);
                             if (Rnd.Next(r + 2) == 0) {
-                                column.SetBlock(x, k, z, mixBlock);
+                                column.SetBlockByRuntimeId(x, k, z, mixBlock);
                             }
                             else if (Rnd.Next((int) (r / 2f) + 2) == 0) {
-                                column.SetBlock(x, k, z, mix2Block);
+                                column.SetBlockByRuntimeId(x, k, z, mix2Block);
                             }
                             else {
-                                column.SetBlock(x, k, z, TopBlock);
+                                column.SetBlockByRuntimeId(x, k, z, TopBlock);
                             }
                         }
                         else if (depth < 4) {
-                            column.SetBlock(x, k, z, FillerBlock);
+                            column.SetBlockByRuntimeId(x, k, z, FillerBlock);
                         }
                     }
                 }

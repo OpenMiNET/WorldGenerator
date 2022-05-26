@@ -1,7 +1,6 @@
 using System;
 using MiNET.Blocks;
 using MiNET.Worlds;
-using MiNET.Worlds.Structures;
 using OpenAPI.Utils;
 using OpenAPI.WorldGenerator.Generators.Biomes;
 using OpenAPI.WorldGenerator.Generators.Structures;
@@ -20,181 +19,196 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 		}
 		
 		public static readonly string[] FlowerTypes = new []{"cornflower", "houstonia", "lily_of_the_valley", "allium", "tulip_pink", "tulip_red", "poppy", "tulip_white", "tulip_orange", "oxeye", "orchid"};
-		public override void Decorate(ChunkColumn column, int chunkX, int chunkZ, BiomeBase biome, float[] thresholdMap, int x, int y, int z, bool surface,
+
+		private static readonly int SugerCaneId = new Reeds().GetRuntimeId();
+		private static readonly int TallGrassId = new Tallgrass().GetRuntimeId();
+		public override void Decorate(ChunkColumn column,
+			int chunkX,
+			int chunkZ,
+			BiomeBase biome,
+			float[] thresholdMap,
+			int x,
+			int y,
+			int z,
+			bool surface,
 			bool isBelowMaxHeight)
 		{
-			try
+
+			var currentTemperature = biome.Temperature;
+
+			if (y > 64)
 			{
-				var currentTemperature = biome.Temperature;
-				if (y > 64)
-				{
-					int distanceToSeaLevel = y - 64;
-					currentTemperature = biome.Temperature - (0.00166667f*distanceToSeaLevel);
-				}
+				int distanceToSeaLevel = y - 64;
+				currentTemperature = biome.Temperature - (0.00166667f * distanceToSeaLevel);
+			}
 
-				int rx = chunkX*16 + x;
-				int rz = chunkZ*16 + z;
+			int rx = chunkX * 16 + x;
+			int rz = chunkZ * 16 + z;
 
-				bool generated = false;
-				if (surface && y >= Preset.SeaLevel)
+			bool generated = false;
+
+			if (surface && y >= Preset.SeaLevel)
+			{
+				var noise = Simplex.Noise(rx, rz, Math.Min(biome.Downfall * 0.32f, 0.03f), 0.5, true);
+
+				if (x >= 3 && x <= 13 && z >= 3 && z <= 13)
 				{
-					var noise = Simplex.Noise(rx, rz, Math.Min(biome.Downfall * 0.32f, 0.03f), 0.5, true);
-					if (x >= 3 && x <= 13 && z >= 3 && z <= 13)
+					Structure tree = null;
+
+					//if (biome.Config.)
+					if (biome.Downfall <= 0f && biome.Temperature >= 2f)
 					{
-						Structure tree = null;
-						//if (biome.Config.)
-						if (biome.Downfall <= 0f && biome.Temperature >= 2f)
+						if (GetRandom(32) == 16)
 						{
-							if (GetRandom(32) == 16)
-							{
-								var randValue = GetRandom(18);
-								if (randValue >= 0 && randValue <= 2) //3 tall cactus
-								{
-									tree = new CactusStructure(3);
-								}
-								else if (randValue > 2 && randValue <= 5) // 2 tall cactus
-								{
-									tree = new CactusStructure(2);
-								}
-								else if (randValue > 5 && randValue <= 11) // 1 tall cactus
-								{
-									tree = new CactusStructure(1);
-								}
-							}
-						}
+							var randValue = GetRandom(18);
 
-						if (tree == null && biome.Downfall >= 0 && (noise > (0.5f + (y/512f))))
-						{
-							if (currentTemperature >= 1f && biome.Downfall >= 0.4f)
+							if (randValue >= 0 && randValue <= 2) //3 tall cactus
 							{
-								if (GetRandom(8) == 4)
-								{
-									tree = new LargeJungleTree();
-								}
-								else
-								{
-									tree = new SmallJungleTree();
-								}
+								tree = new CactusStructure(3);
 							}
-							/*	else if (currentTemperature >= 0.7F && biome.Downfall >= 0.2f)
-								{
-									tree = new OakTree(true);
-								}*/
-							else if (currentTemperature >= 0.7F && biome.Downfall < 0.2f)
+							else if (randValue > 2 && randValue <= 5) // 2 tall cactus
 							{
-								tree = new AcaciaTree();
+								tree = new CactusStructure(2);
 							}
-							else if (currentTemperature > 0.25f && biome.Downfall > 0f)
+							else if (randValue > 5 && randValue <= 11) // 1 tall cactus
 							{
-								if (biome.Name.Contains("Birch") || GetRandom(16) == 8)
-								{
-									tree = new BirchTree();
-								}
-								else
-								{
-									tree = new OakTree();
-								}
+								tree = new CactusStructure(1);
 							}
-							else if (currentTemperature <= 0.25f && biome.Downfall > 0f)
-							{
-								tree = new PineTree();
-							}
-						}
-
-						if (tree != null)
-						{
-							if (y + 1 < 254)
-							{
-								tree.Create(column, x, y + 1, z);
-							}
-							generated = true;
 						}
 					}
 
-					if (!generated)
+					if (tree == null && biome.Downfall >= 0 && (noise > (0.5f + (y / 512f))))
 					{
-						if (noise > 0.5) //Threshold 1
+						if (currentTemperature >= 1f && biome.Downfall >= 0.4f)
 						{
-							/*if (currentTemperature > 0.3f && currentTemperature < 1.5f && biome.Downfall >= 0.85f)
+							if (GetRandom(8) == 4)
 							{
-								column.SetBlock(x, y + 1, z, 18); //Leaves
-								column.SetMetadata(x, y + 1, z, 3); //Jungle Leaves
+								tree = new LargeJungleTree();
 							}
-							else*/
-							if (currentTemperature > 0.3f && currentTemperature < 1.5f && biome.Downfall > 0)
+							else
 							{
-								var blockBeneath = column.GetBlockId(x, y, z);// column.GetBlock(x, y, z);
+								tree = new SmallJungleTree();
+							}
+						}
+						/*	else if (currentTemperature >= 0.7F && biome.Downfall >= 0.2f)
+							{
+								tree = new OakTree(true);
+							}*/
+						else if (currentTemperature >= 0.7F && biome.Downfall < 0.2f)
+						{
+							tree = new AcaciaTree();
+						}
+						else if (currentTemperature > 0.25f && biome.Downfall > 0f)
+						{
+							if (biome.Name.Contains("Birch", StringComparison.InvariantCultureIgnoreCase) || GetRandom(16) == 8)
+							{
+								tree = new BirchTree();
+							}
+							else
+							{
+								tree = new OakTree();
+							}
+						}
+						else if (currentTemperature <= 0.25f && biome.Downfall > 0f)
+						{
+							tree = new PineTree();
+						}
+					}
 
-								var sugarPosibility = GetRandom(18);
-								if ( /*sugarPosibility <= 11*/ noise > 0.75f &&
-								                               (blockBeneath == 3 || blockBeneath == 2 || blockBeneath == 12) &&
-								                               IsValidSugarCaneLocation(column, x, y, z))
+					if (tree != null)
+					{
+						if (y + 1 < 254)
+						{
+							tree.Create(column, x, y + 1, z);
+						}
+
+						generated = true;
+					}
+				}
+
+				if (!generated)
+				{
+					if (noise > 0.5) //Threshold 1
+					{
+						/*if (currentTemperature > 0.3f && currentTemperature < 1.5f && biome.Downfall >= 0.85f)
+						{
+							column.SetBlock(x, y + 1, z, 18); //Leaves
+							column.SetMetadata(x, y + 1, z, 3); //Jungle Leaves
+						}
+						else*/
+						if (currentTemperature > 0.3f && currentTemperature < 1.5f && biome.Downfall > 0)
+						{
+							var blockBeneath = column.GetBlockId(x, y, z); // column.GetBlock(x, y, z);
+
+							var sugarPosibility = GetRandom(18);
+
+							if ( /*sugarPosibility <= 11*/ noise > 0.75f
+							                               && (blockBeneath == 3 || blockBeneath == 2
+								                               || blockBeneath == 12) && IsValidSugarCaneLocation(
+								                               column, x, y, z))
+							{
+								int height = 1;
+
+								if (sugarPosibility <= 2)
 								{
-									int height = 1;
-									if (sugarPosibility <= 2)
-									{
-										height = 3;
-									}
-									else if (sugarPosibility <= 5)
-									{
-										height = 2;
-									}
-
-									//var growth = Rnd.Next(0x1, 0x15);
-									for (int mY = y + 1; mY < y + 1 + height; mY++)
-									{
-										//column.SetBlock(x, mY, z, 83); //SugarCane
-										//blocks[OverworldGenerator.GetIndex(x, mY, z)] = 83;
-										
-										if (mY == y + 1 + height)
-										{
-											//metadata[OverworldGenerator.GetIndex(x, mY, z)] = (byte) Rnd.Next(0, 15);
-											//column.SetMetadata(x, mY, z, (byte) Rnd.Next(0, 15));
-										}
-										else
-										{
-											//metadata[OverworldGenerator.GetIndex(x, mY, z)] = (byte) 0;
-											//column.SetMetadata(x, mY, z, 0);
-										}
-									}
+									height = 3;
 								}
-								else if (noise > 0.8 && blockBeneath == 3 || blockBeneath == 2) //If above 0.8, we generate flowers :)
+								else if (sugarPosibility <= 5)
 								{
-									if (Simplex.Noise(rx, rz, 0.5f, 0.5f, true) > 0.5)
+									height = 2;
+								}
+
+								//var growth = Rnd.Next(0x1, 0x15);
+								for (int mY = y + 1; mY < y + 1 + height; mY++)
+								{
+									column.SetBlockByRuntimeId(x, mY, z, SugerCaneId); //SugarCane
+									//blocks[OverworldGenerator.GetIndex(x, mY, z)] = 83;
+
+									if (mY == y + 1 + height)
 									{
-										column.SetBlock(x, y + 1, z, new RedFlower()
-										{
-											FlowerType = FlowerTypes[GetRandom(FlowerTypes.Length - 1)]
-										});
-										//blocks[OverworldGenerator.GetIndex(x, y + 1, z)] = 38;
-										//metadata[OverworldGenerator.GetIndex(x, y + 1, z)] = (byte) GetRandom(8);
-										//column.SetBlock(x, y + 1, z, 38); //Poppy
-										//column.SetMetadata(x, y + 1, z, (byte) GetRandom(8));
+										//metadata[OverworldGenerator.GetIndex(x, mY, z)] = (byte) Rnd.Next(0, 15);
+										//column.SetMetadata(x, mY, z, (byte) Rnd.Next(0, 15));
 									}
 									else
 									{
+										//metadata[OverworldGenerator.GetIndex(x, mY, z)] = (byte) 0;
+										//column.SetMetadata(x, mY, z, 0);
+									}
+								}
+							}
+							else if (noise > 0.8 && blockBeneath == 3
+							         || blockBeneath == 2) //If above 0.8, we generate flowers :)
+							{
+								if (Simplex.Noise(rx, rz, 0.5f, 0.5f, true) > 0.5)
+								{
+									column.SetBlockByRuntimeId(
+										x, y + 1, z,
+										new RedFlower() {FlowerType = FlowerTypes[GetRandom(FlowerTypes.Length - 1)]}
+										   .GetRuntimeId());
+									//blocks[OverworldGenerator.GetIndex(x, y + 1, z)] = 38;
+									//metadata[OverworldGenerator.GetIndex(x, y + 1, z)] = (byte) GetRandom(8);
+									//column.SetBlock(x, y + 1, z, 38); //Poppy
+									//column.SetMetadata(x, y + 1, z, (byte) GetRandom(8));
+								}
+								else
+								{
 									//	blocks[OverworldGenerator.GetIndex(x, y + 1, z)] = 37;
 									//	column.SetBlock(x, y + 1, z, new Dan());
 									//	column.SetBlock(x, y + 1, z, 37); //Dandelion
-									}
-								}
-								else if (blockBeneath == 3 || blockBeneath == 2)
-								{
-									column.SetBlock(x, y + 1, z, new Tallgrass());
-									//blocks[OverworldGenerator.GetIndex(x, y + 1, z)] = 31;
-									//metadata[OverworldGenerator.GetIndex(x, y + 1, z)] = (byte) 1;
-									//column.SetBlock(x, y + 1, z, 31); //Grass
-									//column.SetMetadata(x, y + 1, z, 1);
 								}
 							}
-
+							else if (blockBeneath == 3 || blockBeneath == 2)
+							{
+								column.SetBlockByRuntimeId(x, y + 1, z, TallGrassId);
+								//blocks[OverworldGenerator.GetIndex(x, y + 1, z)] = 31;
+								//metadata[OverworldGenerator.GetIndex(x, y + 1, z)] = (byte) 1;
+								//column.SetBlock(x, y + 1, z, 31); //Grass
+								//column.SetMetadata(x, y + 1, z, 1);
+							}
 						}
+
 					}
 				}
-			}
-			catch (Exception e)
-			{
-				
 			}
 		}
 

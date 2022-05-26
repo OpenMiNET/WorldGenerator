@@ -160,22 +160,27 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
             Console.WriteLine($"Temperature (min: {minTemp} max: {maxTemp}) Downfall (min:{minRain} max: {maxRain}) Height (min: {minHeight} max: {maxHeight})");
         }
 
+        private BiomeBase[] _nonEdgeBiomes = null;
         public BiomeBase[] GetBiomes()
         {
-            return Biomes.Where(x => x.Terrain != null && x.Surface != null && !x.Config.IsEdgeBiome).ToArray();
+            if (_nonEdgeBiomes == null)
+            {
+                _nonEdgeBiomes = Biomes.Where(x => x.Terrain != null && x.Surface != null && !x.Config.IsEdgeBiome)
+                   .ToArray();
+            }
+
+            return _nonEdgeBiomes;
+            //return Biomes.Where(x => x.Terrain != null && x.Surface != null && !x.Config.IsEdgeBiome).ToArray();
         }
 
-        public BiomeBase GetBiome(float temperature, float downfall)
+        public BiomeBase GetBiome(float temperature, float downfall, float rnd)
         {
        //     var temp = temperature; MathUtils.ConvertRange(-1f, 1f, -0.5f, 2f, temperature);// temperature;
-
+       
             var biomes = GetBiomes();
-
-            /*var closestMatches = biomes.OrderBy(x => MathF.Abs(x.Temperature - temp)).Take(3).OrderBy(x =>  MathF.Abs(x.Downfall - rain))
-               .FirstOrDefault();
-
-            return closestMatches;*/
-
+          //  rnd = Math.Abs(rnd);
+            rnd *= biomes.Length;
+            
             float maxt    = float.MinValue;
             int   maxi    = 0;
 
@@ -183,20 +188,34 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
             int   minIndex = biomes.Length - 1;
             
             float sum     = 0;
-          //  var   weights = new float[biomes.Length];
+            var   weights = new float[biomes.Length];
 
             for (int i = 0; i < biomes.Length; i++)
             {
                 var temperatureDifference = biomes[i].Temperature - temperature;
                 var humidityDifference    = biomes[i].Downfall - downfall;
                 
+                //if (temperatureDifference > rnd || humidityDifference > rnd)
+               // {
+                //    weights[i] = 0;
+                //    continue;
+                //}
+                
               //  Vector2 d                     = new Vector2(biomes[i].Temperature - temp, biomes[i].Downfall - rain);
-              temperatureDifference *= 10f;
-              humidityDifference *= 3.5f;
+             // if (rnd > 0.5)
+              {
+                  temperatureDifference *= 13.37f;
+                  humidityDifference *= 3.57734f;
+              }
+             // else
+              {
+              //    temperatureDifference *= 5f;
+              //    humidityDifference *= 10f;
+              }
 
-                var weight = MathF.Max(0f, (temperatureDifference * temperatureDifference
-                                            + humidityDifference * humidityDifference));
-
+              var weight =temperatureDifference * temperatureDifference
+                          + humidityDifference * humidityDifference;
+                
                 if (weight > maxt)
                 {
                     maxi = i;
@@ -210,12 +229,15 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
                 }
 
                 sum += weight;
-              //  weights[i] = weight;
+                weights[i] = weight;
             }
 
             return biomes[minIndex];
-/*
-            rnd *= biomes.Length;
+
+         //   var rnd = 
+             //rnd = Math.Abs(rnd);
+            //rnd *= biomes.Length;
+
             
             if (sum > .001f) {
                 // normalize the weights so they add up to 1
@@ -247,7 +269,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
                 }
             }
 
-            return biomes[maxi];*/
+            return biomes[minIndex];
         }
 
         public BiomeBase GetBiome(int id)

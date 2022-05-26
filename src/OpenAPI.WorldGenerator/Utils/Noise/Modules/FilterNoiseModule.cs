@@ -22,6 +22,9 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
     public const float DEFAULT_SPECTRAL_EXPONENT = 0.9f;
     protected INoiseModule _source;
 
+    /// <summary>
+    /// The number of cycles per unit length that a specific coherent-noise function outputs.
+    /// </summary>
     [Modifier]
     public float Frequency
     {
@@ -29,6 +32,9 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
       set { this._frequency = value; }
     }
 
+    /// <summary>
+    ///   A multiplier that determines how quickly the frequency increases for each successive octave in a Perlin-noise function.
+    /// </summary>
     [Modifier]
     public float Lacunarity
     {

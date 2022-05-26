@@ -8,13 +8,16 @@ namespace OpenAPI.WorldGenerator.Generators.Surfaces.Taiga
 {
 	public class TaigaSurface : SurfaceBase
 	{
-		private Block MixBlock;
+		private int MixBlock;
 		/// <inheritdoc />
 		public TaigaSurface(BiomeConfig config, Block top, Block filler) : base(config, top, filler)
 		{
-			MixBlock = new Podzol();
+			MixBlock = new Podzol().GetRuntimeId();
 		}
 
+        private int _dirt = new Dirt().GetRuntimeId();
+        private int _snow = new Snow().GetRuntimeId();
+        private int _grass = new Grass().GetRuntimeId();
 		/// <inheritdoc />
 		public override void PaintTerrain(ChunkColumn column,
 			int blockX,
@@ -32,13 +35,13 @@ namespace OpenAPI.WorldGenerator.Generators.Surfaces.Taiga
             float c = TerrainBase.CalcCliff(x, z, noise);
             int cliff = 0;
 
-            Block b;
+            int b;
             for (int y = 255; y > -1; y--) {
-                b = column.GetBlockObject(x, y, z);
-                if (b is Air) {
+                b = column.GetBlockId(x, y, z);
+                if (b == AirId) {
                     depth = -1;
                 }
-                else if (b is Stone) {
+                else if (b == StoneId) {
                     depth++;
 
                     if (depth == 0) {
@@ -56,38 +59,38 @@ namespace OpenAPI.WorldGenerator.Generators.Surfaces.Taiga
                         if (cliff == 1) {
                             if (Rnd.Next(3) == 0) {
 
-                                column.SetBlock(x, y, z, CliffCobbleBlock);
+                                column.SetBlockByRuntimeId(x, y, z, CliffCobbleBlock);
                             }
                             else {
 
-                                column.SetBlock(x, y, z, CliffStoneBlock);
+                                column.SetBlockByRuntimeId(x, y, z, CliffStoneBlock);
                             }
                         }
                         else if (cliff == 2) {
-                            column.SetBlock(x, y, z, ShadowStoneBlock);
+                            column.SetBlockByRuntimeId(x, y, z, ShadowStoneBlock);
                         }
                         else if (cliff == 3) {
-                            column.SetBlock(x, y, z, new Snow());
+                            column.SetBlockByRuntimeId(x, y, z, _snow);
                         }
                         else if (simplex.GetValue(blockX / 50f, blockZ / 50f) + p * 0.6f > 0.24f) {
-                            column.SetBlock(x, y, z, MixBlock);
+                            column.SetBlockByRuntimeId(x, y, z, MixBlock);
                         }
                         else {
-                            column.SetBlock(x, y, z, new Grass());
+                            column.SetBlockByRuntimeId(x, y, z, _grass);
                         }
                     }
                     else if (depth < 6) {
                         if (cliff == 1) {
-                            column.SetBlock(x, y, z, CliffStoneBlock);
+                            column.SetBlockByRuntimeId(x, y, z, CliffStoneBlock);
                         }
                         else if (cliff == 2) {
-                            column.SetBlock(x, y, z, ShadowStoneBlock);
+                            column.SetBlockByRuntimeId(x, y, z, ShadowStoneBlock);
                         }
                         else if (cliff == 3) {
-                            column.SetBlock(x, y, z, new Snow());
+                            column.SetBlockByRuntimeId(x, y, z, _snow);
                         }
                         else {
-                            column.SetBlock(x, y, z, new Dirt());
+                            column.SetBlockByRuntimeId(x, y, z, _dirt);
                         }
                     }
                 }

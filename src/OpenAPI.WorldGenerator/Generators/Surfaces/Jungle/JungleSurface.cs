@@ -16,7 +16,7 @@ namespace OpenAPI.WorldGenerator.Generators.Surfaces.Jungle
 		private float sStrength = 65f;
 		private float cCliff    = 1.5f;
 
-		private Block mixBlock;
+		private int mixBlock;
 		private float       mixHeight;
 		
 		/// <inheritdoc />
@@ -30,7 +30,7 @@ namespace OpenAPI.WorldGenerator.Generators.Surfaces.Jungle
 			sStrength = stoneStrength;
 			cCliff = clayCliff;
 
-			mixBlock = mix;// this.getConfigBlock(config.SURFACE_MIX_BLOCK.get(), mix);
+			mixBlock = mix.GetRuntimeId();// this.getConfigBlock(config.SURFACE_MIX_BLOCK.get(), mix);
 
 			mixHeight = mixSize;
 		}
@@ -52,17 +52,17 @@ namespace OpenAPI.WorldGenerator.Generators.Surfaces.Jungle
             int cliff = 0;
             bool m = false;
 
-            Block b;
+            int b;
 
             for (int k = 255; k > -1; k--)
             {
-	            b = column.GetBlockObject(x,k,z);
+	            b = column.GetBlockId(x,k,z);
 
-	            if (b is Air)
+	            if (b == AirId)
 	            {
 		            depth = -1;
 	            }
-	            else if (b is Stone)
+	            else if (b == StoneId)
 	            {
 		            depth++;
 
@@ -85,52 +85,52 @@ namespace OpenAPI.WorldGenerator.Generators.Surfaces.Jungle
 			            {
 				            if (Rnd.Next(3) == 0)
 				            {
-					            column.SetBlock(x,k,z, CliffCobbleBlock);
+					            column.SetBlockByRuntimeId(x,k,z, CliffCobbleBlock);
 				            }
 				            else
 				            {
 
-					            column.SetBlock(x, k, z, CliffStoneBlock);
+					            column.SetBlockByRuntimeId(x, k, z, CliffStoneBlock);
 				            }
 			            }
 			            else if (cliff == 2)
 			            {
-				            column.SetBlock(x, k, z, ShadowStoneBlock);
+				            column.SetBlockByRuntimeId(x, k, z, ShadowStoneBlock);
 			            }
 			            else if (k < 63)
 			            {
 				            if (k < 62)
 				            {
-					            column.SetBlock(x, k, z, FillerBlock);
+					            column.SetBlockByRuntimeId(x, k, z, FillerBlock);
 				            }
 				            else
 				            {
-					            column.SetBlock(x, k, z,  TopBlock);
+					            column.SetBlockByRuntimeId(x, k, z,  TopBlock);
 				            }
 			            }
 			            else if (simplex.GetValue(blockX / 12f, blockZ / 12f) > mixHeight)
 			            {
-				            column.SetBlock(x, k, z, mixBlock);
+				            column.SetBlockByRuntimeId(x, k, z, mixBlock);
 				            m = true;
 			            }
 			            else
 			            {
-				            column.SetBlock(x, k, z, TopBlock);
+				            column.SetBlockByRuntimeId(x, k, z, TopBlock);
 			            }
 		            }
 		            else if (depth < 6)
 		            {
 			            if (cliff == 1)
 			            {
-				            column.SetBlock(x, k, z, CliffStoneBlock);
+				            column.SetBlockByRuntimeId(x, k, z, CliffStoneBlock);
 			            }
 			            else if (cliff == 2)
 			            {
-				            column.SetBlock(x, k, z, ShadowStoneBlock);
+				            column.SetBlockByRuntimeId(x, k, z, ShadowStoneBlock);
 			            }
 			            else
 			            {
-				            column.SetBlock(x, k, z, FillerBlock);
+				            column.SetBlockByRuntimeId(x, k, z, FillerBlock);
 			            }
 		            }
 	            }

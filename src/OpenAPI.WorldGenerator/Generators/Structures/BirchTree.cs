@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using MiNET.Blocks;
 using MiNET.Worlds;
 
 namespace OpenAPI.WorldGenerator.Generators.Structures
@@ -16,6 +17,16 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
         }
 
 		private const int LeafRadius = 2;
+		private static readonly int WoodId = new Wood()
+		{
+			WoodType = "birch"
+		}.GetRuntimeId();
+		
+		private static readonly int LeafId = new Leaves()
+		{
+			OldLeafType = "birch"
+		}.GetRuntimeId();
+		
 		public override void Create(ChunkColumn column, int x, int y, int z)
 	    {
 		//	var block = blocks[OverworldGenerator.GetIndex(x, y - 1, z)];
@@ -25,19 +36,9 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 			if (!ValidLocation(location, LeafRadius)) return;
 
 			int height = Rnd.Next(4, MaxHeight);
-			GenerateColumn(column, location, height, 17, 2);
+			GenerateColumn(column, location, height, WoodId);
 			Vector3 leafLocation = location + new Vector3(0, height, 0);
-			GenerateVanillaLeaves(column, leafLocation, LeafRadius, 18, 2);
-		}
-
-		public override void Create(Level level, int x, int y, int z)
-		{
-			var location = new Vector3(x, y, z);
-
-			int height = Rnd.Next(4, MaxHeight);
-			GenerateColumn(level, location, height, 17, 2);
-			Vector3 leafLocation = location + new Vector3(0, height, 0);
-			GenerateVanillaLeaves(level, leafLocation, LeafRadius, 18, 2);
+			GenerateVanillaLeaves(column, leafLocation, LeafRadius, LeafId);
 		}
 	}
 }

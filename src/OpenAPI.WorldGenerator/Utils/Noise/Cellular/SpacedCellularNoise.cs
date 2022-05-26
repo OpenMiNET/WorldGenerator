@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Numerics;
 using OpenAPI.Utils;
@@ -11,7 +12,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Cellular
         private static int _pointsPerTorus = 25;
         private static double _minDistanceSq = 0.005d;
 
-        private Dictionary<Vector2, Vector2[]> _cache = new Dictionary<Vector2, Vector2[]>(256);
+        private ConcurrentDictionary<Vector2, Vector2[]> _cache = new ConcurrentDictionary<Vector2, Vector2[]>();
         private Vector2[] _allPoints;
         private int _xSeed;
 

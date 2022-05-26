@@ -1,4 +1,5 @@
 using MiNET.Utils;
+using MiNET.Utils.Vectors;
 
 namespace OpenAPI.WorldGenerator.Utils.Noise
 {

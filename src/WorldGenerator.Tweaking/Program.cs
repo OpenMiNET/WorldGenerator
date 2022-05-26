@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LibNoise;
 using MiNET.Utils;
+using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using Newtonsoft.Json;
 using OpenAPI.Utils;
@@ -24,7 +25,7 @@ namespace WorldGenerator.Tweaking
     {
         private static TestGame Game { get; set; }
         private const int Radius     = 256;
-        private const int Resolution = 4;
+        private const int Resolution = 1;
         //private static ConcurrentQueue<ChunkColumn> Finished = new ConcurrentQueue<ChunkColumn>();
         static void Main(string[] args)
         {
@@ -34,94 +35,82 @@ namespace WorldGenerator.Tweaking
             
             bool done = false;
           //  ChunkColumn[] generatedChunks = new ChunkColumn[chunks * chunks];
-            ConcurrentQueue<ChunkCoordinates> chunkGeneratorQueue = new ConcurrentQueue<ChunkCoordinates>();
-            
             long average = 0;
             long min = long.MaxValue;
             long max = long.MinValue;
 
             int      chunskGenerated = 0;
-            Thread[] threads         = new Thread[Environment.ProcessorCount / 2];
-            for (int t = 0; t < threads.Length; t++)
-            {
-                threads[t] = new Thread(() =>
-                {
-                    Stopwatch timing = new Stopwatch();
-                    while (true)
-                    {
-                        if (chunkGeneratorQueue.TryDequeue(out var coords))
-                        {
-                            timing.Restart();
-                            
-                           // ChunkColumn column = WorldGen.GenerateChunkColumn(coords);
-                            NoiseData   nd     = new NoiseData();
-                            nd.X = coords.X;
-                            nd.Z = coords.Z;
-                            nd.Chunk = WorldGen.GenerateChunkColumn(coords);
+            // threads[0] = new Thread(() => { GenerateBiomeMap(chunks); });
 
-                            /*   for (int x = 0; x < 16; x++)
-                                {
-                                    for (int z = 0; z < 16; z++)
-                                    {
-                                        var index = NoiseMap.GetIndex(x, z);
-                                        var temp = WorldGen.TemperatureNoise.GetValue((coords.X * 16) + x, (coords.Z * 16) + z) + 1f;
-                                        var rain = MathF.Abs(WorldGen.RainfallNoise.GetValue((coords.X * 16) + x, (coords.Z * 16) + z));
-    
-                                        nd.Temperature[index] = temp;
-                                        nd.Humidity[index] = rain;
-                                    }
-                                }
-    */
-                            lock (Game.Lock)
-                            {
-                                Game.Chunks.Add(nd);
-                            }
-
-                            // generatedChunks[(coords.X * chunks) + coords.Z] = column;
-                           // Finished.Enqueue(column);
-                            chunskGenerated++;
-
-                            timing.Stop();
-                            
-                            average += timing.ElapsedMilliseconds;
-                            if (timing.ElapsedMilliseconds < min)
-                                min = timing.ElapsedMilliseconds;
-                            
-                            if (timing.ElapsedMilliseconds > max)
-                                max = timing.ElapsedMilliseconds;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                });
-            }
-            
-           // threads[0] = new Thread(() => { GenerateBiomeMap(chunks); });
+            List<ChunkCoordinates> gen = new List<ChunkCoordinates>();
 
             for (int z = 0; z < Radius; z+= Resolution)
             {
                 for(int x= 0; x < Radius; x+= Resolution)
                 {
-                    chunkGeneratorQueue.Enqueue(new ChunkCoordinates(x, z));
+                    gen.Add(new ChunkCoordinates(x, z));
                 }
             }
-            
-            Stopwatch timer = Stopwatch.StartNew();
-            foreach (var thread in threads)
+
+            new Thread(() =>
             {
-                thread.Start();
-            }
+                Stopwatch timer = Stopwatch.StartNew();
+                Parallel.ForEach(
+                    gen, new ParallelOptions()
+                    {
+                        
+                    }, coords =>
+                    {
+                        Stopwatch timing = new Stopwatch();
+                        timing.Restart();
 
-           
-                Game.Run();
+                        // ChunkColumn column = WorldGen.GenerateChunkColumn(coords);
+                        NoiseData nd = new NoiseData();
+                        nd.X = coords.X;
+                        nd.Z = coords.Z;
+                        nd.Chunk = WorldGen.GenerateChunkColumn(coords);
 
+                        /*   for (int x = 0; x < 16; x++)
+                            {
+                                for (int z = 0; z < 16; z++)
+                                {
+                                    var index = NoiseMap.GetIndex(x, z);
+                                    var temp = WorldGen.TemperatureNoise.GetValue((coords.X * 16) + x, (coords.Z * 16) + z) + 1f;
+                                    var rain = MathF.Abs(WorldGen.RainfallNoise.GetValue((coords.X * 16) + x, (coords.Z * 16) + z));
+        
+                                    nd.Temperature[index] = temp;
+                                    nd.Humidity[index] = rain;
+                                }
+                            }
+        */
+                        //lock (Game.Lock)
+                        //{
+                        Game.Add(nd);
+
+
+                        // generatedChunks[(coords.X * chunks) + coords.Z] = column;
+                        // Finished.Enqueue(column);
+                        chunskGenerated++;
+
+                        timing.Stop();
+
+                        average += timing.ElapsedMilliseconds;
+
+                        if (timing.ElapsedMilliseconds < min)
+                            min = timing.ElapsedMilliseconds;
+
+                        if (timing.ElapsedMilliseconds > max)
+                            max = timing.ElapsedMilliseconds;
+                    });
+                
                 timer.Stop();
             
-            Console.Clear();
+                Console.Clear();
             
-            Console.WriteLine($"Generating {Radius * Radius} chunks took: {timer.Elapsed}");
+                Console.WriteLine($"Generating {Radius * Radius} chunks took: {timer.Elapsed}");
+            }).Start();
+
+            Game.Run();
             //Console.WriteLine($"Min Height: {gen.MinHeight} Max Height: {gen.MaxHeight}");
         }
 

@@ -1,5 +1,6 @@
 using System;
 using MiNET.Utils;
+using MiNET.Utils.Vectors;
 using OpenAPI.WorldGenerator.Utils.Noise;
 
 namespace OpenAPI.WorldGenerator.Generators.Terrain

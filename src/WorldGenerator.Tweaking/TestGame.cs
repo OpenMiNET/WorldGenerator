@@ -2,9 +2,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using MiNET.Worlds;
 using OpenAPI.WorldGenerator.Generators;
 using OpenAPI.WorldGenerator.Generators.Biomes;
@@ -17,17 +19,13 @@ namespace WorldGenerator.Tweaking
 {
 	public class NoiseData
 	{
-		public float[]     Temperature = new float[256];
-		public float[]     Humidity    = new float[256];
 		public ChunkColumn Chunk;
-
 		public int X;
 		public int Z;
 	}
 	
 	public class TestGame : Game
 	{
-		public  ConcurrentBag<NoiseData> Chunks { get; } = new ConcurrentBag<NoiseData>();
 		private int                      _chunks, _resolution;
 
 		private GraphicsDeviceManager _graphics;
@@ -62,9 +60,11 @@ namespace WorldGenerator.Tweaking
 			Window.AllowUserResizing = true;
 		}
 
-		private RenderTarget2D _humidityMap, _heatmap, _heightMap, _combined;
-		private Texture2D      _pixel;
+		public static Texture2D      _pixel;
 		private SpriteBatch    _spriteBatch;
+		private SpriteFont _spriteFont;
+
+		private Dictionary<TestGame.RenderStage, StageData> _stageDatas = new Dictionary<RenderStage, StageData>(); 
 
 		/// <inheritdoc />
 		protected override void LoadContent()
@@ -74,67 +74,107 @@ namespace WorldGenerator.Tweaking
 			var width  = _chunks * 16;
 			var height = _chunks * 16;
 
-			_humidityMap = new RenderTarget2D(GraphicsDevice, width, height);
-			_heatmap = new RenderTarget2D(GraphicsDevice, width, height);
-			_heightMap = new RenderTarget2D(GraphicsDevice, width, height);
-			_combined = new RenderTarget2D(GraphicsDevice, width, height);
-			
 			_pixel = new Texture2D(GraphicsDevice, 1, 1);
 			_pixel.SetData(new[] {Color.White});
 
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
+			Content.RootDirectory = "Resources";
+			_spriteFont = Content.Load<SpriteFont>("Arial");
+
+			foreach (RenderStage stage in Enum.GetValues<RenderStage>())
+			{
+				_stageDatas.Add(stage, new StageData(stage, GraphicsDevice, width, height, this));
+			}
 		}
 
-		public  object      Lock = new object();
-		private NoiseData[] _noise = new NoiseData[0];
 		private Stopwatch _sw = Stopwatch.StartNew();
+
+		private ConcurrentQueue<NoiseData> _newQueue = new ConcurrentQueue<NoiseData>();
+		public void Add(NoiseData chunk)
+		{
+			_newQueue.Enqueue(chunk);
+			//Chunks.Add(chunk);
+		}
+
+		private MouseState _mouseState = new MouseState();
+
+		private BiomeBase ClickedBiome { get; set; } = null;
+		private Point CursorPos { get; set; } = Point.Zero;
+		/// <inheritdoc />
+		protected override void Update(GameTime gameTime)
+		{
+			base.Update(gameTime);
+			
+			var state = Mouse.GetState(Window);
+
+			var width = GraphicsDevice.Viewport.Width / 2;
+			var height = GraphicsDevice.Viewport.Height / 2;
+			if (state != _mouseState && state.LeftButton == ButtonState.Released && _mouseState.LeftButton == ButtonState.Pressed)
+			{
+				var pos = state.Position;
+
+				if (pos.X <= width && pos.Y <= height)
+				{
+					if (_stageDatas.TryGetValue(RenderStage.Biomes, out var stageData))
+					{
+						var scale = new Vector2((float)width / (float)stageData.Texture.Width, (float)height / (float)stageData.Texture.Height);
+						pos = new Point((int)(pos.X * scale.X), (int)(pos.Y * scale.Y));
+						var color = stageData.GetColorAt(pos.X, pos.Y);
+						var biomeId = _biomeColors.FirstOrDefault(x => x.Value == color).Key;
+						var biome = _worldGen.BiomeProvider.GetBiome(biomeId);
+						ClickedBiome = biome;
+						
+						CursorPos = pos;
+					}
+				}
+			}
+			
+			_mouseState = state;
+		}
 
 		/// <inheritdoc />
 		protected override void Draw(GameTime gameTime)
 		{
-			var width  = GraphicsDevice.Viewport.Width / 2;
+			IsMouseVisible = true;
+			var width = GraphicsDevice.Viewport.Width / 2;
 			var height = GraphicsDevice.Viewport.Height / 2;
 			GraphicsDevice.Clear(Color.Black);
 
 
-			if (_sw.ElapsedMilliseconds >= 250 && Monitor.TryEnter(Lock, 1))
+			Stopwatch sw = Stopwatch.StartNew();
+
+			int updates = 0;
+			while (_newQueue.TryDequeue(out var chunk) && sw.ElapsedMilliseconds <= (1000f / 25))
 			{
-				_noise = Chunks.ToArray();
+				foreach (var stage in _stageDatas)
+				{
+					stage.Value.AddChunk(chunk);
+				}
 
-				DrawChunks(_noise, _heatmap, RenderStage.Temperature);
-				DrawChunks(_noise, _humidityMap, RenderStage.Humidity);
-				DrawChunks(_noise, _heightMap, RenderStage.Height);
-				DrawChunks(_noise, _combined, RenderStage.HumidityAndTemperature);
-
-				Monitor.Exit(Lock);
-				_sw.Restart();
+				updates++;
 			}
 
-			//using (SpriteBatch sb = new SpriteBatch(GraphicsDevice))
+			_spriteBatch.Begin();
+			
+			DrawChunks(RenderStage.Biomes, new Rectangle(0, 0, width, height));
+			DrawChunks(RenderStage.Height, new Rectangle(0, height, width, height));
+			DrawChunks(RenderStage.Humidity, new Rectangle(width, 0, width, height));
+			DrawChunks(RenderStage.Temperature, new Rectangle(width, height, width, height));
+
+			if (ClickedBiome != null)
 			{
-				_spriteBatch.Begin();
-
-				_spriteBatch.Draw(
-					_heatmap, new Rectangle(0, 0, width, height),
-					Color.White);
-				
-				_spriteBatch.Draw(
-					_humidityMap, new Rectangle(0, height, width, height),
-					Color.White);
-
-				_spriteBatch.Draw(
-					_heightMap, new Rectangle(width, 0, width, height),
-					Color.White);
-				
-				_spriteBatch.Draw(
-					_combined, new Rectangle(width, height, width, height),
-					Color.White);
-
-				_spriteBatch.End();
-				//}
-
-				base.Draw(gameTime);
+				string text = $"Cursor: {CursorPos}\nBiome: {ClickedBiome.DefinitionName ?? "N/A"}";
+				var size = _spriteFont.MeasureString(text);
+				_spriteBatch.DrawString(_spriteFont, text, new Vector2(0, height - size.Y), Color.White);
 			}
+
+			var updateText = $"Updates: {updates:000}\nTemp: min={_worldGen.MinTemp:F3} max={_worldGen.MaxTemp:F3}  range={(_worldGen.MaxTemp - _worldGen.MinTemp):F3}\nRain: min={_worldGen.MinRain:F3} max={_worldGen.MaxRain:F3} range={(_worldGen.MaxRain - _worldGen.MinRain):F3}";
+			var updateTextSize = _spriteFont.MeasureString(updateText);
+			_spriteBatch.DrawString(_spriteFont, updateText, new Vector2(GraphicsDevice.Viewport.Width - (updateTextSize.X + 5), 5), Color.White);
+			_spriteBatch.End();
+
+
+			base.Draw(gameTime);
 		}
 
 		private void DrawBorder(Rectangle rectangleToDraw, int thicknessOfBorder, Color borderColor) 
@@ -158,104 +198,39 @@ namespace WorldGenerator.Tweaking
 				thicknessOfBorder), borderColor); 
 		}
 
-		private void DrawChunks(NoiseData[] chunks, RenderTarget2D target, RenderStage renderStage)
+		private void DrawChunks(RenderStage renderStage, Rectangle offset)
 		{
-			GraphicsDevice.SetRenderTarget(target);
+			if (!_stageDatas.TryGetValue(renderStage, out var stageData))
+				return;
+			
+			_spriteBatch.Draw(stageData.Texture, offset, Color.White);
+			_spriteBatch.DrawString(_spriteFont, $"Stage: {renderStage.ToString()}", new Vector2(offset.X + 5, offset.Y + 5), Color.White);
 
-			//using (SpriteBatch sb = new SpriteBatch(GraphicsDevice))
+			if (renderStage == RenderStage.Biomes)
 			{
-				_spriteBatch.Begin();
-
-				foreach (var data in chunks)
+				int yOffset = offset.Y + 32;
+				int xOffset = offset.X + 5;
+				foreach (var biome in _biomeColors)
 				{
-					var column = data.Chunk;
-					var worldX = data.X << 4;
-					var worldZ = data.Z << 4;
+					var b = BiomeUtils.GetBiomeById(biome.Key);
 
-					for (int cx = 0; cx < 16; cx++)
+					if (!string.IsNullOrWhiteSpace(b?.Name))
 					{
-						var rx = (data.X << 4) + (cx * _resolution);
+						var textSize = _spriteFont.MeasureString(b.Name) / 2;
+						_spriteBatch.Draw(_pixel, new Rectangle(xOffset, yOffset, (int)textSize.X + 10, 10), Color.Black * 0.75f);
+						_spriteBatch.Draw(_pixel, new Rectangle(xOffset, yOffset, 8, 8), biome.Value);
 
-						for (int cz = 0; cz < 16; cz++)
-						{
-							var rz = (data.Z << 4) + (cz * _resolution);
-
-							var pixelPosition = new Rectangle(rx, rz, _resolution, _resolution);
-							var biome         = _worldGen.BiomeProvider.GetBiome(column.GetBiome(cx, cz));
-							
-						var temp  = (int) Math.Max(0, Math.Min(255, (255 * (biome.Temperature / 2f))));
-						var humid = (int) Math.Max(0, Math.Min(255, (255 * biome.Downfall)));
+						_spriteBatch.DrawString(
+							_spriteFont, b?.Name ?? "Unknown", new Vector2(xOffset + 10, yOffset), Color.White, 0f,
+							Vector2.Zero, 0.5f, SpriteEffects.None, 0);
 						
-							/*var t    = data.Temperature[NoiseMap.GetIndex(cx, cz)];
-							var temp = (int) Math.Max(0,
-								Math.Min(255, (255 * (t / 2f))));
-
-							var r = data.Humidity[NoiseMap.GetIndex(cx, cz)];// MathF.Abs(_worldGen.RainfallNoise.GetValue(rx, rz));
-							var humid = (int) Math.Max(0,
-								Math.Min(255, (255 * r)));*/
-
-							switch (renderStage)
-							{
-								case RenderStage.Humidity:
-									_spriteBatch.Draw(_pixel, pixelPosition, new Color(humid, humid, humid));
-									break;
-
-								case RenderStage.Temperature:
-									_spriteBatch.Draw(_pixel, pixelPosition, new Color(temp, 0, humid));
-									break;
-
-								case RenderStage.Height:
-									int height = column.GetHeight(cx, cz);
-									_spriteBatch.Draw(_pixel, pixelPosition, new Color(height, height, height));
-								//	_spriteBatch.Draw(_pixel, pixelPosition, new Color(temp, temp, temp));
-									break;
-								case RenderStage.HumidityAndTemperature:
-								//	var biome = _worldGen.BiomeProvider.GetBiome(t, r);
-								//	var c = biome.Color.GetValueOrDefault(System.Drawing.Color.White);
-									if (_biomeColors.TryGetValue(biome.Id, out var c))
-									{
-										_spriteBatch.Draw(_pixel, pixelPosition, new Color(c.R, c.G, c.B));
-									}
-
-									break;
-							}
-
-							/*var t = WorldGen.TemperatureNoise.GetValue(rx, rz) + 1f;
-							var r = MathF.Abs(WorldGen.RainfallNoise.GetValue(rx, rz));
-							        
-							var humid = (int) Math.Max(0,
-							    Math.Min(255, (255 * r)));
-							        
-							humidityMap.SetPixel(rx, rz, Color.FromArgb(humid, humid, humid));
-							        
-							var temp = (int) Math.Max(0,
-							    Math.Min(255, (255 * (t / 2f))));
-							        
-							heatmap.SetPixel(rx, rz, Color.FromArgb(temp, temp, temp));*/
-
-
-							// humidityMap.SetPixel(rx, rz, Color.FromArgb(humid, humid, humid));
-							// heatmap.SetPixel(rx, rz, Color.FromArgb(temp, temp, temp));
-
-							// chunkHeight.SetPixel(rx, rz, Color.FromArgb(height, height, height));
-
-							/*height = (int) Math.Max(0,
-							    Math.Min(255,
-							        (255 * MathUtils.ConvertRange(-2f, 2f, 0f, 1f,
-							             ((biome.MinHeight + biome.MaxHeight) / 2f)))));*/
-
-							// heightmap.SetPixel(rx, rz, Color.FromArgb(height, height, height));
-						}
+						yOffset += 10;
 					}
-					
-					//DrawBorder(new Rectangle(worldX,worldZ, 16, 16), 1, Color.Magenta);
 				}
-
-				DrawBorder(new Rectangle(0,0, target.Width, target.Height), 1, Color.Red);
-;				_spriteBatch.End();
 			}
-
-			GraphicsDevice.SetRenderTarget(null);
+			
+			DrawBorder(new Rectangle(offset.X,offset.Y, offset.Width, offset.Height), 1, Color.Red);
+			//GraphicsDevice.SetRenderTarget(null);
 		}
 
 		public enum RenderStage
@@ -263,7 +238,107 @@ namespace WorldGenerator.Tweaking
 			Humidity,
 			Temperature,
 			Height,
-			HumidityAndTemperature
+			Biomes
+		}
+		
+			private class StageData
+		{
+			private readonly RenderStage _stage;
+			private readonly GraphicsDevice _device;
+			private readonly TestGame _parent;
+			public RenderTarget2D RenderTarget2D { get; }
+			public Texture2D Texture { get; set; }
+
+			private SpriteBatch _spriteBatch;
+			public StageData(RenderStage stage, GraphicsDevice device, int width, int height, TestGame parent)
+			{
+				_stage = stage;
+				_device = device;
+				_parent = parent;
+				RenderTarget2D = new RenderTarget2D(device, 16, 16);
+				Texture = new Texture2D(device, width, height);
+				_spriteBatch = new SpriteBatch(device);
+			}
+
+			public Color GetColorAt(int x, int y)
+			{
+				Color[] colors = new Color[1];
+				Texture.GetData(0, new Rectangle(x, y, 1, 1), colors, 0, 1);
+
+				return colors[0];
+			}
+
+			public void AddChunk(NoiseData data)
+			{
+				_device.SetRenderTarget(RenderTarget2D);
+				_spriteBatch.Begin();
+				//_spriteBatch.Draw(Texture, Vector2.Zero, Color.White);
+				try
+				{
+					DrawChunk(data);
+				}
+				finally
+				{
+					_spriteBatch.End();
+					_device.SetRenderTarget(null);
+
+					var index = (data.X * 16) + (data.Z * 16);
+					int[] d = new int[RenderTarget2D.Width * RenderTarget2D.Height];
+					RenderTarget2D.GetData(0, new Rectangle(0, 0, 16, 16), d, 0, d.Length);
+					
+					Texture.SetData(0, new Rectangle(data.X * (16), data.Z * (16), 16, 16), d, 0, d.Length);
+				}
+			}
+			
+			private void DrawChunk(NoiseData data)
+			{
+				for (int x = 0; x < 16; x++)
+				{
+					for (int y = 0; y < 16; y++)
+					{
+						var pixelPosition = new Rectangle(x, y, 1, 1);
+						var biome         = _parent._worldGen.BiomeProvider.GetBiome(data.Chunk.GetBiome(x, y));
+							
+						var temp  = (int) Math.Max(0, Math.Min(255, (255 * (biome.Temperature / 2f))));
+						var humid = (int) Math.Max(0, Math.Min(255, (255 * biome.Downfall)));
+						
+						/*var t    = data.Temperature[NoiseMap.GetIndex(cx, cz)];
+						var temp = (int) Math.Max(0,
+							Math.Min(255, (255 * (t / 2f))));
+	
+						var r = data.Humidity[NoiseMap.GetIndex(cx, cz)];// MathF.Abs(_worldGen.RainfallNoise.GetValue(rx, rz));
+						var humid = (int) Math.Max(0,
+							Math.Min(255, (255 * r)));*/
+
+						switch (_stage)
+						{
+							case RenderStage.Humidity:
+								_spriteBatch.Draw(_pixel, pixelPosition, new Color(0, 0, humid));
+								break;
+
+							case RenderStage.Temperature:
+								_spriteBatch.Draw(_pixel, pixelPosition, new Color(temp, 0, humid));
+								break;
+
+							case RenderStage.Height:
+								var column = data.Chunk;
+								int height = column.GetHeight(x, y);
+								_spriteBatch.Draw(_pixel, pixelPosition, new Color(height, height, height));
+								//	_spriteBatch.Draw(_pixel, pixelPosition, new Color(temp, temp, temp));
+								break;
+							case RenderStage.Biomes:
+								//	var biome = _worldGen.BiomeProvider.GetBiome(t, r);
+								//	var c = biome.Color.GetValueOrDefault(System.Drawing.Color.White);
+								if (_parent._biomeColors.TryGetValue(biome.Id, out var c))
+								{
+									_spriteBatch.Draw(_pixel, pixelPosition, new Color(c.R, c.G, c.B));
+								}
+
+								break;
+						}
+					}
+				}
+			}
 		}
 	}
 }

@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using MiNET.Utils;
+using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
 namespace OpenAPI.WorldGenerator

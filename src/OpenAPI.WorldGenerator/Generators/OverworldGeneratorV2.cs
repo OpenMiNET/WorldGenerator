@@ -5,21 +5,16 @@ using LibNoise;
 using LibNoise.Filter;
 using MiNET.Blocks;
 using MiNET.Utils;
+using MiNET.Utils.Vectors;
 using MiNET.Worlds;
-using Newtonsoft.Json;
-using OpenAPI.Utils;
 using OpenAPI.WorldGenerator.Generators.Biomes;
-using OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Ocean;
 using OpenAPI.WorldGenerator.Generators.Decorators;
 using OpenAPI.WorldGenerator.Generators.Terrain;
-using OpenAPI.WorldGenerator.Utils;
 using OpenAPI.WorldGenerator.Utils.Noise;
 using OpenAPI.WorldGenerator.Utils.Noise.Api;
 using OpenAPI.WorldGenerator.Utils.Noise.Cellular;
 using OpenAPI.WorldGenerator.Utils.Noise.Modules;
 using OpenAPI.WorldGenerator.Utils.Noise.Primitives;
-using OpenAPI.WorldGenerator.Utils.Noise.Transformers;
-using BiomeUtils = OpenAPI.WorldGenerator.Utils.BiomeUtils;
 
 namespace OpenAPI.WorldGenerator.Generators
 {
@@ -59,16 +54,18 @@ namespace OpenAPI.WorldGenerator.Generators
         private bool[] BeachBiome { get; }
         private bool[] LandBiome { get; }
         private bool[] OceanBiome { get; }
+        private readonly int _seed;
         public OverworldGeneratorV2()
         {
             Preset = new WorldGeneratorPreset();
             //Preset.BiomeSize = 1f;
-            //Preset = JsonConvert.DeserializeObject<WorldGeneratorPreset>("{\"coordinateScale\":175.0,\"heightScale\":75.0,\"lowerLimitScale\":512.0,\"upperLimitScale\":512.0,\"depthNoiseScaleX\":200.0,\"depthNoiseScaleZ\":200.0,\"depthNoiseScaleExponent\":0.5,\"mainNoiseScaleX\":165.0,\"mainNoiseScaleY\":106.61267,\"mainNoiseScaleZ\":165.0,\"baseSize\":8.267606,\"stretchY\":13.387607,\"biomeDepthWeight\":1.2,\"biomeDepthOffset\":0.2,\"biomeScaleWeight\":3.4084506,\"biomeScaleOffset\":0.0,\"seaLevel\":63,\"useCaves\":true,\"useDungeons\":true,\"dungeonChance\":7,\"useStrongholds\":true,\"useVillages\":true,\"useMineShafts\":true,\"useTemples\":true,\"useMonuments\":true,\"useRavines\":true,\"useWaterLakes\":true,\"waterLakeChance\":49,\"useLavaLakes\":true,\"lavaLakeChance\":80,\"useLavaOceans\":false,\"fixedBiome\":-1,\"biomeSize\":8,\"riverSize\":5,\"dirtSize\":33,\"dirtCount\":10,\"dirtMinHeight\":0,\"dirtMaxHeight\":256,\"gravelSize\":33,\"gravelCount\":8,\"gravelMinHeight\":0,\"gravelMaxHeight\":256,\"graniteSize\":33,\"graniteCount\":10,\"graniteMinHeight\":0,\"graniteMaxHeight\":80,\"dioriteSize\":33,\"dioriteCount\":10,\"dioriteMinHeight\":0,\"dioriteMaxHeight\":80,\"andesiteSize\":33,\"andesiteCount\":10,\"andesiteMinHeight\":0,\"andesiteMaxHeight\":80,\"coalSize\":17,\"coalCount\":20,\"coalMinHeight\":0,\"coalMaxHeight\":128,\"ironSize\":9,\"ironCount\":20,\"ironMinHeight\":0,\"ironMaxHeight\":64,\"goldSize\":9,\"goldCount\":2,\"goldMinHeight\":0,\"goldMaxHeight\":32,\"redstoneSize\":8,\"redstoneCount\":8,\"redstoneMinHeight\":0,\"redstoneMaxHeight\":16,\"diamondSize\":8,\"diamondCount\":1,\"diamondMinHeight\":0,\"diamondMaxHeight\":16,\"lapisSize\":7,\"lapisCount\":1,\"lapisCenterHeight\":16,\"lapisSpread\":16}");
+           // Preset = JsonConvert.DeserializeObject<WorldGeneratorPreset>("{\"coordinateScale\":175.0,\"heightScale\":75.0,\"lowerLimitScale\":512.0,\"upperLimitScale\":512.0,\"depthNoiseScaleX\":200.0,\"depthNoiseScaleZ\":200.0,\"depthNoiseScaleExponent\":0.5,\"mainNoiseScaleX\":165.0,\"mainNoiseScaleY\":106.61267,\"mainNoiseScaleZ\":165.0,\"baseSize\":8.267606,\"stretchY\":13.387607,\"biomeDepthWeight\":1.2,\"biomeDepthOffset\":0.2,\"biomeScaleWeight\":3.4084506,\"biomeScaleOffset\":0.0,\"seaLevel\":63,\"useCaves\":true,\"useDungeons\":true,\"dungeonChance\":7,\"useStrongholds\":true,\"useVillages\":true,\"useMineShafts\":true,\"useTemples\":true,\"useMonuments\":true,\"useRavines\":true,\"useWaterLakes\":true,\"waterLakeChance\":49,\"useLavaLakes\":true,\"lavaLakeChance\":80,\"useLavaOceans\":false,\"fixedBiome\":-1,\"biomeSize\":8,\"riverSize\":5,\"dirtSize\":33,\"dirtCount\":10,\"dirtMinHeight\":0,\"dirtMaxHeight\":256,\"gravelSize\":33,\"gravelCount\":8,\"gravelMinHeight\":0,\"gravelMaxHeight\":256,\"graniteSize\":33,\"graniteCount\":10,\"graniteMinHeight\":0,\"graniteMaxHeight\":80,\"dioriteSize\":33,\"dioriteCount\":10,\"dioriteMinHeight\":0,\"dioriteMaxHeight\":80,\"andesiteSize\":33,\"andesiteCount\":10,\"andesiteMinHeight\":0,\"andesiteMaxHeight\":80,\"coalSize\":17,\"coalCount\":20,\"coalMinHeight\":0,\"coalMaxHeight\":128,\"ironSize\":9,\"ironCount\":20,\"ironMinHeight\":0,\"ironMaxHeight\":64,\"goldSize\":9,\"goldCount\":2,\"goldMinHeight\":0,\"goldMaxHeight\":32,\"redstoneSize\":8,\"redstoneCount\":8,\"redstoneMinHeight\":0,\"redstoneMaxHeight\":16,\"diamondSize\":8,\"diamondCount\":1,\"diamondMinHeight\":0,\"diamondMaxHeight\":16,\"lapisSize\":7,\"lapisCount\":1,\"lapisCenterHeight\":16,\"lapisSpread\":16}");
            // Preset = JsonConvert.DeserializeObject<WorldGeneratorPreset>(
             //          "{\"useCaves\":true,\"useStrongholds\":true,\"useVillages\":true,\"useMineShafts\":true,\"useTemples\":true,\"useRavines\":true,\"useMonuments\":true,\"useMansions\":true,\"useLavaOceans\":false,\"useWaterLakes\":true,\"useLavaLakes\":true,\"useDungeons\":true,\"fixedBiome\":-3,\"biomeSize\":4,\"seaLevel\":63,\"riverSize\":4,\"waterLakeChance\":4,\"lavaLakeChance\":80,\"dungeonChance\":8,\"dirtSize\":33,\"dirtCount\":10,\"dirtMinHeight\":0,\"dirtMaxHeight\":255,\"gravelSize\":33,\"gravelCount\":8,\"gravelMinHeight\":0,\"gravelMaxHeight\":255,\"graniteSize\":33,\"graniteCount\":10,\"graniteMinHeight\":0,\"graniteMaxHeight\":80,\"dioriteSize\":33,\"dioriteCount\":10,\"dioriteMinHeight\":0,\"dioriteMaxHeight\":80,\"andesiteSize\":33,\"andesiteCount\":10,\"andesiteMinHeight\":0,\"andesiteMaxHeight\":80,\"coalSize\":17,\"coalCount\":20,\"coalMinHeight\":0,\"coalMaxHeight\":128,\"ironSize\":9,\"ironCount\":20,\"ironMinHeight\":0,\"ironMaxHeight\":64,\"goldSize\":9,\"goldCount\":2,\"goldMinHeight\":0,\"goldMaxHeight\":32,\"redstoneSize\":8,\"redstoneCount\":8,\"redstoneMinHeight\":0,\"redstoneMaxHeight\":16,\"diamondSize\":8,\"diamondCount\":1,\"diamondMinHeight\":0,\"diamondMaxHeight\":16,\"lapisSize\":7,\"lapisCount\":1,\"lapisMinHeight\":0,\"lapisMaxHeight\":32,\"coordinateScale\":684,\"heightScale\":684,\"mainNoiseScaleX\":80,\"mainNoiseScaleY\":160,\"mainNoiseScaleZ\":80,\"depthNoiseScaleX\":200,\"depthNoiseScaleZ\":200,\"depthNoiseScaleExponent\":0.5,\"biomeDepthWeight\":1,\"biomeDepthOffset\":0,\"biomeScaleWeight\":1,\"biomeScaleOffset\":1,\"lowerLimitScale\":512,\"upperLimitScale\":512,\"baseSize\":8.5,\"stretchY\":12,\"lapisCenterHeight\":16,\"lapisSpread\":16}");;
                 
-            int seed = Environment.TickCount;
-
+            int seed = 1234;
+            _seed = seed;
+            
             InitBiomeProviders(seed);
 
             for (int i = 0; i < SimplexInstanceCount; i++) {
@@ -146,92 +143,70 @@ namespace OpenAPI.WorldGenerator.Generators
             }
             return this._cellularNoiseInstances[index];
         }
-        
+
         private void InitBiomeProviders(int seed)
         {
-            var biomeScale = 128f;// Preset.CoordinateScale;
+            var biomeScale = 128f;
 
-         //  var biomeScale = 8f * Preset.BiomeSize;
-         
-         INoiseModule distortionX = new SimplexPerlin(seed, NoiseQuality.Fast);
-         distortionX = new PipeNoiseModule()
-         {
-             Primitive = distortionX,
-             Frequency = 1f / 48.24345f
-         };
-           
-         INoiseModule distortionY = new SimplexPerlin(seed, NoiseQuality.Fast);
-         distortionY = new PipeNoiseModule()
-         {
-             Primitive = distortionY,
-             Frequency = 1f / 32.24145f
-         };
-         
-          // INoiseModule temperatureNoise = new SimplexPerlin(seed^3, NoiseQuality.Fast);
-           /*temperatureNoise = new BillowNoiseModule()
-           {
-               Primitive = temperatureNoise,
-               Lacunarity = 2f,
-               Frequency = 0.25f,
-               OctaveCount = 1
-              // Scale = 0.1f,
-              // Bias = 1f
-             //  SpectralExponent = 0.8f,
-              // Offset = 1f,
-              // Gain = 2f
-           };*/
+            INoiseModule temperaturePrimitive = new SimplexPerlin(seed ^ 3, NoiseQuality.Fast);
+            INoiseModule temperatureNoise = temperaturePrimitive;
 
-           INoiseModule temperatureNoise = new SimplexPerlin(seed ^ 3, NoiseQuality.Fast);
-          /* temperatureNoise = new OctaveNoise(temperatureNoise, 4)
-           {
-               Amplitude = 16f,
-               Frequency = 1.8f
-           };
-           */
-           temperatureNoise = new VoronoiNoseModule()
-           {
-               Primitive = temperatureNoise,
-               Distance = false,
-               Frequency = 0.343f,//0.125644f,
-               Displacement = 1f,
-               Size = 2,
-           };
-           
-           temperatureNoise = new ScaledNoiseModule(temperatureNoise){
-               ScaleX = 1f / biomeScale, ScaleY = 1f / biomeScale, ScaleZ = 1f / biomeScale
-           };
+            temperatureNoise = new ScaledNoiseModule(temperatureNoise)
+            {
+                ScaleX = 1f / biomeScale, ScaleY = 1f / biomeScale, ScaleZ = 1f / biomeScale
+            };
+            /*temperatureNoise = new BillowNoiseModule()
+            {
+                Primitive = temperatureNoise,
+                Lacunarity = 2f,
+                Frequency = 0.25f,
+                OctaveCount = 1
+            };*/
+            temperatureNoise = new VoronoiNoseModule()
+            {
+                Primitive = temperatureNoise,
+                Distance = true,
+                Frequency = 0.0425644f,
+                OctaveCount = 6,
+               // Size = 8,
+               
+                Displacement = 2f,
+                Gain = 1.3f,
+                Lacunarity = 1.1f,
+                SpectralExponent = 0.6f
+            };
 
-           temperatureNoise = new TurbulenceNoiseModule(temperatureNoise, distortionX, distortionY, distortionY, 16f);
-
-           //  temperatureNoise = new AverageSelectorModule(temperatureNoise, temperatureNoise);
-         
-           
-           INoiseModule rainNoise = new SimplexPerlin(seed*seed^2, NoiseQuality.Fast);
-
-           rainNoise = new VoronoiNoseModule()
+            INoiseModule rainNoise = new SimplexPerlin(seed * seed ^ 2, NoiseQuality.Fast);
+            rainNoise = new ScaledNoiseModule(rainNoise)
+            {
+                ScaleX = 1f / biomeScale, ScaleY = 1f / biomeScale, ScaleZ = 1f / biomeScale
+            };
+            rainNoise = new VoronoiNoseModule()
             {
                 Primitive = rainNoise,
-                Distance = false,
-                Frequency = 0.22776f,
+                Distance = true,
+                Frequency = 0.022776f,
+                OctaveCount = 6,
+                
                 Displacement = 1f,
-                Size = 2
+                Gain = 2.3f,
+                Lacunarity = 1.3f,
+                SpectralExponent = 0.8f
             };
-               
-               rainNoise = new ScaledNoiseModule(rainNoise)
-               {
-                   ScaleX = 1f / biomeScale, ScaleY = 1f / biomeScale, ScaleZ = 1f / biomeScale
-               };
 
-           rainNoise = new TurbulenceNoiseModule(rainNoise, distortionY, distortionX, distortionX, 16f);
-           
+
+
+
+            //   rainNoise = new TurbulenceNoiseModule(rainNoise, distortionY, distortionX, distortionX, 16f);
+
             BiomeProvider = new BiomeProvider();
             RainfallNoise = rainNoise;
             TemperatureNoise = temperatureNoise;
         }
-        
+
         public  INoiseModule TemperatureNoise { get; set; }
         public  INoiseModule RainfallNoise    { get; set; }
-        
+
         public  bool         ApplyBlocks { get; set; } = true;
 
         /// <inheritdoc />
@@ -265,112 +240,6 @@ namespace OpenAPI.WorldGenerator.Generators
            return column;
         }
 
-        public const int MAX_BIOMES = 256;
-        private void FixBiomes(ChunkColumn column,
-            ChunkLandscape landscape, int[] neighboring)
-        {
-            var orginalBiomes = landscape.Biome.ToArray();
-           
-            ISimplexData2D jitterData = SimplexData2D.NewDisk();
-            BiomeBase[] jitteredBiomes = new BiomeBase[256];
-            BiomeBase jitterbiome, actualbiome;
-            for (int i = 0; i < 16; i++) {
-                for (int j = 0; j < 16; j++) {
-                    int x = (column.X * 16) + i;
-                    int z = (column.Z * 16) + j;
-                    this.SimplexInstance(0).GetValue(x, z, jitterData);
-                    int pX = (int) Math.Round(x + jitterData.GetDeltaX() * BlendRadius);
-                    int pZ = (int) Math.Round(z + jitterData.GetDeltaY() * BlendRadius);
-                    actualbiome = landscape.Biome[(x & 15) * 16 + (z & 15)];
-                    jitterbiome = landscape.Biome[(pX & 15) * 16 + (pZ & 15)];
-                    jitteredBiomes[i * 16 + j] = (actualbiome.Config.SurfaceBlendIn && jitterbiome.Config.SurfaceBlendOut) ? jitterbiome : actualbiome;
-                }
-            }
-
-
-            BiomeBase realisticBiome;
-            int realisticBiomeId;
-
-            
-            var noise = landscape.Noise;
-            var riverStrength = landscape.River;
-            
-            // currently just stuffs the genLayer into the jitter;
-            for (int i = 0; i < MAX_BIOMES; i++) {
-
-                realisticBiome = orginalBiomes[i];
-
-                bool canBeRiver = riverStrength[i] > 0.7;
-
-                if (noise[i] > 61.5) {
-                    // replace
-                    jitteredBiomes[i] = realisticBiome;
-                }
-                else {
-                    // check for river
-                    if (canBeRiver && (realisticBiome.Type & BiomeType.Ocean) == 0 && (realisticBiome.Type & BiomeType.Swamp) == 0) {
-                        // make river
-                       jitteredBiomes[i] = BiomeProvider.GetBiome(realisticBiome.GetRiverBiome());
-                    }
-                    else {
-                        // replace
-                        jitteredBiomes[i] = realisticBiome;
-                    }
-                }
-            }
-            
-          //  SmoothingSearchStatus beachSearch = new SmoothingSearchStatus(BeachBiome);
-            SmoothingSearchStatus landSearch = new SmoothingSearchStatus(LandBiome);
-            
-          /*  beachSearch.SetNotHunted();
-            beachSearch.SetAbsent();
-            
-            landSearch.SetNotHunted();
-            landSearch.SetAbsent();*/
-         // beachSearch.Hunt(neighboring);
-          landSearch.Hunt(neighboring);
-
-            float beachTop = 64.5f;
-            for (int i = 0; i < MAX_BIOMES; i++)
-            {
-                float beachBottom = 61.5f;
-                
-                if (noise[i] < beachBottom || noise[i] > RiverAdjusted(beachTop, riverStrength[i])) {
-                    continue;// this block isn't beach level
-                }
-
-                if ((jitteredBiomes[i].Type & BiomeType.Swamp) != 0)
-                {
-                    continue;
-                }
-
-               /* if (beachSearch.IsNotHunted())
-                {
-                    beachSearch.Hunt(neighboring);
-                    landSearch.Hunt(neighboring);
-                }*/
-                
-             //   int foundBiome = beachSearch.Biomes[i];
-               // if (foundBiome != -1) {
-                    int nearestLandBiome = landSearch.Biomes[i];
-                    
-                    if (nearestLandBiome > -1) {
-                        var foundBiome = BiomeProvider.GetBiome(nearestLandBiome).GetBeachBiome();
-                        var biome = BiomeProvider.GetBiome(foundBiome);
-
-                        if (biome != null && biome.Terrain != null && biome.Surface != null)
-                        {
-                            jitteredBiomes[i] = biome;
-                        }
-                    }
-
-                    //
-               // }
-            }
-
-            landscape.Biome = jitteredBiomes;
-        }
-
         private float RiverAdjusted(float top, float river) {
             if (river >= 1) {
                 return top;
@@ -389,6 +258,8 @@ namespace OpenAPI.WorldGenerator.Generators
             int worldZ = chunk.Z * 16;
 
             var coords = new BlockCoordinates(worldX, 0, worldZ);
+            var d = new FoliageDecorator(Preset);
+            d.SetSeed(_seed);
             for (int x = 0; x < 16; x++)
             {
                 coords.X = worldX + x;
@@ -405,71 +276,31 @@ namespace OpenAPI.WorldGenerator.Generators
                     chunk.biomeId[index] = (byte) biome.Id;
                 }
             }
-        }
-        
-        private void GenerateTerrain(ChunkColumn column, float[] noiseMap)
-        {
+
             for (int x = 0; x < 16; x++)
             {
                 for (int z = 0; z < 16; z++)
                 {
-                   /* var biome = biomes[NoiseMap.GetIndex(x, z)];
+                    var index = NoiseMap.GetIndex(x, z);
 
-                    byte biomeId = (byte) biome.Id;
-                    if (ApplyBlocks)
-                    {*/
-                        var height = (int)noiseMap[NoiseMap.GetIndex(x, z)];
-                        for (int y = 0; (y <= height || y <= Preset.SeaLevel) && y < 255; y++)
-                        {
-                            if (y > height)
-                            {
-                                if (y < Preset.SeaLevel)
-                                {
-                                    column.SetBlock(x, y, z, new Water());
-                                }
-                                else
-                                {
-                                    if (Preset.SeaLevel - y < 1f)
-                                    {
-                                        
-                                    }
-                                    // column.SetBlock(x,y,z, new Air());
-                                }
-                            }
-                            else if (y == height)
-                            {
-                                column.SetBlock(x,y,z, new Stone());
-                            //    column.SetBlock(x, y, z, BlockFactory.GetBlockById(biome.SurfaceBlock));
-                                //column.SetMetadata(x, y, z, biome.SurfaceMetadata);
-                                
-                               // column.SetBlock(x, y - 1, z,  BlockFactory.GetBlockById(biome.SoilBlock));
-                                //column.SetMetadata(x, y -1, z, biome.SoilMetadata);
-                            }
-                            else if (y < height)
-                            {
-                                column.SetBlock(x, y, z,new Stone());
-                            }
-                        }
-                        
-                        
-                        column.SetHeight(x, z, (short) height);
-                    //}
-
-                    //column.SetBiome(x, z, biomeId);
+                    d.Decorate(
+                        chunk, chunk.X, chunk.Z, BiomeProvider.GetBiome(chunk.biomeId[index]), new float[0], x,
+                        chunk.height[index] , z, true, false);
                 }
             }
         }
+        
+        #region Biome Selection
 
-        private float _lowestTemp   = 1f;
-        private float _highestTemp  = 0f;
-        private float _totalTemp    = 0f;
-        
-        private float _lowestHumidity  = 1f;
-        private float _highestHumidity = 0f;
-        private float _totalHumidity   = 0f;
-        
         private long                _totalLookups = 0;
-        private ThreadSafeList<int> _uniqueBiomes  = new ThreadSafeList<int>();
+
+        public float MaxTemp = float.MinValue;
+        public float MinTemp = float.MaxValue;
+        
+        public float MaxRain = float.MinValue;
+        public float MinRain = float.MaxValue;
+        
+      //  private ThreadSafeList<int> _uniqueBiomes  = new ThreadSafeList<int>();
         private int[] CalculateBiomes(ChunkCoordinates coordinates, ChunkLandscape landscape)
         {
            // var biomes = BiomeProvider.GetBiomes().ToArray();
@@ -478,8 +309,10 @@ namespace OpenAPI.WorldGenerator.Generators
             int worldZ = coordinates.Z << 4;
           
             float[] weightedBiomes = new float[256];
-            var     biomeData      = new int[SampleArraySize * SampleArraySize];
-
+            
+            var     biomes      = new BiomeBase[SampleArraySize * SampleArraySize];
+            var c=CellularInstance(0);
+           // var rnd = _simplexNoiseInstances[0].GetValue(worldX, worldZ);
             for (int x = -SampleSize; x < SampleSize + 5; x++)
             {
                 for (int z = -SampleSize; z < SampleSize + 5; z++)
@@ -487,55 +320,41 @@ namespace OpenAPI.WorldGenerator.Generators
                     var xx   = worldX + ((x * 8f));
                     var zz   = worldZ + ((z * 8f));
                     
-                    var temp = TemperatureNoise.GetValue(xx, zz);
-                    
-                    //Note for self: The temperature noise returns a value between -1 & 1 however we need the value to be between 0 & 2.
+                   var temp = TemperatureNoise.GetValue(xx, zz);
+
+                   //Note for self: The temperature noise returns a value between -1 & 1 however we need the value to be between 0 & 2.
                     //We do this by getting the absolute value (0 to 1) and multiplying it by 2.
-                    temp = MathF.Abs(temp) * 2f;
+                  //  temp = MathF.Abs(temp) * 2f;
+                  
+                    temp = MathF.Abs(temp);
 
-                    var rain = MathF.Abs(RainfallNoise.GetValue(xx, zz));
-
-                    if (temp < _lowestTemp)
+                    if (temp > 2f)
                     {
-                        _lowestTemp = temp;
+                        var remainder = temp - 2f;
+                        temp = 2f - remainder;
+                    }
+                    MaxTemp = MathF.Max(temp, MaxTemp);
+                    MinTemp = MathF.Min(temp, MinTemp);
+                    
+                    var rain =RainfallNoise.GetValue(xx, zz);
+                    rain = MathF.Abs(rain);
+                    if (rain > 1f)
+                    {
+                        var remainder = rain - 1f;
+                        rain = 1f - remainder;
                     }
                     
-                    if (temp > _highestTemp)
-                    {
-                        _highestTemp = temp;
-                    }
+                    MaxRain = MathF.Max(rain, MaxRain);
+                    MinRain = MathF.Min(rain, MinRain);
                     
-                    if (rain < _lowestHumidity)
-                    {
-                        _lowestHumidity = rain;
-                    }
-                    
-                    if (rain > _highestHumidity)
-                    {
-                        _highestHumidity = rain;
-                    }
-
-                    _totalTemp += temp;
-                    _totalHumidity += rain;
                     _totalLookups++;
 
-                    if (_totalLookups % 1024 == 0)
-                    {
-                      /*  Console.Clear();
-                        
-                        Console.WriteLine(
-                            $"Average temperature: {_totalTemp / _totalLookups} Highest: {_highestTemp} Lowest: {_lowestTemp}");
-                        
-                        Console.WriteLine(
-                            $"Average humidity: {_totalHumidity / _totalLookups} Highest: {_highestHumidity} Lowest: {_lowestHumidity}");
-                        
-                        Console.WriteLine($"Unique biomes: {_uniqueBiomes.Count}");*/
-                    }
-
-                    biomeData[(x + SampleSize) * SampleArraySize + (z + SampleSize)] = (BiomeProvider.GetBiome(
-                        (float) temp, (float) rain).Id);
+                    biomes[(x + SampleSize) * SampleArraySize + (z + SampleSize)] = (BiomeProvider.GetBiome(
+                        (float) temp, (float) rain, 0f));
                 }
             }
+            
+            var     biomeData      = biomes.Select(x => x.Id).ToArray();
 
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++)
@@ -583,12 +402,6 @@ namespace OpenAPI.WorldGenerator.Generators
                            {
                                maxWeight = value;
                                landscape.Biome[index] = biome;
-                               
-                               if (!_uniqueBiomes.Contains(biome.Id))
-                               {
-                                   _uniqueBiomes.TryAdd(biome.Id);
-                                      // Console.WriteLine($"Unique biomes: {uniqueBiomes.Count}");
-                               }
                            }
                        }
                    }
@@ -601,6 +414,174 @@ namespace OpenAPI.WorldGenerator.Generators
             }
 
             return biomeData;
+        }
+        
+        public const int MAX_BIOMES = 256;
+        private void FixBiomes(ChunkColumn column,
+            ChunkLandscape landscape, int[] neighboring)
+        {
+         //   return;
+          //  landscape.Biome
+            var orginalBiomes = landscape.Biome.ToArray();
+           
+            ISimplexData2D jitterData = SimplexData2D.NewDisk();
+           /// BiomeBase[] jitteredBiomes = new BiomeBase[256];
+            BiomeBase jitterbiome, actualbiome;
+            for (int i = 0; i < 16; i++) {
+                for (int j = 0; j < 16; j++) {
+                    int x = (column.X * 16) + i;
+                    int z = (column.Z * 16) + j;
+                    this.SimplexInstance(0).GetValue(x, z, jitterData);
+                    int pX = (int) Math.Round(x + jitterData.GetDeltaX() * BlendRadius);
+                    int pZ = (int) Math.Round(z + jitterData.GetDeltaY() * BlendRadius);
+                    actualbiome = landscape.Biome[(x & 15) * 16 + (z & 15)];
+                    jitterbiome = landscape.Biome[(pX & 15) * 16 + (pZ & 15)];
+                    landscape.Biome[i * 16 + j] = (actualbiome.Config.SurfaceBlendIn && jitterbiome.Config.SurfaceBlendOut) ? jitterbiome : actualbiome;
+                }
+            }
+
+
+            BiomeBase realisticBiome;
+            int realisticBiomeId;
+
+            
+            var noise = landscape.Noise;
+            var riverStrength = landscape.River;
+            
+            // currently just stuffs the genLayer into the jitter;
+            for (int i = 0; i < MAX_BIOMES; i++) {
+
+                realisticBiome = orginalBiomes[i];
+
+                bool canBeRiver = riverStrength[i] > 0.7;
+
+                if (noise[i] > 61.5) {
+                    // replace
+                    landscape.Biome[i] = realisticBiome;
+                }
+                else {
+                    // check for river
+                    if (canBeRiver && realisticBiome.Config.AllowRivers && (realisticBiome.Type & BiomeType.Ocean) == 0 && (realisticBiome.Type & BiomeType.Swamp) == 0) {
+                        // make river
+                        landscape.Biome[i] = BiomeProvider.GetBiome(realisticBiome.GetRiverBiome());
+                    }
+                    else {
+                        // replace
+                        landscape.Biome[i] = realisticBiome;
+                    }
+                }
+            }
+            
+            SmoothingSearchStatus beachSearch = new SmoothingSearchStatus(BeachBiome);
+            SmoothingSearchStatus landSearch = new SmoothingSearchStatus(LandBiome);
+            
+            beachSearch.SetNotHunted();
+            beachSearch.SetAbsent();
+            
+            landSearch.SetNotHunted();
+            landSearch.SetAbsent();
+        //  beachSearch.Hunt(neighboring);
+        //    landSearch.Hunt(neighboring);
+
+            float beachTop = 64.5f;
+            for (int i = 0; i < MAX_BIOMES; i++)
+            {
+                float beachBottom = 61.5f;
+                
+                if (noise[i] < beachBottom || noise[i] > RiverAdjusted(beachTop, riverStrength[i])) {
+                    continue;// this block isn't beach level
+                }
+
+                if ((landscape.Biome[i].Type & BiomeType.Swamp) != 0)
+                {
+                    continue;
+                }
+
+                if (beachSearch.IsNotHunted())
+                {
+                   beachSearch.Hunt(neighboring);
+                    landSearch.Hunt(neighboring);
+                    //landSearch.SetNotHunted();
+                }
+                
+                int foundBeachBiome = beachSearch.Biomes[i];
+
+                if (foundBeachBiome != -1)
+                {
+                 //   var nearestBeachBiome = BiomeProvider.GetBiome(foundBeachBiome);
+                    int nearestLandBiome = landSearch.Biomes[i];
+
+                    if (nearestLandBiome > -1)
+                    {
+                        var foundBiome = BiomeProvider.GetBiome(nearestLandBiome).GetBeachBiome();
+                        var biome = BiomeProvider.GetBiome(foundBiome);
+
+                        if (biome != null && biome.Terrain != null && biome.Surface != null)
+                        {
+                            landscape.Biome[i] = biome;
+                        }
+                    }
+                }
+            }
+
+          //  landscape.Biome = jitteredBiomes;
+        }
+        
+        #endregion
+        
+        private void GenerateTerrain(ChunkColumn column, float[] noiseMap)
+        {
+            int stoneId = new Stone().GetRuntimeId();
+            var waterId = new Water().GetRuntimeId();
+            for (int x = 0; x < 16; x++)
+            {
+                for (int z = 0; z < 16; z++)
+                {
+                   /* var biome = biomes[NoiseMap.GetIndex(x, z)];
+
+                    byte biomeId = (byte) biome.Id;
+                    if (ApplyBlocks)
+                    {*/
+                        var height = (int)noiseMap[NoiseMap.GetIndex(x, z)];
+                        for (int y = 0; (y <= height || y <= Preset.SeaLevel) && y < 255; y++)
+                        {
+                            if (y > height)
+                            {
+                                if (y < Preset.SeaLevel)
+                                {
+                                    column.SetBlockByRuntimeId(x, y, z, waterId);
+                                }
+                                else
+                                {
+                                    if (Preset.SeaLevel - y < 1f)
+                                    {
+                                        
+                                    }
+                                    // column.SetBlock(x,y,z, new Air());
+                                }
+                            }
+                            else if (y == height)
+                            {
+                                column.SetBlockByRuntimeId(x,y,z, stoneId);
+                            //    column.SetBlock(x, y, z, BlockFactory.GetBlockById(biome.SurfaceBlock));
+                                //column.SetMetadata(x, y, z, biome.SurfaceMetadata);
+                                
+                               // column.SetBlock(x, y - 1, z,  BlockFactory.GetBlockById(biome.SoilBlock));
+                                //column.SetMetadata(x, y -1, z, biome.SoilMetadata);
+                            }
+                            else if (y < height)
+                            {
+                                column.SetBlockByRuntimeId(x, y, z, stoneId);
+                            }
+                        }
+                        
+                        
+                        column.SetHeight(x, z, (short) height);
+                    //}
+
+                    //column.SetBiome(x, z, biomeId);
+                }
+            }
         }
     }
 }
