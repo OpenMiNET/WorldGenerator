@@ -16,6 +16,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Ocean
             
             
             Type = BiomeType.Ocean;
+            Config.WeightMultiplier = 1.05f;
         }
     }
 }

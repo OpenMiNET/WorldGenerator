@@ -15,9 +15,11 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla
             MinHeight = 0.025f;
             MaxHeight = 1.5f;
 
-            base.Config.AllowScenicLakes = false;
+            Config.AllowRivers = false;
+            Config.AllowScenicLakes = false;
+            Config.WeightMultiplier = 1.05f;
 
-            Terrain = new SavannaPlateauTerrain(true, 35f, 160f, 60f, 40f, 69f, false);
+            Terrain = new SavannaPlateauTerrain(true, 35f, 160f, 60f, 40f, 69f, true);
             Surface = new SavannaPlateauSurface(Config, new Grass(), new Dirt());
         }
     }

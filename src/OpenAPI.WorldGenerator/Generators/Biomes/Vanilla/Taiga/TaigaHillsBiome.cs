@@ -16,6 +16,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Taiga
             MaxHeight = 0.7f;
             Terrain = new TaigaHillsTerrain();
             Surface = new TaigaSurface(Config, new Grass(), new Dirt());
+
+            Config.AllowRivers = false;
         }
     }
 }

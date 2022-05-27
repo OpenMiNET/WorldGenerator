@@ -44,10 +44,10 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 			{
 				if (Y % 2 == 0)
 				{
-					GenerateVanillaCircle(column, location + new Vector3(0, Y + 1, 0), _leafRadius - 1, 18, 1);
+					GenerateVanillaCircle(column, location + new Vector3(0, Y + 1, 0), _leafRadius - 1, LeafId, 1);
 					continue;
 				}
-				GenerateVanillaCircle(column, location + new Vector3(0, Y + 1, 0), _leafRadius, 18, 1);
+				GenerateVanillaCircle(column, location + new Vector3(0, Y + 1, 0), _leafRadius, LeafId, 1);
 			}
 
 			GenerateTopper(column, location + new Vector3(0, height, 0), 0x1);

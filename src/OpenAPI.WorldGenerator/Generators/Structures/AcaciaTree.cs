@@ -1,4 +1,5 @@
-﻿using MiNET.Blocks;
+﻿using System.Numerics;
+using MiNET.Blocks;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
@@ -16,16 +17,27 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
         {
             get { return 8; }
         }
-
+        
+        private static readonly int WoodId = new Wood()
+        {
+	        WoodType = "acacia"
+        }.GetRuntimeId();
+		
+        private static readonly int LeafId = new Leaves2()
+        {
+	        NewLeafType = "acacia"
+        }.GetRuntimeId();
+        
+        private readonly int _leafRadius = 2;
 	    public override void Create(ChunkColumn column, int x, int y, int z)
 	    {
-		    if (x > 11 || z > 11) return;
-		    if (x < 5 || z < 5) return;
+		    var location = new Vector3(x, y, z);
+		    if (!ValidLocation(location, _leafRadius)) return;
 
-		//    var block = blocks[OverworldGenerator.GetIndex(x, y - 1, z)];
-		//	if (block != 2 && block != 3) return;
-
-			base.Create(column, x, y, z);
+		    int height = Rnd.Next(5, 6);
+		    
+		    GenerateColumn(column, location, height, WoodId);
+		    GenerateVanillaLeaves(column, location + new Vector3(0, height, 0), _leafRadius, LeafId);
 	    }
     }
 }

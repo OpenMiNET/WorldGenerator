@@ -212,7 +212,7 @@ namespace WorldGenerator.Tweaking
 				int xOffset = offset.X + 5;
 				foreach (var biome in _biomeColors)
 				{
-					var b = BiomeUtils.GetBiomeById(biome.Key);
+					var b = _worldGen.BiomeProvider.GetBiome(biome.Key);
 
 					if (!string.IsNullOrWhiteSpace(b?.Name))
 					{

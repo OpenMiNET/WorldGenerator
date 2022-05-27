@@ -173,103 +173,82 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
             //return Biomes.Where(x => x.Terrain != null && x.Surface != null && !x.Config.IsEdgeBiome).ToArray();
         }
 
-        public BiomeBase GetBiome(float temperature, float downfall, float rnd)
+        public BiomeBase GetBiome(float temperature, float downfall, float selector)
         {
-       //     var temp = temperature; MathUtils.ConvertRange(-1f, 1f, -0.5f, 2f, temperature);// temperature;
-       
             var biomes = GetBiomes();
-          //  rnd = Math.Abs(rnd);
-            rnd *= biomes.Length;
-            
-            float maxt    = float.MinValue;
-            int   maxi    = 0;
 
-            float minT     = float.MaxValue;
-            int   minIndex = biomes.Length - 1;
+            /*
+             * 1. Calculate "Weight" for all biomes
+             * 2. 
+             */
             
-            float sum     = 0;
-            var   weights = new float[biomes.Length];
+            selector = 1f / MathF.Abs(selector);
+            float[] weights = new float[biomes.Length];
 
+            int totalItems = 0;
+            float minDifference = float.MaxValue;
             for (int i = 0; i < biomes.Length; i++)
             {
                 var temperatureDifference = biomes[i].Temperature - temperature;
-                var humidityDifference    = biomes[i].Downfall - downfall;
-                
-                //if (temperatureDifference > rnd || humidityDifference > rnd)
-               // {
-                //    weights[i] = 0;
-                //    continue;
-                //}
-                
-              //  Vector2 d                     = new Vector2(biomes[i].Temperature - temp, biomes[i].Downfall - rain);
-             // if (rnd > 0.5)
-              {
-                  temperatureDifference *= 13.37f;
-                  humidityDifference *= 3.57734f;
-              }
-             // else
-              {
-              //    temperatureDifference *= 5f;
-              //    humidityDifference *= 10f;
-              }
+                var humidityDifference = biomes[i].Downfall - downfall;
 
-              var weight =temperatureDifference * temperatureDifference
-                          + humidityDifference * humidityDifference;
-                
-                if (weight > maxt)
+                temperatureDifference *= 12.5f;
+                humidityDifference *= 3.25f;
+
+                var difference =
+                    MathF.Abs((temperatureDifference * temperatureDifference + humidityDifference * humidityDifference) );
+
+                if (difference > 0f)
                 {
-                    maxi = i;
-                    maxt = weight;
+                    if (difference < minDifference)
+                        minDifference = difference;
+                    
+                    weights[i] = difference;
+                    totalItems++;
                 }
-
-                if (weight < minT)
-                {
-                    minT = weight;
-                    minIndex = i;
-                }
-
-                sum += weight;
-                weights[i] = weight;
             }
-
-            return biomes[minIndex];
-
-         //   var rnd = 
-             //rnd = Math.Abs(rnd);
-            //rnd *= biomes.Length;
-
             
-            if (sum > .001f) {
-                // normalize the weights so they add up to 1
-                sum = 1.0f / sum;
-                for (int i = 0; i < biomes.Length; i++) 
-                    weights[i] *= sum;
-            }else {
-                // sum of all weights is very close to zero, just zero all weights and set the highest to 1.0
-                // this helped with artifacts at biome borders
-                for (int i = 0; i < biomes.Length; i++) 
-                    weights[i] = 0.0f;
-                weights[maxi] = 1.0f;
-            }
-
-            // Console.WriteLine($"Weight sum: {sum} Max: {weights.Max()} Min: {weights.Min()} Rnd: {rnd}");
-
-            //  var rnd = MathF.Abs(selectorNoise);
-            while (rnd > 0f)
+            for (int biomeIndex = 0; biomeIndex < weights.Length; biomeIndex++)
             {
-                for (int i = 0; i < biomes.Length; i++)
+                if (weights[biomeIndex] > minDifference)
                 {
-                    rnd -= weights[i];
-
-                    if (rnd <= 0f)
-                    {
-                        //   Console.WriteLine("Got it");
-                        return biomes[i];
-                    }
+                    weights[biomeIndex] = 0f;
+                }
+                else
+                {
+                    weights[biomeIndex] *= biomes[biomeIndex].Config.WeightMultiplier;
                 }
             }
+            
+            float sum = weights.Sum();
 
-            return biomes[minIndex];
+            for (int biomeIndex = 0; biomeIndex < weights.Length; biomeIndex++)
+            {
+                weights[biomeIndex] /= sum;
+            }
+
+           // selector *= totalItems;
+            // selector /= sum;
+           int result = 0;
+
+         //  while (selector > 0f)
+           {
+               for (int i = 0; i < weights.Length; i++)
+               {
+                   var value = weights[i];
+
+                   if (value > 0f)
+                   {
+                       result = i;
+                       selector -= value;
+                       weights[i] = 0;
+                       if (selector <= 0f)
+                           break;
+                   }
+               }
+           }
+
+           return biomes[result];
         }
 
         public BiomeBase GetBiome(int id)

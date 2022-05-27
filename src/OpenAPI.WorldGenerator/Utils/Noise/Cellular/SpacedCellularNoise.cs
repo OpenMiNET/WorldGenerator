@@ -59,13 +59,13 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Cellular
             return (xDist * xDist) + (yDist * yDist);
         }
 
+        private const float TOLERANCE = 0.001f;
         public VoronoiResult Eval2D(double x, double y)
         {
-
             // this algorithm places the points about five times more frequently
             // so I'm adjusting the passed values rather than recalibrating all the routings
-            x = x / 5.0;
-            y = y / 5.0;
+            x /= 5.0;
+            y /= 5.0;
 
             int xInt = (x > 0.0 ? (int) x : (int) x - 1);
             int yInt = (y > 0.0 ? (int) y : (int) y - 1);
@@ -79,50 +79,50 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Cellular
 
             // now horizontally adjacent squares as appropriate
             double distance = y - yInt;
-            if (distance != result.NextDistance)
+            if (Math.Abs(distance - result.NextDistance) > TOLERANCE)
             {
                 result.Evaluate(this.AreaPoints(new Vector2(xInt, yInt - 1)), x, y);
             }
 
             distance = x - xInt;
-            if (distance != result.NextDistance)
+            if (Math.Abs(distance - result.NextDistance) > TOLERANCE)
             {
                 result.Evaluate(this.AreaPoints(new Vector2(xInt - 1, yInt)), x, y);
             }
 
             distance = yInt - y + 1.0;
-            if (distance != result.NextDistance)
+            if (Math.Abs(distance - result.NextDistance) > TOLERANCE)
             {
                 result.Evaluate(this.AreaPoints(new Vector2(xInt, yInt + 1)), x, y);
             }
 
             distance = xInt - x + 1.0;
-            if (distance != result.NextDistance)
+            if (Math.Abs(distance - result.NextDistance) > TOLERANCE)
             {
                 result.Evaluate(this.AreaPoints(new Vector2(xInt + 1, yInt)), x, y);
             }
 
             // now diagonally adjacent squares
             distance = Math.Min(y - yInt, x - xInt);
-            if (distance != result.NextDistance)
+            if (Math.Abs(distance - result.NextDistance) > TOLERANCE)
             {
                 result.Evaluate(this.AreaPoints(new Vector2(xInt - 1, yInt - 1)), x, y);
             }
 
             distance = Math.Min(yInt - y + 1.0, x - xInt);
-            if (distance != result.NextDistance)
+            if (Math.Abs(distance - result.NextDistance) > TOLERANCE)
             {
                 result.Evaluate(this.AreaPoints(new Vector2(xInt - 1, yInt + 1)), x, y);
             }
 
             distance = Math.Min(yInt - y + 1.0, xInt - x + 1.0);
-            if (distance != result.NextDistance)
+            if (Math.Abs(distance - result.NextDistance) > TOLERANCE)
             {
                 result.Evaluate(this.AreaPoints(new Vector2(xInt + 1, yInt + 1)), x, y);
             }
 
             distance = Math.Min(y - yInt, xInt - x + 1.0);
-            if (distance != result.NextDistance)
+            if (Math.Abs(distance - result.NextDistance) > TOLERANCE)
             {
                 result.Evaluate(this.AreaPoints(new Vector2(xInt + 1, yInt - 1)), x, y);
             }

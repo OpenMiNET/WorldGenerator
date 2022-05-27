@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Numerics;
 using MiNET.Blocks;
 using MiNET.Utils;
@@ -46,16 +47,8 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 						var z = location.Z + j;
 						if (x < 0 || z > 16) continue;
 						if (z < 0 || z > 16) continue;
-
-						//var idx = OverworldGenerator.GetIndex((int) x, (int) location.Y, (int) z);
 						
-						//if (blocks[idx] == 0)
-						{
-							//blocks[idx] = id;
-							//metadata[idx] = meta;
-							chunk.SetBlockByRuntimeId((int)x, (int)location.Y, (int)z, blockRuntimeId);
-							//chunk.SetMetadata((int)x, (int)location.Y, (int)z, meta);
-						}
+						chunk.SetBlockByRuntimeId((int)x, (int)location.Y, (int)z, blockRuntimeId);
 					}
 				}
 			}
@@ -68,10 +61,8 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 				var x = (int)location.X;
 				var y = (int)location.Y + o;
 				var z = (int)location.Z;
-			//	blocks[OverworldGenerator.GetIndex(x, y, z)] = id;
-			//	metadata[OverworldGenerator.GetIndex(x, y, z)] = meta;
+				
 				chunk.SetBlockByRuntimeId(x, y, z, blockRuntimeId);
-				//chunk.SetMetadata(x, y, z, meta);
 			}
 		}
 
@@ -93,13 +84,8 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 						var x = (int)X;
 						var y = (int)location.Y;
 						var z = (int)Z;
-						//if (blocks[OverworldGenerator.GetIndex(x, y, z)].Equals(0))
-						{
-							//blocks[OverworldGenerator.GetIndex(x, y, z)] = id;
-							//metadata[OverworldGenerator.GetIndex(x, y, z)] = meta;
-							chunk.SetBlockByRuntimeId(x, y, z, blockRuntimeId);
-							//chunk.SetMetadata(x, y, z, meta);
-						}
+						
+						chunk.SetBlockByRuntimeId(x, y, z, blockRuntimeId);
 					}
 				}
 			}
@@ -169,9 +155,6 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 
 			while (c < length)
 			{
-				//blocks[OverworldGenerator.GetIndex((int)x, (int)y, (int)z)] = blockId;//);
-				//metadata[OverworldGenerator.GetIndex((int) x, (int) y, (int) z)] = meta;
-				//world.SetMetadata((int)x, (int)y, (int)z, meta);
 				chunk.SetBlockByRuntimeId((int)x, (int)y, (int)z, blockRuntimeId);
 				
 				x += velX;
@@ -223,10 +206,8 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 							{
 								chunk.SetBlockByRuntimeId(x + i, y + j, z + k, woodRuntimeId);
 							}
-							//if (blocks[OverworldGenerator.GetIndex(x + i, y + j, z + k)] == 0)
-							{
-								chunk.SetBlockByRuntimeId(x + i, y + j, z + k, leafBlockRuntimeId);
-							}
+							
+							chunk.SetBlockByRuntimeId(x + i, y + j, z + k, leafBlockRuntimeId);
 						}
 					}
 				}
@@ -237,6 +218,23 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 		{
 			return !(location.X - leafRadius < 0) && !(location.X + leafRadius >= 16) && !(location.Z - leafRadius < 0) &&
 				   !(location.Z + leafRadius >= 16);
+		}
+
+		private static int[] ValidBlockRuntimeIds = new int[]
+		{
+			new Grass().GetRuntimeId(), new Dirt().GetRuntimeId(), new Farmland().GetRuntimeId()
+		};
+		/// <inheritdoc />
+		public override bool CanCreate(ChunkColumn column, int x, int y, int z)
+		{
+			var block = column.GetBlockObject(x, y, z);
+
+			if (ValidBlockRuntimeIds.Contains(block.GetRuntimeId()))
+				return true;
+
+			return false;
+			
+			return base.CanCreate(column, x, y, z);
 		}
 	}
 }

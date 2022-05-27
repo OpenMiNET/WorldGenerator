@@ -21,7 +21,12 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 		
 		}
 
-		public Block GetBlockObject(int runtimeId)
+		public virtual bool CanCreate(ChunkColumn column, int x, int y, int z)
+		{
+			return true;
+		}
+
+		protected Block GetBlockObject(int runtimeId)
 		{
 			BlockStateContainer blockStateContainer = BlockFactory.BlockPalette[runtimeId];
 			Block blockById = BlockFactory.GetBlockById(blockStateContainer.Id);

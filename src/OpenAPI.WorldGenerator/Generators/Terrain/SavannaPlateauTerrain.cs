@@ -13,9 +13,8 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
         private float   _baseVal;
         private bool    _isModified;
         
-        public SavannaPlateauTerrain(bool riverGen, float heightStrength, float canyonWidth, float canyonHeight, float canyonStrength, float baseHeight, bool isModified)
+        public SavannaPlateauTerrain(bool riverGen, float heightStrength, float canyonWidth, float canyonHeight, float canyonStrength, float baseHeight, bool isModified) : base(baseHeight)
         {
-            BaseHeight = baseHeight;
             _booRiver = true;
             /*    Values come in pairs per layer. First is how high to step up.
              * 	Second is a value between 0 and 1, signifying when to step up.

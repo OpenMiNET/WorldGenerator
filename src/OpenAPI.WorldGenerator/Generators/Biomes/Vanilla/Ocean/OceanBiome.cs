@@ -11,10 +11,11 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Ocean
             Temperature = 0.5f;
             Downfall = 0.5f;
             MinHeight = -1f;
-            MaxHeight = 0.4f;
+            MaxHeight = 0.5f;
             Terrain = new OceanTerrain();
 
             Type = BiomeType.Ocean;
+            Config.WeightMultiplier = 1f;
         }
     }
 }

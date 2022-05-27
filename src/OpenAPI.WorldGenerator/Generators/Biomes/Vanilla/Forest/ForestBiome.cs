@@ -13,6 +13,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Forest
             MinHeight = 0.1f; //TODO
             MaxHeight = 0.2f;
             Terrain = new ForestTerrain();
+            
+            Config.WeightMultiplier = 0.75f;
         }
     }
 }

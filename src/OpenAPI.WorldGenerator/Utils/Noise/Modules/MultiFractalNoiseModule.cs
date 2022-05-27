@@ -15,6 +15,16 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
     {
         #region Ctor/Dtor
 
+        public MultiFractalNoiseModule()
+        {
+            
+        }
+
+        public MultiFractalNoiseModule(INoiseModule primitive)
+        {
+            Primitive = primitive;
+        }
+        
         #endregion
 
         #region IModule2D Members

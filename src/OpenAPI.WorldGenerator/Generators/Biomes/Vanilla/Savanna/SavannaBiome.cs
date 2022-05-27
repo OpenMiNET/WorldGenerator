@@ -17,6 +17,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla
             
             Terrain = new SavannaTerrain();
             Surface = new SavannaSurface(Config, new Grass(), new Dirt(), new Grass(), 13f, 0.27f);
+
+            Config.WeightMultiplier = 1f;
         }
     }
 }

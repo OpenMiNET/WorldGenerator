@@ -86,7 +86,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise
 
             }
 
-            public ISimplexData2D.IDataRequest request()
+            public ISimplexData2D.IDataRequest Request()
             {
                 return new DiskDataRequest(this);
             }
@@ -119,7 +119,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise
 
             }
 
-            public ISimplexData2D.IDataRequest request()
+            public ISimplexData2D.IDataRequest Request()
             {
                 return new DerivativeDataRequest(this);
             }

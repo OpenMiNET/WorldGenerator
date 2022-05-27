@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using OpenAPI.WorldGenerator.Generators.Terrain;
 
@@ -14,14 +15,14 @@ namespace OpenAPI.WorldGenerator.Generators.Effects
         {
             var evaluateAt = new Vector2(x / PointWavelength, y / PointWavelength);
             var points = generator.CellularInstance(1).Eval2D(evaluateAt.X, evaluateAt.Y);
-            float raise = (float) (points.InteriorValue);
+            float raise = (float) Math.Abs((points.InteriorValue));
             // now we're going to get an adjustment value which will be the same
             // for all points on a given vector from the voronoi basin center
             var adjustAt = points.ToLength(evaluateAt, AdjustmentRadius);
             float multiplier = 1.3f;
             float noZeros = 0.1f;
-            float adjustment = (float) generator.CellularInstance(2).Eval2D(adjustAt.X, adjustAt.Y).InteriorValue * multiplier + noZeros;
-            float reAdjustment = (float) generator.CellularInstance(3).Eval2D(adjustAt.X, adjustAt.Y).InteriorValue * multiplier + noZeros;
+            float adjustment = (float) Math.Abs(generator.CellularInstance(2).Eval2D(adjustAt.X, adjustAt.Y).InteriorValue) * multiplier + noZeros;
+            float reAdjustment = (float) Math.Abs(generator.CellularInstance(3).Eval2D(adjustAt.X, adjustAt.Y).InteriorValue) * multiplier + noZeros;
             // 0 to 1 which is currently undesirable so increase to average closer to 1
             adjustment = TerrainBase.BayesianAdjustment(adjustment, reAdjustment);
             raise = TerrainBase.BayesianAdjustment(raise, adjustment);

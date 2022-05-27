@@ -15,6 +15,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Ocean
             Terrain = new OceanTerrain();
             
             Type = BiomeType.Ocean | BiomeType.Snowy;
+            Config.WeightMultiplier = 1.3f;
         }
     }
 }

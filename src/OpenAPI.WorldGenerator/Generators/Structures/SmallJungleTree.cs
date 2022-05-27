@@ -54,7 +54,7 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 			{
 				//blocks[OverworldGenerator.GetIndex(x, i, z)] = 17;
 				//metadata[OverworldGenerator.GetIndex(x, i, z)] = 3;
-				chunk.SetBlock(x, i, z, 17);
+				chunk.SetBlockByRuntimeId(x, i, z, WoodId);
 			//	chunk.SetMetadata(x, i, z, 3);
 			}
 

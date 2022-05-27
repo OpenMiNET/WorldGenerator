@@ -4,6 +4,7 @@ using System.Threading;
 using log4net;
 using MiNET;
 using MiNET.Blocks;
+using MiNET.Effects;
 using MiNET.Utils;
 using MiNET.Worlds;
 using Newtonsoft.Json;
@@ -28,6 +29,17 @@ namespace OpenAPI.WorldGenerator
       //  private WorldGeneratorPreset Preset { get; }
         public WorldGeneratorPlugin()
         {
+        }
+
+        [EventHandler(EventPriority.Monitor)]
+        protected void OnPlayerJoin(PlayerJoinEvent e)
+        {
+            e.Player.SetEffect(new Speed()
+            {
+                Duration = int.MaxValue,
+                Level = 10,
+                Particles = false,
+            });
         }
 
         private void Callback(object state)
@@ -57,7 +69,7 @@ namespace OpenAPI.WorldGenerator
                 if (result == null)
                     result = BiomeUtils.GetBiomeById(biome);
                 
-                player.SendTitle($"Biome: {result.Name}, Temperature: {result.Temperature}, Downfall: {result.Downfall}", TitleType.ActionBar, 0, 0, 25);
+                player.SendTitle($"Biome: {(result?.Name ?? "N/A")}, Temperature: {(result?.Temperature.ToString() ?? "N/A")}, Downfall: {(result?.Downfall.ToString() ?? "N/A")}", TitleType.ActionBar, 0, 0, 25);
             }
         }
 

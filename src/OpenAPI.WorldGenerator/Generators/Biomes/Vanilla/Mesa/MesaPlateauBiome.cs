@@ -1,5 +1,7 @@
 using MiNET.Blocks;
+using OpenAPI.WorldGenerator.Generators.Biomes.Config;
 using OpenAPI.WorldGenerator.Generators.Surfaces;
+using OpenAPI.WorldGenerator.Generators.Surfaces.Mesa;
 using OpenAPI.WorldGenerator.Generators.Terrain;
 
 namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Mesa
@@ -12,18 +14,18 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Mesa
             Name = "Mesa Plateau";
             Temperature = 2.0f;
             Downfall = 0.0f;
-            MinHeight = 1.5f;
-            MaxHeight = 0.025f;
+            MinHeight = 0.025f;
+            MaxHeight = 1.5f;
 
-         //   SurfaceBlock = 12; //Surface = Red Sand
-          //  SurfaceMetadata = 1;
+            Config.AllowRivers = false;
+            Config.AllowScenicLakes = false;
+            Config.WeightMultiplier = 1.25f;
+            //   SurfaceBlock = 12; //Surface = Red Sand
+            //  SurfaceMetadata = 1;
 
-          //  SoilBlock = 179; //Soil = Red Sandstone
-            Terrain = new MesaPlateauTerrain(67);
-            Surface = new SurfaceBase(Config, new Sand()
-            {
-                SandType = "red"
-            }, new RedSandstone());
+            //  SoilBlock = 179; //Soil = Red Sandstone
+            Terrain = new VanillaMesaPlateauTerrain(true, 35f, 160f, 60f, 40f, 69f);
+            Surface = new MesaSurface(Config, new Sand() {SandType = "red"}, new RedSandstone());
         }
     }
 }

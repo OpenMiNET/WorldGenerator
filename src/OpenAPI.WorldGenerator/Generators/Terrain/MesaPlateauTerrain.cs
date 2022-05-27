@@ -17,13 +17,11 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
         private float _bumpinessWavelength = 10f;
 
         
-        public MesaPlateauTerrain(float baseHeight)
+        public MesaPlateauTerrain(float baseHeight) : base(baseHeight)
         {
             _plateau = new VoronoiPlateauEffect();
             _plateau.PointWavelength = 200;
             _groundNoise = 4;
-
-            BaseHeight = baseHeight;
         }
         
         public override float GenerateNoise(OverworldGeneratorV2 generator, int passedX, int passedY, float border, float river)
@@ -37,8 +35,35 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             float bumpiness = generator.SimplexInstance(2).GetValue(x / _bumpinessWavelength, y / _bumpinessWavelength) * _bumpinessMultiplier;
             float simplex = _plateau.Added(generator, x, y) * bordercap * rivercap + bumpiness;
             float added = PlateauUtil.StepIncrease(simplex, _stepStart, _stepFinish, _stepHeight) / border;
-            
+
+            /*return TerrainPlateau(
+                x, y, generator, river, new float[] {12.0f, 0.5f, 6f, 0.7f}, border, 35f, 4, 50f, false);*/
             return Riverized(generator, BaseHeight + GetGroundNoise(x, y, _groundNoise, generator), river) + added;
+        }
+    }
+
+    public class VanillaMesaPlateauTerrain : TerrainBase
+    {
+        private readonly float[] _height;
+        private readonly int _heightLength;
+        private readonly float _strength;
+
+        public VanillaMesaPlateauTerrain(bool riverGen,
+            float heightStrength,
+            float canyonWidth,
+            float canyonHeight,
+            float canyonStrength,
+            float baseHeight) : base(baseHeight)
+        {
+            _height = new float[] {32.0f, 0.4f};
+            _strength = 10f;
+            _heightLength = _height.Length;
+        }
+
+        /// <inheritdoc />
+        public override float GenerateNoise(OverworldGeneratorV2 generator, int x, int y, float border, float river)
+        {
+            return TerrainPlateau(x, y, generator, river, _height, border, _strength, _heightLength, 100f, false);
         }
     }
 }

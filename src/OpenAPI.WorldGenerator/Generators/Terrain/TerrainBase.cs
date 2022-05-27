@@ -176,8 +176,8 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             h += simplex.GetValue(x / 15f, y / 15f) * (12f - h) * 0.15f;*/
 
             float ruggedNoise = generator.SimplexInstance(1).GetValue(
-                x / 200f,
-                y / 200f
+                x / generator.Preset.DepthNoiseScaleX,
+                y / generator.Preset.DepthNoiseScaleZ
             );
 
             ruggedNoise = BlendedHillHeight(ruggedNoise);
@@ -348,6 +348,51 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return Riverized(generator, baseHeight + h, river);
         }
 
+        public static float TerrainMesa(int x, int y, OverworldGeneratorV2 generator, float river, float border) {
+
+            var simplex = generator.SimplexInstance(0);
+            float b = simplex.GetValue(x / 130f, y / 130f) * 50f * river;
+            b *= b / 40f;
+
+            float hn = simplex.GetValue(x / 12f, y / 12f);
+
+            float sb = 0f;
+            if (b > 2f) {
+                sb = (b - 2f) / 2f;
+                sb = sb < 0f ? 0f : sb > 5.5f ? 5.5f : sb;
+                sb = hn * sb;
+            }
+            b += sb;
+
+            b = b < 0.1f ? 0.1f : b;
+
+            float c1 = 0f;
+            if (b > 1f) {
+                c1 = b > 5.5f ? 4.5f : b - 1f;
+                c1 *= 3;
+            }
+
+            float c2 = 0f;
+            if (b > 5.5f && border > 0.95f + hn * 0.09f) {
+                c2 = b > 6f ? 0.5f : b - 5.5f;
+                c2 *= 35;
+            }
+
+            float bn = 0f;
+            if (b < 7f) {
+                float bnh = 5f - b;
+                bn += simplex.GetValue(x / 70f, y / 70f) * (bnh * 0.4f);
+                bn += simplex.GetValue(x / 20f, y / 20f) * (bnh * 0.3f);
+            }
+
+            float w = simplex.GetValue(x / 80f, y / 80f) * 25f;
+            w *= w / 25f;
+
+            b += c1 + c2 + bn - w;
+
+            return 74f + b;
+        }
+        
         public static float TerrainOcean(int x, int y, OverworldGeneratorV2 generator, float river, float averageFloor)
         {
 
@@ -566,11 +611,11 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return baseHeight + h * border;
         }
 
-        public static float GetRiverStrength(BlockCoordinates blockPos, OverworldGeneratorV2 generator)
+        public static float GetRiverStrength(int x, int z, OverworldGeneratorV2 generator)
         {
 
-            int worldX = blockPos.X;
-            int worldZ = blockPos.Z;
+            int worldX = x;
+            int worldZ = z;
             double pX = worldX;
             double pZ = worldZ;
             var jitterData = SimplexData2D.NewDisk();
@@ -596,7 +641,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
                 return 0;
             } // no river effect
 
-            return (float) (riverFactor / generator.RiverValleyLevel - 1d);
+            return (float) (riverFactor / generator.RiverValleyLevel - 1f);
         }
         
         public static float CalcCliff(int x, int z, float[] noise)

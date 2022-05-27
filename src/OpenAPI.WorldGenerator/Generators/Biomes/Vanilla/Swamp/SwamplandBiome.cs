@@ -9,7 +9,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Swamp
             Id = 6;
             Name = "Swampland";
             Temperature = 0.8f;
-            Downfall = 0.9f;
+            Downfall = 0.5f;
             MinHeight = -0.2f;
             MaxHeight = 0.1f;
 

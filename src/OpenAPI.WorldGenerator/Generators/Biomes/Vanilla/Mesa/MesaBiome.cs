@@ -15,7 +15,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Mesa
             Downfall = 0.0f;
             MinHeight = 0.1f;
             MaxHeight = 0.2f;
-
+            
+            Config.WeightMultiplier = 1.25f;
             //SurfaceBlock = 12; //Surface = Red Sand
             //SurfaceMetadata = 1;
 

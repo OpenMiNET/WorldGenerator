@@ -58,26 +58,14 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 					//if (biome.Config.)
 					if (biome.Downfall <= 0f && biome.Temperature >= 2f)
 					{
-						if (GetRandom(32) == 16)
+						if (GetRandom(64) == 16)
 						{
-							var randValue = GetRandom(18);
-
-							if (randValue >= 0 && randValue <= 2) //3 tall cactus
-							{
-								tree = new CactusStructure(3);
-							}
-							else if (randValue > 2 && randValue <= 5) // 2 tall cactus
-							{
-								tree = new CactusStructure(2);
-							}
-							else if (randValue > 5 && randValue <= 11) // 1 tall cactus
-							{
-								tree = new CactusStructure(1);
-							}
+							var randValue = GetRandom(3);
+							tree = new CactusStructure(randValue);
 						}
 					}
 
-					if (tree == null && biome.Downfall >= 0 && (noise > (0.5f + (y / 512f))))
+					if (tree == null && biome.Downfall > 0 && (noise > (0.5f + (y / 512f))))
 					{
 						if (currentTemperature >= 1f && biome.Downfall >= 0.4f)
 						{
@@ -119,7 +107,10 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 					{
 						if (y + 1 < 254)
 						{
-							tree.Create(column, x, y + 1, z);
+							if (tree.CanCreate(column, x, y, z))
+							{
+								tree.Create(column, x, y + 1, z);
+							}
 						}
 
 						generated = true;

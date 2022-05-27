@@ -12,10 +12,9 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
         private readonly float _ridgeWidth = 300f;
         private readonly float _valleyFloor = -0.2f;
 
-        public RidgedExtremeHillsTerrain(float landHeight, float baseHeight, float hillWidth)
+        public RidgedExtremeHillsTerrain(float landHeight, float baseHeight, float hillWidth) : base(baseHeight)
         {
             _height = landHeight;
-            this.BaseHeight = baseHeight;
             _width = hillWidth;
 
             SpikeEverywhereEffect baseHills = new SpikeEverywhereEffect();
