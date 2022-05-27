@@ -24,8 +24,8 @@ namespace WorldGenerator.Tweaking
     class Program
     {
         private static TestGame Game { get; set; }
-        private const int Radius     = 256;
-        private const int Resolution = 1;
+        public const int Radius     = 372;
+        public const int Resolution = 1;
         //private static ConcurrentQueue<ChunkColumn> Finished = new ConcurrentQueue<ChunkColumn>();
         static void Main(string[] args)
         {

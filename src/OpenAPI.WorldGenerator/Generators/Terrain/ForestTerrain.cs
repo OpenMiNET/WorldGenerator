@@ -4,6 +4,8 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
     {
         public override float GenerateNoise(OverworldGeneratorV2 generator, int x, int y, float border, float river)
         {
+            GroundNoise = GetGroundNoise(x, y, GroundVariation, generator);
+            return TerrainForest(x, y, generator, river, generator.Preset.SeaLevel + 3 + GroundNoise);
           //  return TerrainForest(x,y, generator, river, ge)
             GroundNoise = GetGroundNoise(x, y, GroundVariation, generator);
 

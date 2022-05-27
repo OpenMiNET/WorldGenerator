@@ -1,3 +1,5 @@
+using OpenAPI.WorldGenerator.Generators.Terrain;
+
 namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla
 {
     public class IcePlainsBiome : BiomeBase
@@ -10,6 +12,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla
             Downfall = 0.5f;
             MinHeight = 0.125f;
             MaxHeight = 0.5f;
+
+            Terrain = new PlainsTerrain();
         }
     }
 }

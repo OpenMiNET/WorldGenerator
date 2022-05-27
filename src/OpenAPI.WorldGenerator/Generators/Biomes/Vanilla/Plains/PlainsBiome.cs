@@ -14,7 +14,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla
             MaxHeight = 0.5f;
             
             Terrain = new PlainsTerrain();
-            Config.WeightMultiplier = 0.75f;
+            Config.WeightMultiplier = 0.8f;
         }
     }
 }

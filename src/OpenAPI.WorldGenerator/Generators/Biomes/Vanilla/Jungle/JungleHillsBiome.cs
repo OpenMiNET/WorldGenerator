@@ -14,6 +14,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Jungle
             MaxHeight = 1.8f;
 
             Terrain = new JungleHillsTerrain(72f, 40f);
+            Config.WeightMultiplier = 1.2f;
         }
     }
 }

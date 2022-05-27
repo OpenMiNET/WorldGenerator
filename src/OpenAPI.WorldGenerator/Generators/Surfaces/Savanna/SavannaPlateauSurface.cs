@@ -40,7 +40,7 @@ namespace OpenAPI.WorldGenerator.Generators.Surfaces.Savanna
 		public SavannaPlateauSurface(BiomeConfig config, Block top, Block filler, bool isModified = false) : base(config, top, filler)
 		{
 			mixBlock = new Dirt().GetRuntimeId();
-			isModified = isModified;
+			IsModified = isModified;
 		}
 
 		/// <inheritdoc />

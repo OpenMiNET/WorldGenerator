@@ -19,11 +19,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Mesa
 
             Config.AllowRivers = false;
             Config.AllowScenicLakes = false;
-            Config.WeightMultiplier = 1.25f;
-            //   SurfaceBlock = 12; //Surface = Red Sand
-            //  SurfaceMetadata = 1;
-
-            //  SoilBlock = 179; //Soil = Red Sandstone
+            Config.WeightMultiplier = 1.3f;
+            
             Terrain = new VanillaMesaPlateauTerrain(true, 35f, 160f, 60f, 40f, 69f);
             Surface = new MesaSurface(Config, new Sand() {SandType = "red"}, new RedSandstone());
         }

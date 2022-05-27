@@ -31,10 +31,8 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             additionalHeightSpikes.Octave = 4;
             additionalHeightSpikes.Power = 1.9f;
 
-            JitterEffect additionalHeight = new JitterEffect();
-            additionalHeight.Amplitude = additionalHeightSpikes.Wavelength / 3;
-            additionalHeight.Wavelength = additionalHeightSpikes.Wavelength / 2;
-            additionalHeight.Jittered = additionalHeightSpikes;
+            JitterEffect additionalHeight = new JitterEffect(
+                additionalHeightSpikes.Wavelength / 3, additionalHeightSpikes.Wavelength / 2, additionalHeightSpikes);
 
             SpikeEverywhereEffect rougheningSpikes = new SpikeEverywhereEffect();
             rougheningSpikes.Spiked = new RaiseEffect(_height / 8f);
@@ -43,32 +41,19 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             rougheningSpikes.Octave = 5;
             rougheningSpikes.Power = 1.9f;
 
-            JitterEffect roughening = new JitterEffect();
-            roughening.Amplitude = rougheningSpikes.Wavelength / 3;
-            roughening.Wavelength = rougheningSpikes.Wavelength / 2;
-            roughening.Jittered = rougheningSpikes;
+            JitterEffect roughening = new JitterEffect(rougheningSpikes.Wavelength / 3, rougheningSpikes.Wavelength / 2, rougheningSpikes);
 
-            JitterEffect hillJitter = new JitterEffect();
-            hillJitter.Amplitude = 15f;
-            hillJitter.Wavelength = 50f;
-            hillJitter.Jittered = baseHills.Plus(additionalHeight).Plus(roughening);
+            JitterEffect hillJitter = new JitterEffect(15f, 50f, baseHills.Plus(additionalHeight).Plus(roughening));
             _heightIncrease = hillJitter;
-
-
+            
             VoronoiBorderEffect ridging = new VoronoiBorderEffect();
             ridging.PointWavelength = _ridgeWidth;
             ridging.Floor = _valleyFloor;
             ridging.MinimumDivisor = .2f;
 
-            JitterEffect ridgeJitter = new JitterEffect();
-            ridgeJitter.Amplitude = 15f;
-            ridgeJitter.Wavelength = 50f;
-            ridgeJitter.Jittered = ridging;
+            JitterEffect ridgeJitter = new JitterEffect(15f, 50f, ridging);
 
-            JitterEffect ridgeJitterrette = new JitterEffect();
-            ridgeJitterrette.Amplitude = 5f;
-            ridgeJitterrette.Wavelength = 20f;
-            ridgeJitterrette.Jittered = ridgeJitter;
+            JitterEffect ridgeJitterrette = new JitterEffect(5f, 20f, ridgeJitter);
             _multiplier = ridgeJitterrette;
 
             _groundEffect = new GroundEffect(6);

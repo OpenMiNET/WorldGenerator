@@ -21,10 +21,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
         public float MaxHeight = 0.3f;
 
         public byte SurfaceBlock = 2;
-        public byte SurfaceMetadata = 0;
 
         public byte SoilBlock = 3;
-        public byte SoilMetadata = 0;
         
         public Color? Color { get; set; } = null;
 
@@ -70,10 +68,10 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
 
             if (!this.Config.AllowScenicLakes)
             {
-                
+                return Terrain.GenerateNoise(generator, x, y, border, river);
             }
             
-            /*// combine rivers and lakes
+            // combine rivers and lakes
             if ((river < 1) && (lakeFlattening < 1))
             {
                 river = (1f - river) / river + (1f - lakeFlattening) / lakeFlattening;
@@ -94,9 +92,9 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
             if (riverFlattening < 0)
             {
                 riverFlattening = 0;
-            }*/
+            }
             
-            float riverFlattening = river*1.25f-0.25f;
+            /*float riverFlattening = river*1.25f-0.25f;
             if (riverFlattening <0) riverFlattening = 0;
             if ((river<1)&&(lakeFlattening<1)) 
             {
@@ -119,7 +117,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
             else if (lakeFlattening < river)
             {
                 river = lakeFlattening;
-            }
+            }*/
 
             // flatten terrain to set up for the water features
             float terrainNoise = Terrain.GenerateNoise(generator, x, y, border, riverFlattening);
@@ -127,7 +125,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
             return this.ErodedNoise(generator, x, y, river, border, terrainNoise);
         }
         
-        /*public float ErodedNoise(OverworldGeneratorV2 generator, int x, int y, float river, float border, float biomeHeight)
+        public float ErodedNoise(OverworldGeneratorV2 generator, int x, int y, float river, float border, float biomeHeight)
         {
             float r;
             // put a flat spot in the middle of the river
@@ -145,9 +143,9 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
                     2f + generator.SimplexInstance(0).GetValue(x / 8f, y / 8f) * 1.5f) * (1f-r));
             }
             else return biomeHeight;
-        }*/
+        }
 
-        public float ErodedNoise(OverworldGeneratorV2 generator, int x, int y, float river, float border, float biomeHeight)
+        /*public float ErodedNoise(OverworldGeneratorV2 generator, int x, int y, float river, float border, float biomeHeight)
         {
             float r;
 
@@ -176,7 +174,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
             }
 
             return biomeHeight;
-        }
+        }*/
 
         public float LakePressure(OverworldGeneratorV2 generator, int x, int y, float border, float lakeInterval,
             float largeBendSize, float mediumBendSize, float smallBendSize)

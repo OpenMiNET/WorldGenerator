@@ -15,9 +15,6 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Desert
             MinHeight = 0.2f;
             MaxHeight = 0.7f;
 
-            SurfaceBlock = 12; //Sand
-            SoilBlock = 24; //Sandstone
-
             Terrain = new DesertHillsTerrain(10f, 80f, 68f, 200f);
             Surface = new SurfaceBase(Config, new Sand(), new Sandstone());
         }

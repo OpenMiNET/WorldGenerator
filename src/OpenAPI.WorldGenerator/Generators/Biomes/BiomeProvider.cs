@@ -28,6 +28,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
         //public INoiseModule TemperatureProvider { get; set; }
         
         public BiomeBase[] Biomes { get; }
+        private Dictionary<int, BiomeBase> ById { get; }
         public BiomeProvider()
         {
             //Biomes = BiomeUtils.Biomes.Where(b => b.Terrain != null).ToArray();
@@ -44,8 +45,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
                 new DesertBiome(),
                 new DesertHillsBiome(),
                 //    new DesertMBiome(),
-             //   new ExtremeHillsBiome(),
-            //    new ExtremeHillsEdgeBiome(),
+                new ExtremeHillsBiome(),
+                new ExtremeHillsEdgeBiome(),
                 /*    new ExtremeHillsMBiome(),
                     new ExtremeHillsPlusBiome(),
                     new ExtremeHillsPlusMBiome(),
@@ -57,7 +58,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
                 new IcePlainsBiome(),
                 // new IcePlainsSpikesBiome(),
                 new JungleBiome(),
-                new JungleEdgeBiome(),
+                new JungleEdgeBiome().SetEdgeBiome(true),
                 //  new JungleEdgeMBiome(),
                 new JungleHillsBiome(),
                 /*new JungleMBiome(),
@@ -123,6 +124,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
             float minHeight = float.MaxValue;
             float maxHeight = float.MinValue;
 
+            Dictionary<int, BiomeBase> byId = new Dictionary<int, BiomeBase>();
+            
             for (int i = 0; i < Biomes.Length; i++)
             {
                 var biome = Biomes[i];
@@ -156,7 +159,11 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
                 }
 
                 Biomes[i] = biome;
+
+                byId.TryAdd(biome.Id, biome);
             }
+
+            ById = byId;
             Console.WriteLine($"Temperature (min: {minTemp} max: {maxTemp}) Downfall (min:{minRain} max: {maxRain}) Height (min: {minHeight} max: {maxHeight})");
         }
 
@@ -176,13 +183,9 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
         public BiomeBase GetBiome(float temperature, float downfall, float selector)
         {
             var biomes = GetBiomes();
+         //   selector = Math.Clamp(selector, 0, 1f);
 
-            /*
-             * 1. Calculate "Weight" for all biomes
-             * 2. 
-             */
-            
-            selector = 1f / MathF.Abs(selector);
+         
             float[] weights = new float[biomes.Length];
 
             int totalItems = 0;
@@ -192,11 +195,11 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
                 var temperatureDifference = biomes[i].Temperature - temperature;
                 var humidityDifference = biomes[i].Downfall - downfall;
 
-                temperatureDifference *= 12.5f;
-                humidityDifference *= 3.25f;
+                temperatureDifference *= 4.5f;
+                humidityDifference *= 2.5f;
 
-                var difference =
-                    MathF.Abs((temperatureDifference * temperatureDifference + humidityDifference * humidityDifference) );
+                var difference = MathF.Abs(
+                    (temperatureDifference * temperatureDifference + humidityDifference * humidityDifference));
 
                 if (difference > 0f)
                 {
@@ -226,9 +229,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
             {
                 weights[biomeIndex] /= sum;
             }
-
-           // selector *= totalItems;
-            // selector /= sum;
+            //selector *= weights.Length;
+           //  selector /= totalItems;
            int result = 0;
 
          //  while (selector > 0f)
@@ -242,6 +244,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
                        result = i;
                        selector -= value;
                        weights[i] = 0;
+                       
                        if (selector <= 0f)
                            break;
                    }
@@ -253,6 +256,10 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
 
         public BiomeBase GetBiome(int id)
         {
+            if (ById.TryGetValue(id, out var value))
+                return value;
+
+            return default;
             return Biomes.FirstOrDefault(x => x.Id == id);//.Where(x => x.Terrain != null && x.Surface != null).FirstOrDefault(x => x.Id == id);
         }
     }

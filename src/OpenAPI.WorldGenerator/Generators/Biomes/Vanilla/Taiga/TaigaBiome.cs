@@ -14,6 +14,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Taiga
             Downfall = 0.8f;
             MinHeight = 0.1f;
             MaxHeight = 0.4f;
+            
             Terrain = new TaigaTerrain();
             Surface = new TaigaSurface(Config, new Grass(), new Dirt());
         }

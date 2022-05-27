@@ -17,6 +17,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Jungle
 
             Terrain = new JungleTerrain();
             Surface = new JungleSurface(Config, new Grass(), new Dirt(), 0f, 1.5f, 60f, 65f, 1.5f, new Podzol(), 0.09f);
+            
+           // Config.WeightMultiplier = 1.f;
         }
     }
 }

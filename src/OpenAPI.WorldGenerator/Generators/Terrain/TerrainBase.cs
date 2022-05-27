@@ -651,22 +651,22 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             float cliff = 0f;
             if (x > 0)
             {
-                cliff = Math.Max(cliff, Math.Abs(noise[index] - noise[NoiseMap.GetIndex(x - 1, z)]));
+                cliff = MathF.Max(cliff, MathF.Abs(noise[index] - noise[NoiseMap.GetIndex(x - 1, z)]));
             }
 
             if (z > 0)
             {
-                cliff = Math.Max(cliff, Math.Abs(noise[index] - noise[NoiseMap.GetIndex(x, z - 1)]));
+                cliff = MathF.Max(cliff, MathF.Abs(noise[index] - noise[NoiseMap.GetIndex(x, z - 1)]));
             }
 
             if (x < 15)
             {
-                cliff = Math.Max(cliff, Math.Abs(noise[index] - noise[NoiseMap.GetIndex(x + 1, z)]));
+                cliff = MathF.Max(cliff, MathF.Abs(noise[index] - noise[NoiseMap.GetIndex(x + 1, z)]));
             }
 
             if (z < 15)
             {
-                cliff = Math.Max(cliff, Math.Abs(noise[index] - noise[NoiseMap.GetIndex(x, z + 1)]));
+                cliff = MathF.Max(cliff, MathF.Abs(noise[index] - noise[NoiseMap.GetIndex(x, z + 1)]));
             }
 
             return cliff;
@@ -689,12 +689,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
         {
             // returns the original probability adjusted for the multiplier to the confidence ratio
             // useful for computationally cheap remappings within [0,1]
-            if (probability >= 1)
-            {
-                return probability;
-            }
-
-            if (probability <= 0)
+            if (probability >= 1 || probability <= 0)
             {
                 return probability;
             }

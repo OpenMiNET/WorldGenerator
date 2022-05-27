@@ -17,11 +17,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Mesa
             MaxHeight = 0.2f;
             
             Config.WeightMultiplier = 1.25f;
-            //SurfaceBlock = 12; //Surface = Red Sand
-            //SurfaceMetadata = 1;
-
-           // SoilBlock = 179; //Soil = Red Sandstone
-
+            
             Terrain = new MesaTerrain();
             Surface = new MesaSurface(Config, new Sand() {SandType = "red"}, new RedSandstone());
         }   

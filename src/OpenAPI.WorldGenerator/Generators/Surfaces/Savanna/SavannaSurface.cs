@@ -35,7 +35,6 @@ namespace OpenAPI.WorldGenerator.Generators.Surfaces.Savanna
 			BiomeBase[] biomes)
 		{
 			
-			FastRandom       rand    = new FastRandom();
 			var simplex = generator.SimplexInstance(0);
 			float        c       = TerrainBase.CalcCliff(x, z, noise);
 			bool      cliff   = c > 1.4f;
@@ -50,7 +49,7 @@ namespace OpenAPI.WorldGenerator.Generators.Surfaces.Savanna
 
 					if (cliff) {
 						if (depth > -1 && depth < 2) {
-							if (rand.Next(3) == 0) {
+							if (Rnd.Next(3) == 0) {
 								column.SetBlockByRuntimeId(x, y, z, CliffCobbleBlock);
 							}
 							else {

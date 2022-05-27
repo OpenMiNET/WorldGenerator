@@ -13,7 +13,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Forest
             MinHeight = 0.1f;
             MaxHeight = 0.2f;
             Terrain = new BirchForestTerrain();
-            Config.WeightMultiplier = 0.75f;
+            Config.WeightMultiplier = 1f;
         }
     }
 }
