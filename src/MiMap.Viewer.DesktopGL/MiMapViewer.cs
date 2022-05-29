@@ -1,9 +1,11 @@
 ﻿using System;
+using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MiMap.Viewer.DesktopGL.Components;
 using MiMap.Viewer.DesktopGL.Graphics;
+using MiMap.Viewer.DesktopGL.Models;
 using MiNET.Worlds;
 using OpenAPI.WorldGenerator.Generators;
 
@@ -68,7 +70,26 @@ namespace MiMap.Viewer.DesktopGL
             _mapViewer = new GuiMapViewer(this, Map);
             _mapViewer.Initialize();
             Components.Add(_mapViewer);
+            
+            
+            // Initialize biome colors
+            InitializeBiomeColors();
 
+        }
+
+        private void InitializeBiomeColors()
+        {
+            var json = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, "biomeColors.json"));
+            var map = BiomeColors.FromJson(json);
+
+            foreach (var mapping in map.ColorMap)
+            {
+                var biome = Map.BiomeProvider.GetBiome(mapping.BiomeId);
+                if (biome != default)
+                {
+                    biome.Color = System.Drawing.Color.FromArgb(mapping.JColor.R, mapping.JColor.G, mapping.JColor.B);
+                }
+            }
         }
 
         private void UpdateViewport(bool apply = true)

@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using NLog;
+using OpenAPI.WorldGenerator.Generators.Biomes;
 
 namespace MiMap.Viewer.DesktopGL
 {
@@ -26,6 +27,8 @@ namespace MiMap.Viewer.DesktopGL
         private ConcurrentQueue<Point> _regionsToGenerate;
         private AutoResetEvent _trigger;
         private bool _running;
+
+        public readonly BiomeProvider BiomeProvider = new BiomeProvider();
 
         public Map(IWorldGenerator worldGenerator)
         {
@@ -115,7 +118,9 @@ namespace MiMap.Viewer.DesktopGL
 
         public MapRegion GetRegion(Point regionPosition)
         {
-            return Regions[regionPosition];
+            if (Regions.TryGetValue(regionPosition, out var region))
+                return region;
+            return null;
         }
 
         public IEnumerable<MapRegion> GetRegions()

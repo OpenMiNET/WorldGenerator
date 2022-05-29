@@ -1,40 +1,9 @@
 using System;
 using Microsoft.Xna.Framework;
+using OpenAPI.WorldGenerator.Utils;
 
 namespace MiMap.Viewer.DesktopGL
 {
-    public class MapRegion
-    {
-        public readonly int X;
-        public readonly int Z;
-
-        public readonly MapChunk[] Chunks;
-        public bool IsComplete { get; internal set; }
-
-        public MapRegion(int x, int z)
-        {
-            X = x;
-            Z = z;
-            Chunks = new MapChunk[32 * 32];
-        }
-
-        public void SetChunk(int cx, int cz, MapChunk chunk)
-        {
-            Chunks[GetIndex(cx & 31, cz & 31)] = chunk;
-        }
-
-        public MapChunk this[int cx, int cz]
-        {
-            get => Chunks[GetIndex(cx & 31, cz & 31)];
-            set => Chunks[GetIndex(cx & 31, cz & 31)] = value;
-        }
-
-        private int GetIndex(int x, int z)
-        {
-            return (x * 32) + z;
-        }
-    }
-
     public class MapChunk
     {
         public readonly int X;
@@ -88,9 +57,14 @@ namespace MiMap.Viewer.DesktopGL
             var height = Heights[i];
             var hIntensity = MathHelper.Clamp((height % (255f / 25f)) / 25f, 0f, 1f) / 2;
 
-            var c1 = Globals.BiomeColors[biome];
+            // var c1 = Globals.BiomeColors[biome];
+            var c1d = MiMapViewer.Instance.Map.BiomeProvider.GetBiome(biome)?.Color;
+            var c1 = c1d.HasValue 
+                ? new Color(c1d.Value.R, c1d.Value.G, c1d.Value.B, c1d.Value.A) 
+                : Color.HotPink;
             var c2 = Color.Black;
-            Colors[i] = Color.Lerp(c1, c2, hIntensity);
+            // Colors[i] = Color.Lerp(c1, c2, hIntensity);
+            Colors[i] = c1;
         }
 
         private int GetIndex(int x, int z)
