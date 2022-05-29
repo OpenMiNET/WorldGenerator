@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenAPI.WorldGenerator", "O
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorldGenerator.Tweaking", "WorldGenerator.Tweaking\WorldGenerator.Tweaking.csproj", "{2AB15C83-8F60-4D20-A8E0-2158B1C01E25}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiMap.Viewer.DesktopGL", "MiMap.Viewer.DesktopGL\MiMap.Viewer.DesktopGL.csproj", "{EE6B11E1-77BF-4CD6-B98B-4B01F2B68163}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{2AB15C83-8F60-4D20-A8E0-2158B1C01E25}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2AB15C83-8F60-4D20-A8E0-2158B1C01E25}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2AB15C83-8F60-4D20-A8E0-2158B1C01E25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE6B11E1-77BF-4CD6-B98B-4B01F2B68163}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE6B11E1-77BF-4CD6-B98B-4B01F2B68163}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE6B11E1-77BF-4CD6-B98B-4B01F2B68163}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE6B11E1-77BF-4CD6-B98B-4B01F2B68163}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
