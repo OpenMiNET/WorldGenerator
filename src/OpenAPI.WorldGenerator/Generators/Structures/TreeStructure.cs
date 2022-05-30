@@ -12,22 +12,31 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 	//And from https://github.com/SirCmpwn/TrueCraft
 	public class TreeStructure : Structure
 	{
-		protected void GenerateVanillaLeaves(ChunkColumn chunk, Vector3 location, int radius, int blockRuntimeId)
+		private static readonly Block[] ValidBlocks = new Block[]
 		{
-			if (location.X > 16 || location.X < 0 || location.Z > 16 || location.Z < 0) return;
+			new Grass(), new Dirt(), new Farmland()
+		};
+		
+		protected void CheckFloor(StructurePlan plan, int x, int y, int z)
+		{
+			plan.RequireBlock(x,y,z, ValidBlocks);
+		}
+		protected void GenerateVanillaLeaves(StructurePlan plan, Vector3 location, int radius, int blockRuntimeId)
+		{
 			var radiusOffset = radius;
 			for (var yOffset = -radius; yOffset <= radius; yOffset = (yOffset + 1))
 			{
 				var y = location.Y + yOffset;
 				if (y > 255)
 					continue;
-				GenerateVanillaCircle(chunk, new Vector3(location.X, y, location.Z), radiusOffset, blockRuntimeId);
+				
+				GenerateVanillaCircle(plan, new Vector3(location.X, y, location.Z), radiusOffset, blockRuntimeId);
 				if (yOffset != -radius && yOffset % 2 == 0)
 					radiusOffset--;
 			}
 		}
 
-		protected void GenerateVanillaCircle(ChunkColumn chunk, Vector3 location, int radius, int blockRuntimeId,
+		protected void GenerateVanillaCircle(StructurePlan plan, Vector3 location, int radius, int blockRuntimeId,
 			double corner = 0)
 		{
 			for (var I = -radius; I <= radius; I = (I + 1))
@@ -48,13 +57,13 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 						if (x < 0 || z > 16) continue;
 						if (z < 0 || z > 16) continue;
 						
-						chunk.SetBlockByRuntimeId((int)x, (int)location.Y, (int)z, blockRuntimeId);
+						plan.PlaceBlock((int)x, (int)location.Y, (int)z, blockRuntimeId);
 					}
 				}
 			}
 		}
 
-		public static void GenerateColumn(ChunkColumn chunk, Vector3 location, int height, int blockRuntimeId)
+		public static void GenerateColumn(StructurePlan plan, Vector3 location, int height, int blockRuntimeId)
 		{
 			for (var o = 0; o < height; o++)
 			{
@@ -62,11 +71,11 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 				var y = (int)location.Y + o;
 				var z = (int)location.Z;
 				
-				chunk.SetBlockByRuntimeId(x, y, z, blockRuntimeId);
+				plan.PlaceBlock(x, y, z, blockRuntimeId);
 			}
 		}
 
-		protected void GenerateCircle(ChunkColumn chunk, Vector3 location, int radius, int blockRuntimeId)
+		protected void GenerateCircle(StructurePlan plan, Vector3 location, int radius, int blockRuntimeId)
 		{
 			for (var I = -radius; I <= radius; I = (I + 1))
 			{
@@ -85,13 +94,13 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 						var y = (int)location.Y;
 						var z = (int)Z;
 						
-						chunk.SetBlockByRuntimeId(x, y, z, blockRuntimeId);
+						plan.PlaceBlock(x, y, z, blockRuntimeId);
 					}
 				}
 			}
 		}
 
-		protected bool CanGenerateBranch(float x, float y, float z, float horDir, float verDir, float branchLength, float speed, float size, float width)
+		/*protected bool CanGenerateBranch(float x, float y, float z, float horDir, float verDir, float branchLength, float speed/*, float size, float width#1#)
 		{
 			if (verDir < 0f)
 			{
@@ -120,7 +129,7 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 				if (x < 0 || x >= 16 || z < 0 || z >= 16) return false;
 			}
 
-			int i, j, k, s = (int)(size - 1f), w = (int)((size - 1f) * width);
+			/*int i, j, k, s = (int)(size - 1f), w = (int)((size - 1f) * width);
 			for (i = -w; i <= w; i++)
 			{
 				for (j = -s; j <= s; j++)
@@ -130,12 +139,12 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 						if (x + i < 0 || x + i >= 16 || z + k < 0 || z + k >= 16) return false;
 					}
 				}
-			}
+			}#1#
 
 			return true;
-		}
+		}*/
 
-		protected void GenerateBranch(ChunkColumn chunk, float x, float y, float z, double horDir, float verDir, float length, float speed, int blockRuntimeId)
+		protected void GenerateBranch(StructurePlan plan, float x, float y, float z, double horDir, float verDir, float length, float speed, int blockRuntimeId)
 		{
 			if (verDir < 0f)
 			{
@@ -155,7 +164,8 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 
 			while (c < length)
 			{
-				chunk.SetBlockByRuntimeId((int)x, (int)y, (int)z, blockRuntimeId);
+				plan.PlaceBlock((int)x, (int)y, (int)z, blockRuntimeId);
+				//chunk.SetBlockByRuntimeId((int)x, (int)y, (int)z, blockRuntimeId);
 				
 				x += velX;
 				y += velY;
@@ -165,7 +175,7 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 			}
 		}
 
-		protected bool CanGenerateLeaves(int x, int y, int z, float size, float width)
+		/*protected bool CanGenerateLeaves(int x, int y, int z, float size, float width)
 		{
 			float dist;
 			int i, j, k, s = (int)(size - 1f), w = (int)((size - 1f) * width);
@@ -187,9 +197,9 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 				}
 			}
 			return true;
-		}
+		}*/
 
-		protected void GenerateLeaves(ChunkColumn chunk, int x, int y, int z, float size, float width, int leafBlockRuntimeId, int woodRuntimeId)
+		protected void GenerateLeaves(StructurePlan plan, int x, int y, int z, float size, float width, int leafBlockRuntimeId, int woodRuntimeId)
 		{
 			float dist;
 			int i, j, k, s = (int)(size - 1f), w = (int)((size - 1f) * width);
@@ -204,27 +214,27 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 						{ 
 							if (dist < 0.6f)
 							{
-								chunk.SetBlockByRuntimeId(x + i, y + j, z + k, woodRuntimeId);
+								plan.PlaceBlock(x + i, y + j, z + k, woodRuntimeId);
 							}
 							
-							chunk.SetBlockByRuntimeId(x + i, y + j, z + k, leafBlockRuntimeId);
+							plan.PlaceBlock(x + i, y + j, z + k, leafBlockRuntimeId);
 						}
 					}
 				}
 			}
 		}
 
-		public bool ValidLocation(Vector3 location, int leafRadius)
+		/*public bool ValidLocation(Vector3 location, int leafRadius)
 		{
 			return !(location.X - leafRadius < 0) && !(location.X + leafRadius >= 16) && !(location.Z - leafRadius < 0) &&
 				   !(location.Z + leafRadius >= 16);
-		}
+		}*/
 
 		private static int[] ValidBlockRuntimeIds = new int[]
 		{
 			new Grass().GetRuntimeId(), new Dirt().GetRuntimeId(), new Farmland().GetRuntimeId()
 		};
-		/// <inheritdoc />
+		/*/// <inheritdoc />
 		public override bool CanCreate(ChunkColumn column, int x, int y, int z)
 		{
 			var block = column.GetBlockObject(x, y, z);
@@ -235,6 +245,6 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 			return false;
 			
 			return base.CanCreate(column, x, y, z);
-		}
+		}*/
 	}
 }

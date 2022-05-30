@@ -215,10 +215,12 @@ namespace OpenAPI.WorldGenerator.Generators
 
         [JsonProperty("lapisSpread")]
         public float LapisSpread { get; set; }
-
-        public float RiverFrequency { get; set; } = 1.0f;
-        public float RiverBendMult { get; set; } = 1.0f;
+        
         public float RiverSizeMult { get; set; } = 1.0f;
+        public float RiverFrequency { get; set; } = 0.5f;
+        public float RiverBendMult { get; set; } = 1.0f;
+        public float RiverCutOffAmpl { get; set; } = 0.5f;
+        public float RiverCutOffScale { get; set; } = 350.0f;
 
         public float RTGlakeSizeMult { get; set; } = 1f;      // RTG
         public float RTGlakeFreqMult { get; set; } = 1f;       // RTG

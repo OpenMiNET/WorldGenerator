@@ -17,11 +17,6 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 			get { return "OakTree"; }
 		}
 
-		public override int MaxHeight
-		{
-			get { return 7; }
-		}
-		
 		private static readonly int WoodId = new Wood()
 		{
 			WoodType = "oak"
@@ -33,15 +28,15 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 		}.GetRuntimeId();
 		
 		private readonly int _leafRadius = 2;
-		public override void Create(ChunkColumn chunk, int x, int y, int z)
+		public override void Create(StructurePlan plan, int x, int y, int z)
 		{
+			CheckFloor(plan, x, y - 1, z);
 			var location = new Vector3(x, y, z);
-			if (!ValidLocation(location, _leafRadius)) return;
 
 			int height = Rnd.Next(4, 5);
-			GenerateColumn(chunk, location, height, WoodId);
+			GenerateColumn(plan, location, height, WoodId);
 			Vector3 leafLocation = location + new Vector3(0, height, 0);
-			GenerateVanillaLeaves(chunk, leafLocation, _leafRadius, LeafId);
+			GenerateVanillaLeaves(plan, leafLocation, _leafRadius, LeafId);
 		}
 	}
 }

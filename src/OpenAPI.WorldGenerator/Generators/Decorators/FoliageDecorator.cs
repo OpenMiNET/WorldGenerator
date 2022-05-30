@@ -5,6 +5,7 @@ using OpenAPI.Utils;
 using OpenAPI.WorldGenerator.Generators.Biomes;
 using OpenAPI.WorldGenerator.Generators.Structures;
 using OpenAPI.WorldGenerator.Utils.Noise;
+using OpenAPI.WorldGenerator.Utils.Noise.Modules;
 using OpenAPI.WorldGenerator.Utils.Noise.Primitives;
 using Biome = OpenAPI.WorldGenerator.Generators.Biomes.Biome;
 using Structure = OpenAPI.WorldGenerator.Generators.Structures.Structure;
@@ -53,25 +54,20 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 			if (surface && y >= Preset.SeaLevel)
 			{
 				var m = Math.Min(biome.Downfall * 0.32f, 0.03f);
-				var noise = Simplex.GetValue(rx * m, rz * m);
+				var noise = MathF.Abs( Math.Clamp(Simplex.GetValue(rx * m, rz * m), 0f, 1f));
 
 				if (x >= 3 && x <= 13 && z >= 3 && z <= 13)
 				{
 					Structure tree = null;
 
-					//if (biome.Config.)
-					if (biome.Downfall <= 0f && biome.Temperature >= 2f)
+					if (biome.Downfall >= 0 && (noise > ((biome.Config.TreeDensity) + (y / 512f))))
 					{
-						if (GetRandom(64) == 16)
+						if (currentTemperature >= 2f && biome.Downfall <= 0f)
 						{
 							var randValue = GetRandom(3);
 							tree = new CactusStructure(randValue);
 						}
-					}
-
-					if (tree == null && biome.Downfall > 0 && (noise > (0.5f + (y / 512f))))
-					{
-						if (currentTemperature >= 1f && biome.Downfall >= 0.4f)
+						else if (currentTemperature >= 1f && biome.Downfall >= 0.4f)
 						{
 							if (GetRandom(8) == 4)
 							{
@@ -111,13 +107,14 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 					{
 						if (y + 1 < 254)
 						{
-							if (tree.CanCreate(column, x, y, z))
+							StructurePlan plan = new StructurePlan();
+							tree.Create(plan, x, y + 1, z);
+
+							if (plan.TryExecute(column))
 							{
-								tree.Create(column, x, y + 1, z);
+								generated = true;
 							}
 						}
-
-						generated = true;
 					}
 				}
 
@@ -243,6 +240,7 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 		protected override void InitSeed(int seed)
 		{
 			Simplex = new SimplexPerlin(seed, NoiseQuality.Fast);
+			Simplex = new ScaledNoiseModule(Simplex) {ScaleX = 16f, ScaleY = 1f, ScaleZ = 16f};
 		//	Simplex.SetScale(1.5);
 
 			Rnd = new FastRandom(seed);

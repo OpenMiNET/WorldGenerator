@@ -1,6 +1,7 @@
 using System;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
+using OpenAPI.WorldGenerator.Generators.Effects;
 using OpenAPI.WorldGenerator.Utils.Noise;
 
 namespace OpenAPI.WorldGenerator.Generators.Terrain
@@ -19,6 +20,8 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
         protected float BaseHeight; // added as most terrains have this;
         protected float GroundNoise;
 
+        protected HeightEffect HeightEffect { get; set; }
+        
         public TerrainBase(float baseHeight)
         {
 
@@ -96,14 +99,13 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return m * hillStrength;
         }
 
-        public static float GetTerrainBase(OverworldGeneratorV2 generator, float river) {
-
+        public static float GetTerrainBase(OverworldGeneratorV2 generator, float river) 
+        {
             return generator.Preset.GetTerrainBase() * river;
         }
         
         public static float GetGroundNoise(OverworldGeneratorV2 generator, int x, int y, float amplitude)
         {
-
             float h = BlendedHillHeight(generator.SimplexInstance(0).GetValue(x / 49f, y / 49f), 0.2f) * amplitude;
             h += BlendedHillHeight(generator.SimplexInstance(1).GetValue(x / 23f, y / 23f), 0.2f) * amplitude / 2f;
             h += BlendedHillHeight(generator.SimplexInstance(2).GetValue(x / 11f, y / 11f), 0.2f) * amplitude / 4f;
@@ -112,7 +114,6 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
 
         public static float GetGroundNoise(OverworldGeneratorV2 generator, float x, float y, float amplitude)
         {
-
             float h = BlendedHillHeight(generator.SimplexInstance(0).GetValue(x / 49f, y / 49f), 0.2f) * amplitude;
             h += BlendedHillHeight(generator.SimplexInstance(1).GetValue(x / 23f, y / 23f), 0.2f) * amplitude / 2f;
             h += BlendedHillHeight(generator.SimplexInstance(2).GetValue(x / 11f, y / 11f), 0.2f) * amplitude / 4f;
@@ -137,7 +138,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
 
         public static float Riverized(OverworldGeneratorV2 generator, float height, float river)
         {
-            var baseH = generator.Preset.SeaLevel + 0.45f;
+            var baseH = generator.Preset.SeaLevel - 0.55f;
             if (height < baseH)
             {
                 return height;
@@ -257,12 +258,11 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return Riverized(generator, baseHeight + h + m, river);
         }
 
-        public static float TerrainHighland(OverworldGeneratorV2 generator, float x, float y, float river, float start,
-            float width, float height, float baseAdjust)
+        public static float TerrainHighland(OverworldGeneratorV2 generator, float x, float y, float river, float hillStart,
+            float hillWidth, float hillHeight, float baseAdjust)
         {
-
-            float h = generator.SimplexInstance(0).GetValue(x / width, y / width) * height * river; //-140 to 140
-            h = h < start ? start + ((h - start) / 4.5f) : h;
+            float h = generator.SimplexInstance(0).GetValue(x / hillWidth, y / hillWidth) * hillHeight * river; //-140 to 140
+            h = h < hillStart ? hillStart + ((h - hillStart) / 4.5f) : h;
 
             if (h < 0f)
             {
@@ -273,7 +273,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             {
                 float st = h * 1.5f > 15f ? 15f : h * 1.5f; // 0 to 15
                 h += generator.SimplexInstance(4).GetValue(x / 70f, y / 70f, 1f) * st; // 0 to 155
-                h = h * river;
+                h *= river;
             }
 
             h += BlendedHillHeight(generator.SimplexInstance(0).GetValue(x / 20f, y / 20f), 0f) * 4f;
@@ -282,7 +282,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
 
             if (h < 0)
             {
-                h = h / 2f;
+                h /= 2f;
             }
 
             if (h < -3)
@@ -290,7 +290,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
                 h = (h + 3f) / 2f - 3f;
             }
 
-            return (GetTerrainBase(generator, river)) + (h + baseAdjust) * river;
+            return (GetTerrainBase(generator, river)) + ((h + baseAdjust) * river);
         }
 
         public static float TerrainLonelyMountain(OverworldGeneratorV2 generator, int x, int y, float river,
@@ -618,7 +618,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             int worldZ = z;
             float pX = worldX;
             float pZ = worldZ;
-            var jitterData = SimplexData2D.NewDisk();
+            var jitterData = new SimplexData2D();
             //New river curve function. No longer creates worldwide curve correlations along cardinal axes.
             generator.SimplexInstance(1).GetValue((float) worldX / 240.0f, (float) worldZ / 240.0f, jitterData);
             pX += jitterData.GetDeltaX() * generator.RiverLargeBendSize;

@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -53,7 +54,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
                     new ExtremeHillsPlusMBiome(),*/
                 new FlowerForestBiome(),
                 new ForestBiome(),
-                new ForestHillsBiome(),
+                new WoodedHillsBiome(),
                 new FrozenOceanBiome(),
                 // new IceMountainsBiome(),
                 new IcePlainsBiome(),
@@ -164,7 +165,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
                 byId.TryAdd(biome.Id, biome);
             }
 
-            foreach (var group in Biomes.Where(x => !x.Config.IsEdgeBiome).GroupBy(x => x.Temperature * x.Downfall * x.Config.Weight))
+            foreach (var group in Biomes.Where(x => !x.Config.IsEdgeBiome).GroupBy(x => (1f + x.Temperature) * (1f + x.Downfall) * x.Config.Weight))
             {
                 if (group.Count() > 1)
                 {
@@ -196,57 +197,54 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
         public int GetBiome(float temperature, float downfall, float selector)
         {
             var biomes = GetBiomes();
-            //   selector = Math.Clamp(selector, 0, 1f);
+            var weights = ArrayPool<float>.Shared.Rent(biomes.Length);
 
-
-            float[] weights = new float[biomes.Length];
-
-            float minDifference = float.MaxValue;
-            float sum = 0f;
-
-            for (int i = 0; i < biomes.Length; i++)
+            try
             {
-                var temperatureDifference = MathF.Abs((biomes[i].Temperature - temperature));
-                var humidityDifference = MathF.Abs(biomes[i].Downfall - downfall);
+                float sum = 0f;
 
-                //   temperatureDifference *= 5.5f;
-                //   humidityDifference *= 1.5f;
-
-                var difference =
-                    (temperatureDifference * temperatureDifference + humidityDifference * humidityDifference) / 3f;
-
-                var w = (float)biomes[i].Config.Weight;
-                /*if (biomes[i].MaxHeight < height || biomes[i].MinHeight > height)
+                for (int i = 0; i < biomes.Length; i++)
                 {
-                    var mdifference = MathF.Min(
-                        MathF.Abs(biomes[i].MaxHeight - height), MathF.Abs(biomes[i].MinHeight - height)) * 4f;
-                    
-                    w -= mdifference;
-                }*/
-                weights[i] = w * (1f + difference);
+                    var temperatureDifference = (biomes[i].Temperature - temperature);
+                    var humidityDifference = (biomes[i].Downfall - downfall);
 
-                sum += weights[i];
-            }
+                    //temperatureDifference *= 7.5f;
+                    //humidityDifference *= 2.5f;
 
-            selector *= sum;
+                    var weight = (float) biomes[i].Config.Weight * MathF.Abs(
+                        (temperatureDifference * temperatureDifference + humidityDifference * humidityDifference));
 
-            int result = 0;
+                    if (weight > 0f)
+                    {
+                        weights[i] = weight;
 
-            float currentWeightIndex = 0;
-            for (int i = 0; i < weights.Length; i++)
-            {
-                var value = weights[i];
-
-                if (value > 0f)
-                {
-                    currentWeightIndex += value;
-
-                    if (currentWeightIndex >= selector)
-                        return biomes[i].Id;
+                        sum += weight;
+                    }
                 }
-            }
 
-            return biomes[result].Id;
+                selector *= sum;
+
+                float currentWeightIndex = 0;
+
+                for (int i = 0; i < biomes.Length; i++)
+                {
+                    var value = weights[i];
+
+                    if (value > 0f)
+                    {
+                        currentWeightIndex += value;
+
+                        if (currentWeightIndex >= selector)
+                            return biomes[i].Id;
+                    }
+                }
+
+                return biomes[0].Id;
+            }
+            finally
+            {
+                ArrayPool<float>.Shared.Return(weights, true);
+            }
         }
 
         public BiomeBase GetBiome(int id)

@@ -7,6 +7,7 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using Newtonsoft.Json;
 using OpenAPI.WorldGenerator.Generators;
@@ -21,16 +22,12 @@ namespace WorldGenerator.Tweaking
 		private GraphicsDeviceManager _graphics;
 
 		private OverworldGeneratorV2   _worldGen;
-		private Dictionary<string, uint> _blockColors;
 		public TestGame(OverworldGeneratorV2 worldGen, int chunks, int resolution)
 		{
 			_worldGen = worldGen;
 			_chunks = chunks;
 			_resolution = resolution;
 			_graphics = new GraphicsDeviceManager(this);
-
-			_blockColors = JsonConvert.DeserializeObject<Dictionary<string, uint>>(
-				File.ReadAllText(Path.Combine("Resources", "blockColors.json")));
 		}
 
 		/// <inheritdoc />
@@ -79,6 +76,7 @@ namespace WorldGenerator.Tweaking
 
 		private MouseState _mouseState = new MouseState();
 
+		private int CursorHeight { get; set; } = 0;
 		private BiomeBase ClickedBiome { get; set; } = null;
 		private Point CursorPos { get; set; } = Point.Zero;
 
@@ -107,6 +105,7 @@ namespace WorldGenerator.Tweaking
 								(float) stageData.Texture.Width / width, (float) stageData.Texture.Height / height);
 
 							pos = new Point((int) (pos.X * scale.X), (int) (pos.Y * scale.Y));
+							//var chunkPos = new ChunkCoordinates(pos.X >> 4, pos.Y >> 4);
 							var color = stageData.GetColorAt(pos.X, pos.Y);
 							var biome = _worldGen.BiomeRegistry.Biomes.FirstOrDefault(x =>
 							{
@@ -114,9 +113,24 @@ namespace WorldGenerator.Tweaking
 
 								return c.R == color.R && c.B == color.B && c.G == color.G;
 							});
+							
 							ClickedBiome = biome;
 
 							CursorPos = pos;
+						}
+					}
+					else if (pos.X >= width && pos.X <= width * 2f && pos.Y >= height && pos.Y <= height * 2f)
+					{
+						pos.X -= width;
+						pos.Y -= height;
+						if (_stageDatas.TryGetValue(RenderStage.Height, out var stageData))
+						{
+							var scale = new Vector2(
+								(float) stageData.Texture.Width / width, (float) stageData.Texture.Height / height);
+
+							pos = new Point((int) (pos.X * scale.X), (int) (pos.Y * scale.Y));
+							var color = stageData.GetColorAt(pos.X, pos.Y);
+							CursorHeight = color.R;
 						}
 					}
 				}
@@ -146,7 +160,12 @@ namespace WorldGenerator.Tweaking
 					stage.Value.AddChunk(chunk);
 				}
 				
-				chunk?.Dispose();
+				foreach (var subChunk in chunk) 
+				{ 
+					subChunk.Dispose();
+				}
+
+				chunk.Dispose();
 				updates++;
 			}
 
@@ -163,11 +182,13 @@ namespace WorldGenerator.Tweaking
 				var size = _spriteFont.MeasureString(text);
 				_spriteBatch.DrawString(_spriteFont, text, new Vector2(width - size.X, 10), Color.White);
 			}
+			
+			DrawHeight(width * 2f, height + 10f);
 
 			var updateText = $"Updates: {updates:000}\n" 
 			                 + $"Temp: min={_worldGen.MinTemp:F3} max={_worldGen.MaxTemp:F3} range={(_worldGen.MaxTemp - _worldGen.MinTemp):F3}\n"
 			                 + $"Rain: min={_worldGen.MinRain:F3} max={_worldGen.MaxRain:F3} range={(_worldGen.MaxRain - _worldGen.MinRain):F3}\n"
-			                 + $"Selector: min={_worldGen.MinSelector:F3} max={_worldGen.MaxSelector:F3} range={(_worldGen.MaxSelector - _worldGen.MinSelector):F3/*}\n"/*
+			                 + $"Selector: min={_worldGen.MinSelector:F3} max={_worldGen.MaxSelector:F3} range={(_worldGen.MaxSelector - _worldGen.MinSelector):F3}\n"/*
 			                 + $"Height: min={_worldGen.MinHeight:F3} max={_worldGen.MaxHeight:F3} range={(_worldGen.MaxHeight - _worldGen.MinHeight):F3}\n"*/;
 			var updateTextSize = _spriteFont.MeasureString(updateText);
 			_spriteBatch.DrawString(_spriteFont, updateText, new Vector2(GraphicsDevice.Viewport.Width - (updateTextSize.X + 5), 5), Color.White);
@@ -175,6 +196,13 @@ namespace WorldGenerator.Tweaking
 
 
 			base.Draw(gameTime);
+		}
+
+		private void DrawHeight(float x, float y)
+		{
+			string text = $"Height: {CursorHeight:000}";
+			var size = _spriteFont.MeasureString(text);
+			_spriteBatch.DrawString(_spriteFont, text, new Vector2(x - size.X  + 10, y), Color.White);
 		}
 
 		private void DrawBorder(Rectangle rectangleToDraw, int thicknessOfBorder, Color borderColor) 
@@ -236,11 +264,10 @@ namespace WorldGenerator.Tweaking
 		{
 			Temperature,
 			Height,
-			Biomes,
-			Blocks
+			Biomes
 		}
 		
-			private class StageData
+		private class StageData
 		{
 			private readonly RenderStage _stage;
 			private readonly GraphicsDevice _device;
@@ -379,17 +406,6 @@ namespace WorldGenerator.Tweaking
 								var biome = _parent._worldGen.BiomeRegistry.GetBiome(data.GetBiome(x, y));
 								var c = biome.Color.GetValueOrDefault();
 								_spriteBatch.Draw(_pixel, pixelPosition, new Color(c.R, c.G, c.B));
-							} break;
-
-							case RenderStage.Blocks:
-							{
-								var block = data.GetBlockObject(x, data.GetHeight(x,y), y);
-
-								if (_parent._blockColors.TryGetValue(block.Name, out uint color))
-								{
-									int height = data.GetHeight(x, y);
-									_spriteBatch.Draw(_pixel, pixelPosition, ChangeColorBrightness(new Color(color), -(1f / 255f) * height));
-								}
 							} break;
 						}
 					}

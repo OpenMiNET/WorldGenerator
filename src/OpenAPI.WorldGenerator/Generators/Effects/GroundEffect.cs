@@ -7,19 +7,16 @@ namespace OpenAPI.WorldGenerator.Generators.Effects
      */
     public class GroundEffect : HeightEffect
     {
-
-        // the standard ground effect
-        private float amplitude;
+        private float Amplitude { get; }
 
         public GroundEffect(float amplitude)
         {
-            this.amplitude = amplitude;
+            this.Amplitude = amplitude;
         }
 
         public override float Added(OverworldGeneratorV2 generator, float x, float y)
         {
-            return TerrainBase.GetGroundNoise(generator, x, y, amplitude);
+            return TerrainBase.GetGroundNoise(generator, x, y, Amplitude);
         }
-
     }
 }

@@ -59,65 +59,32 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
                 }
 
                 river = 1f - (1f - borderForRiver) * (1f - river);
-                return Terrain.GenerateNoise(generator, x, y, border, river);
+                return Terrain.GenerateNoise(generator, x, y, border, 1f);
             }
             float lakePressure = LakePressure(generator, x, y, border, generator.LakeFrequency,
                 OverworldGeneratorV2.LakeBendSizeLarge, OverworldGeneratorV2.LakeBendSizeMedium, OverworldGeneratorV2.LakeBendSizeSmall);
             float lakeFlattening = LakeFlattening(lakePressure, generator.LakeShoreLevel,
                 generator.LakeDepressionLevel);
 
-            /*if (!this.Config.AllowScenicLakes)
-            {
-                return Terrain.GenerateNoise(generator, x, y, border, river);
-            }*/
-            
             // combine rivers and lakes
-            if ((river < 1) && (lakeFlattening < 1))
-            {
+            if ((river < 1) && (lakeFlattening < 1)) {
                 river = (1f - river) / river + (1f - lakeFlattening) / lakeFlattening;
                 river = (1f / (river + 1f));
             }
-            else if (lakeFlattening < river)
-            {
+            else if (lakeFlattening < river) {
                 river = lakeFlattening;
             }
 
             // smooth the edges on the top
             river = 1f - river;
-            river *= (river / (river + 0.05f) * (1.05f));
+            river = river * (river / (river + 0.05f) * (1.05f));
             river = 1f - river;
 
             // make the water areas flat for water features
             float riverFlattening = river * (1f + OverworldGeneratorV2.RiverFlatteningAddend) - OverworldGeneratorV2.RiverFlatteningAddend;
-            if (riverFlattening < 0)
-            {
+            if (riverFlattening < 0) {
                 riverFlattening = 0;
             }
-            
-            /*float riverFlattening = river*1.25f-0.25f;
-            if (riverFlattening <0) riverFlattening = 0;
-            if ((river<1)&&(lakeFlattening<1)) 
-            {
-                riverFlattening = (1f-riverFlattening)/riverFlattening+(1f-lakeFlattening)/lakeFlattening;
-                riverFlattening = (1f/(riverFlattening+1f));
-            }
-            else if (lakeFlattening < riverFlattening)
-            {
-                riverFlattening = lakeFlattening;
-            }
-
-            // the lakes have to have a little less flattening to avoid the rocky edges
-            lakeFlattening = LakeFlattening(lakePressure, generator.LakeWaterLevel, generator.LakeDepressionLevel);
-
-            if ((river<1)&&(lakeFlattening<1))
-            {
-                river = (1f-river)/river+(1f-lakeFlattening)/lakeFlattening;
-                river = (1f/(river+1f));
-            }
-            else if (lakeFlattening < river)
-            {
-                river = lakeFlattening;
-            }*/
 
             // flatten terrain to set up for the water features
             float terrainNoise = Terrain.GenerateNoise(generator, x, y, border, riverFlattening);
@@ -153,7 +120,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
 
             // river of actualRiverProportions now maps to 1;
             float riverFlattening = 1f - river;
-            riverFlattening = riverFlattening - (1f - OverworldGeneratorV2.ActualRiverProportion);
+            riverFlattening -= (1f - OverworldGeneratorV2.ActualRiverProportion);
             // return biomeHeight if no river effect
             if (riverFlattening < 0)
             {
@@ -186,7 +153,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
 
             float pX = x;
             float pY = y;
-            ISimplexData2D jitterData = SimplexData2D.NewDisk();
+            ISimplexData2D jitterData = new SimplexData2D();
 
             generator.SimplexInstance(1).GetValue(x / 240.0d, y / 240.0d, jitterData);
             pX += jitterData.GetDeltaX() * largeBendSize;
@@ -206,8 +173,6 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
 
         public float LakeFlattening(float pressure, float shoreLevel, float topLevel)
         {
-            if (!this.Config.AllowScenicLakes)
-                return 1f;
             // adjusts the lake pressure to the river numbers. The lake shoreLevel is mapped
             // to become equivalent to actualRiverProportion
             if (pressure > topLevel)
@@ -227,21 +192,10 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
           return 1;
         }
 
-        /*public void Replace(ChunkColumn primer, BlockCoordinates blockPos, int x, int y, int depth, OverworldGeneratorV2 generator,
+        public virtual void Replace(ChunkColumn primer, int blockX, int blockZ, int x, int z, int depth, OverworldGeneratorV2 generator,
             float[] noise, float river, BiomeBase[] biomes)
         {
-            Replace(primer, blockPos.X, blockPos.Z, x, y, depth, generator, noise, river, biomes);
-        }*/
-
-        public void Replace(ChunkColumn primer, int blockX, int blockZ, int x, int z, int depth, OverworldGeneratorV2 generator,
-            float[] noise, float river, BiomeBase[] biomes)
-        {
-          /*  if (RTG.surfacesDisabled() || this.getConfig().DISABLE_RTG_SURFACES.get())
-            {
-                return;
-            }
-*/
-          if (this.Surface == null)
+            if (this.Surface == null)
               return;
           
             float riverRegion = !this.Config.AllowRivers ? 0f : river;
@@ -263,7 +217,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
 
             float riverRegion = !this.Config.AllowRivers ? 0f : river;
             this.Surface.PaintTerrain(primer, i, j, x, y, depth, generator, noise, riverRegion, biomes);
-            //this.surfaceRiver.paintTerrain(primer, i, j, x, y, depth, generator, noise, riverRegion, biomes);
+            
            /* if (RTGConfig.lushRiverbanksInDesert())
             {
                 this.surfaceRiver.paintTerrain(primer, i, j, x, y, depth, generator, noise, riverRegion, biomes);
