@@ -23,7 +23,7 @@ namespace MiMap.Viewer.DesktopGL.Components
 {
     public partial class GuiMapViewer : DrawableGameComponent
     {
-        public const float MinScale = 0.1f;
+        public const float MinScale = 0.2f;
         public const float MaxScale = 8f;
         private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
