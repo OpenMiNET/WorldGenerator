@@ -9,7 +9,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Beach
         public StoneBeachBiome()
         {
             Id = 25;
-            Name = "Stone Beach";
+            Name = "Stone Shore";
             Temperature = 0.2f;
             Downfall = 0.3f;
             MinHeight = 0.1f;
@@ -22,6 +22,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Beach
             };
             
             Type = BiomeType.Beach | BiomeType.Cold | BiomeType.Land;
+            Color = OpenAPI.WorldGenerator.Utils.ColorUtils.FromHtml("#A2A284");
         }
     }
 }

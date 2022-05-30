@@ -9,7 +9,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Beach
         public ColdBeachBiome()
         {
             Id = 26;
-            Name = "Cold Beach";
+            Name = "Snowy Beach";
             Temperature = 0.05f;
             Downfall = 0.3f;
             MinHeight = 0f;
@@ -22,6 +22,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Beach
             };
             
             Type = BiomeType.Beach | BiomeType.Cold | BiomeType.Land;
+            Color = OpenAPI.WorldGenerator.Utils.ColorUtils.FromHtml("#FAF0C0");
         }   
     }
 }

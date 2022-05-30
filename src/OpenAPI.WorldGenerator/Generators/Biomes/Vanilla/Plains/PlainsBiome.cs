@@ -1,6 +1,7 @@
+using OpenAPI.WorldGenerator.Generators.Biomes.Config;
 using OpenAPI.WorldGenerator.Generators.Terrain;
 
-namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla
+namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Plains
 {
     public class PlainsBiome : BiomeBase
     {
@@ -14,7 +15,9 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla
             MaxHeight = 0.5f;
             
             Terrain = new PlainsTerrain();
-            Config.WeightMultiplier = 0.8f;
+            Config.Weight = Weights.Common;
+            
+            Color = OpenAPI.WorldGenerator.Utils.ColorUtils.FromHtml("#8DB360");
         }
     }
 }

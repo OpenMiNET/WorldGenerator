@@ -14,7 +14,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             float hPitch = 70;    // Dune scale
             float hDivisor = 40;
 
-            return TerrainPolar(x, y, generator, river, stPitch, stFactor, hPitch, hDivisor, BaseHeight) + GetGroundNoise(x, y, 1f, generator);
+            return TerrainPolar(generator, x, y, river, stPitch, stFactor, hPitch, hDivisor, BaseHeight) + GetGroundNoise(generator, x, y, 1f);
         }
     }
 }

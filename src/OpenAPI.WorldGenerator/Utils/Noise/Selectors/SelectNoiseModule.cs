@@ -1,4 +1,3 @@
-using LibNoise;
 using OpenAPI.WorldGenerator.Utils.Noise.Attributes;
 
 namespace OpenAPI.WorldGenerator.Utils.Noise.Selectors
@@ -233,11 +232,11 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Selectors
                     float lowerCurve = (_lowerBound - _edgeFalloff);
                     float upperCurve = (_lowerBound + _edgeFalloff);
 
-                    alpha = Libnoise.SCurve3(
+                    alpha = MathUtils.SCurve3(
                         (controlValue - lowerCurve)/(upperCurve - lowerCurve)
                         );
 
-                    return Libnoise.Lerp(
+                    return MathUtils.Lerp(
                         ( _leftModule).GetValue(x, y, z),
                         (_leftModule).GetValue(x, y, z),
                         alpha
@@ -257,11 +256,11 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Selectors
                     float lowerCurve = (_upperBound - _edgeFalloff);
                     float upperCurve = (_upperBound + _edgeFalloff);
 
-                    alpha = Libnoise.SCurve3(
+                    alpha = MathUtils.SCurve3(
                         (controlValue - lowerCurve)/(upperCurve - lowerCurve)
                         );
 
-                    return Libnoise.Lerp(
+                    return MathUtils.Lerp(
                         ( _leftModule).GetValue(x, y, z),
                         (_leftModule).GetValue(x, y, z),
                         alpha
@@ -306,11 +305,11 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Selectors
                     float lowerCurve = (_lowerBound - _edgeFalloff);
                     float upperCurve = (_lowerBound + _edgeFalloff);
 
-                    alpha = Libnoise.SCurve3(
+                    alpha = MathUtils.SCurve3(
                         (controlValue - lowerCurve)/(upperCurve - lowerCurve)
                         );
 
-                    return Libnoise.Lerp(
+                    return MathUtils.Lerp(
                         ( _leftModule).GetValue(x, y),
                         (_rightModule).GetValue(x, y),
                         alpha
@@ -330,11 +329,11 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Selectors
                     float lowerCurve = (_upperBound - _edgeFalloff);
                     float upperCurve = (_upperBound + _edgeFalloff);
 
-                    alpha = Libnoise.SCurve3(
+                    alpha = MathUtils.SCurve3(
                         (controlValue - lowerCurve)/(upperCurve - lowerCurve)
                         );
 
-                    return Libnoise.Lerp(
+                    return MathUtils.Lerp(
                         ( _leftModule).GetValue(x, y),
                         (_rightModule).GetValue(x, y),
                         alpha

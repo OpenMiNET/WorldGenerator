@@ -1,5 +1,3 @@
-using LibNoise;
-
 namespace OpenAPI.WorldGenerator.Utils.Noise.Primitives
 {
     /// <summary>
@@ -112,7 +110,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Primitives
                 // Unpack the seed into 4 bytes then perform a bitwise XOR operation
                 // with each byte
                 var F = new byte[4];
-                Libnoise.UnpackLittleUint32(seed, ref F);
+                MathUtils.UnpackLittleUint32(seed, ref F);
 
                 for (int i = 0; i < Source.Length; i++)
                 {
@@ -184,15 +182,15 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Primitives
                     break;
 
                 case NoiseQuality.Standard:
-                    u = Libnoise.SCurve3(x);
+                    u = MathUtils.SCurve3(x);
                     break;
 
                 case NoiseQuality.Best:
-                    u = Libnoise.SCurve5(x);
+                    u = MathUtils.SCurve5(x);
                     break;
             }
 
-            return Libnoise.Lerp(Grad(_random[X], x), Grad(_random[X + 1], x - 1), u);
+            return MathUtils.Lerp(Grad(_random[X], x), Grad(_random[X + 1], x - 1), u);
         }
 
         #endregion
@@ -230,13 +228,13 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Primitives
                     break;
 
                 case NoiseQuality.Standard:
-                    u = Libnoise.SCurve3(x);
-                    v = Libnoise.SCurve3(y);
+                    u = MathUtils.SCurve3(x);
+                    v = MathUtils.SCurve3(y);
                     break;
 
                 case NoiseQuality.Best:
-                    u = Libnoise.SCurve5(x);
-                    v = Libnoise.SCurve5(y);
+                    u = MathUtils.SCurve5(x);
+                    v = MathUtils.SCurve5(y);
                     break;
             }
 
@@ -245,13 +243,13 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Primitives
             int B = _random[X + 1] + Y;
 
             // Interpolate between directions 
-            return Libnoise.Lerp(
-                Libnoise.Lerp(
+            return MathUtils.Lerp(
+                MathUtils.Lerp(
                     Grad(_random[A], x, y),
                     Grad(_random[B], x - 1, y),
                     u
                     ),
-                Libnoise.Lerp(
+                MathUtils.Lerp(
                     Grad(_random[A + 1], x, y - 1),
                     Grad(_random[B + 1], x - 1, y - 1),
                     u
@@ -301,15 +299,15 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Primitives
                     break;
 
                 case NoiseQuality.Standard:
-                    u = Libnoise.SCurve3(x);
-                    v = Libnoise.SCurve3(y);
-                    w = Libnoise.SCurve3(z);
+                    u = MathUtils.SCurve3(x);
+                    v = MathUtils.SCurve3(y);
+                    w = MathUtils.SCurve3(z);
                     break;
 
                 case NoiseQuality.Best:
-                    u = Libnoise.SCurve5(x);
-                    v = Libnoise.SCurve5(y);
-                    w = Libnoise.SCurve5(z);
+                    u = MathUtils.SCurve5(x);
+                    v = MathUtils.SCurve5(y);
+                    w = MathUtils.SCurve5(z);
                     break;
             }
 
@@ -324,27 +322,27 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Primitives
 
             // Interpolate between directions
             return
-                Libnoise.Lerp(
-                    Libnoise.Lerp(
-                        Libnoise.Lerp(
+                MathUtils.Lerp(
+                    MathUtils.Lerp(
+                        MathUtils.Lerp(
                             Grad(_random[aa], x, y, z),
                             Grad(_random[ba], x - 1, y, z),
                             u
                             ),
-                        Libnoise.Lerp(
+                        MathUtils.Lerp(
                             Grad(_random[ab], x, y - 1, z),
                             Grad(_random[bb], x - 1, y - 1, z),
                             u
                             ),
                         v
                         ),
-                    Libnoise.Lerp(
-                        Libnoise.Lerp(
+                    MathUtils.Lerp(
+                        MathUtils.Lerp(
                             Grad(_random[aa + 1], x, y, z - 1),
                             Grad(_random[ba + 1], x - 1, y, z - 1),
                             u
                             ),
-                        Libnoise.Lerp(
+                        MathUtils.Lerp(
                             Grad(_random[ab + 1], x, y - 1, z - 1),
                             Grad(_random[bb + 1], x - 1, y - 1, z - 1),
                             u

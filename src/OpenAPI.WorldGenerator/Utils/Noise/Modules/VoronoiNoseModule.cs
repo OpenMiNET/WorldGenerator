@@ -93,7 +93,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
                 float xDist = xCandidate - x;
                 float yDist = yCandidate - y;
                 value = (MathF.Sqrt(xDist * xDist + yDist * yDist)
-                        ) * Libnoise.Sqrt2 - 1.0f;
+                        ) * MathUtils.Sqrt2 - 1.0f;
             }
             else
                 value = 0.0f;
@@ -170,7 +170,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
                 float yDist = yCandidate - y;
                 float zDist = zCandidate - z;
                 value = (MathF.Sqrt(xDist*xDist + yDist*yDist + zDist*zDist)
-                    )*Libnoise.Sqrt3 - 1.0f;
+                    )*MathUtils.Sqrt3 - 1.0f;
             }
             else
                 value = 0.0f;

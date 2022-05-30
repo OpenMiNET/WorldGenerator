@@ -1,4 +1,5 @@
 using MiNET.Blocks;
+using OpenAPI.WorldGenerator.Generators.Biomes.Config;
 using OpenAPI.WorldGenerator.Generators.Surfaces;
 using OpenAPI.WorldGenerator.Generators.Surfaces.Mesa;
 using OpenAPI.WorldGenerator.Generators.Terrain;
@@ -9,8 +10,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Mesa
     {
         public MesaPlateauFBiome()
         {
-            Id = 38;
-            Name = "Mesa Plateau F";
+            Id = 39;
+            Name = "Badlands Plateau";
             Temperature = 2.0f;
             Downfall = 0.0f;
             MinHeight = 0.25f;
@@ -18,7 +19,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Mesa
 
             Config.AllowRivers = false;
             Config.AllowScenicLakes = false;
-            Config.WeightMultiplier = 1.4f;
+            Config.Weight = Weights.Uncommon;
           //  SurfaceBlock = 12; //Surface = Red Sand
           //  SurfaceMetadata = 1;
 
@@ -29,6 +30,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Mesa
             {
                 SandType = "red"
             }, new RedSandstone());
+            
+            Color = OpenAPI.WorldGenerator.Utils.ColorUtils.FromHtml("#CA8C65");
         }
     }
 }

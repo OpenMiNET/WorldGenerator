@@ -1,8 +1,9 @@
 using MiNET.Blocks;
+using OpenAPI.WorldGenerator.Generators.Biomes.Config;
 using OpenAPI.WorldGenerator.Generators.Surfaces.Savanna;
 using OpenAPI.WorldGenerator.Generators.Terrain;
 
-namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla
+namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Savanna
 {
     public class SavannaPlateauBiome : BiomeBase
     {
@@ -17,10 +18,12 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla
 
             Config.AllowRivers = false;
             Config.AllowScenicLakes = false;
-            Config.WeightMultiplier = 1.05f;
+            Config.Weight = Weights.Common;
 
-            Terrain = new SavannaPlateauTerrain(true, 35f, 160f, 60f, 40f, 69f, true);
+            Terrain = new SavannaPlateauTerrain(true, 10f, 160f, 60f, 40f, 69f, false);
             Surface = new SavannaPlateauSurface(Config, new Grass(), new Dirt());
+            
+            Color = OpenAPI.WorldGenerator.Utils.ColorUtils.FromHtml("#A79D64");
         }
     }
 }

@@ -8,7 +8,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
         
         public override float GenerateNoise(OverworldGeneratorV2 generator, int x, int y, float border, float river)
         {
-            return TerrainMesa(x,y, generator, river, border);// Riverized(generator, BaseHeight + GroundEffect.Added(generator, x, y), river);
+            return TerrainMesa(generator, x, y, river, border);// Riverized(generator, BaseHeight + GroundEffect.Added(generator, x, y), river);
         }
     }
 }

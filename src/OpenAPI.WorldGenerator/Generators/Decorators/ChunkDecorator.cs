@@ -1,6 +1,6 @@
 using MiNET.Worlds;
 using OpenAPI.WorldGenerator.Generators.Biomes;
-using Biome = OpenAPI.WorldGenerator.Utils.Biome;
+using Biome = OpenAPI.WorldGenerator.Generators.Biomes.Biome;
 
 namespace OpenAPI.WorldGenerator.Generators.Decorators
 {

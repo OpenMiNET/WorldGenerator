@@ -10,8 +10,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Mesa
     {
         public MesaPlateauBiome()
         {
-            Id = 39;
-            Name = "Mesa Plateau";
+            Id = 38;
+            Name = "Wooded Badlands Plateau";
             Temperature = 2.0f;
             Downfall = 0.0f;
             MinHeight = 0.025f;
@@ -19,10 +19,12 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Mesa
 
             Config.AllowRivers = false;
             Config.AllowScenicLakes = false;
-            Config.WeightMultiplier = 1.3f;
+            Config.Weight = Weights.Uncommon;
             
             Terrain = new VanillaMesaPlateauTerrain(true, 35f, 160f, 60f, 40f, 69f);
             Surface = new MesaSurface(Config, new Sand() {SandType = "red"}, new RedSandstone());
+            
+            Color = OpenAPI.WorldGenerator.Utils.ColorUtils.FromHtml("#B09765");
         }
     }
 }

@@ -21,6 +21,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Beach
             };
             
             Type = BiomeType.Beach | BiomeType.Land;
+            Color = OpenAPI.WorldGenerator.Utils.ColorUtils.FromHtml("#FADE55");
         }
     }
 }

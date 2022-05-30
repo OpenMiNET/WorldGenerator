@@ -4,11 +4,11 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
 {
     public class ScaledNoiseModule : FilterNoise, INoiseModule
     {
-        public ScaledNoiseModule(INoiseModule noiseModule)
+        public ScaledNoiseModule(INoiseModule noiseModule) : base(DEFAULT_FREQUENCY, 2f, 0.9f, 1f)
         {
             base.Primitive = noiseModule;
         }
-        
+
         [Modifier]
         public float ScaleX { get; set; }
         
@@ -21,12 +21,62 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
         
         public float GetValue(float x, float y)
         {
-            return Primitive.GetValue(x * ScaleX, y * ScaleZ);
+            float freq = Frequency;
+
+            float result = 0f;
+            float max = 0f;
+            x *= ScaleX;
+            y *= ScaleZ;
+            
+            int curOctave;
+            
+            for (curOctave = 0; curOctave < _octaveCount; curOctave++)
+            {
+                var signal = _source.GetValue(x * freq, y * freq) * _spectralWeights[curOctave];
+                result += signal;
+
+                x *= _lacunarity;
+                y *= _lacunarity;
+
+                if (signal > max)
+                    max = signal;
+            }
+
+            float remainder = _octaveCount - (int) _octaveCount;
+
+            if (remainder > 0.0f)
+                result += remainder*_source.GetValue(x, y)*_spectralWeights[curOctave];
+            
+            return result;
         }
 
         public float GetValue(float x, float y, float z)
         {
-            return Primitive.GetValue(x * ScaleX, y * ScaleY, z * ScaleZ);
+            float freq = Frequency;
+
+            float result = 0f;
+            x *= ScaleX;
+            y *= ScaleY;
+            y *= ScaleZ;
+            
+            int curOctave;
+
+            for (curOctave = 0; curOctave < _octaveCount; curOctave++)
+            {
+                var signal = _source.GetValue(x * freq, y * freq, z * freq) * _spectralWeights[curOctave];
+                result += signal;
+
+                x *= _lacunarity;
+                y *= _lacunarity;
+                z *= _lacunarity;
+            }
+
+            float remainder = _octaveCount - (int) _octaveCount;
+
+            if (remainder > 0.0f)
+                result += remainder*_source.GetValue(x, y, z)*_spectralWeights[curOctave];
+            
+            return result / _octaveCount;
         }
     }
 }

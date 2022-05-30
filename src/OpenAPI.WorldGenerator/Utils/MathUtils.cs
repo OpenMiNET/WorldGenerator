@@ -1,11 +1,44 @@
+using System;
+using System.Numerics;
+
 namespace OpenAPI.WorldGenerator.Utils
 {
     public static class MathUtils
     {
+        public const float Pi = 3.1415927f;
+        public const float Sqrt2 = 1.4142135f;
+        public const float Sqrt3 = 1.7320508f;
+        public const float Sqrt5 = 2.236068f;
+        public const float Deg2Rad = 0.017453292f;
+        public const float Rad2Deg = 57.29578f;
+        public static float SCurve3(float a) => (float) ((double) a * (double) a * (3.0 - 2.0 * (double) a));
+        public static float SCurve5(float a) => (float) ((double) a * (double) a * (double) a * ((double) a * ((double) a * 6.0 - 15.0) + 10.0));
+        
+        public static byte[] UnpackLittleUint32(int value, ref byte[] buffer)
+        {
+            if (buffer.Length < 4)
+                Array.Resize<byte>(ref buffer, 4);
+            buffer[0] = (byte) (value & (int) byte.MaxValue);
+            buffer[1] = (byte) ((value & 65280) >> 8);
+            buffer[2] = (byte) ((value & 16711680) >> 16);
+            buffer[3] = (byte) (((long) value & 4278190080L) >> 24);
+            return buffer;
+        }
+        
         public static float Lerp(float a, float b, float f)
         {
             //f = f*f;
             return a + f * (b - a);
+        }
+
+        public static double Clamp01(double value)
+        {
+            return Math.Clamp(value, 0d, 1d);
+        }
+        
+        public static float Clamp01(float value)
+        {
+            return Math.Clamp(value, 0f, 1f);
         }
         
         public static float ConvertRange(

@@ -2,17 +2,17 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Api
 {
     public interface ISimplexData2D {
 
-        void AddToDeltaX(double val);
+        void AddToDeltaX(float val);
 
-        void AddToDeltaY(double val);
+        void AddToDeltaY(float val);
 
-        double GetDeltaX();
+        float GetDeltaX();
 
-        void SetDeltaX(double deltaX);
+        void SetDeltaX(float deltaX);
 
-        double GetDeltaY();
+        float GetDeltaY();
 
-        void SetDeltaY(double deltaY);
+        void SetDeltaY(float deltaY);
 
         void Clear();
 
@@ -20,7 +20,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Api
         
         public interface IDataRequest {
 
-            void Apply(double attn, double extrapolation, double gx, double gy, int giSph2, double dx, double dy);
+            void Apply(float attn, float extrapolation, float gx, float gy, int giSph2, float dx, float dy);
         }
     }
 }

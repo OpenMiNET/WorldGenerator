@@ -1,3 +1,4 @@
+using OpenAPI.WorldGenerator.Generators.Biomes.Config;
 using OpenAPI.WorldGenerator.Generators.Terrain;
 
 namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Jungle
@@ -14,7 +15,9 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Jungle
             MaxHeight = 1.8f;
 
             Terrain = new JungleHillsTerrain(72f, 40f);
-            Config.WeightMultiplier = 1.2f;
+            Config.Weight = Weights.Uncommon;
+            
+            Color = OpenAPI.WorldGenerator.Utils.ColorUtils.FromHtml("#2C4205");
         }
     }
 }

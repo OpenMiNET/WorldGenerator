@@ -7,8 +7,8 @@ namespace OpenAPI.WorldGenerator.Utils.Noise
     public abstract class SimplexData2D : ISimplexData2D
     {
 
-        private double deltaX;
-        private double deltaY;
+        private float deltaX;
+        private float deltaY;
 
         private SimplexData2D()
         {
@@ -37,43 +37,43 @@ namespace OpenAPI.WorldGenerator.Utils.Noise
             return new Derivative();
         }
 
-        public double GetDeltaX()
+        public float GetDeltaX()
         {
             return this.deltaX;
         }
 
-        public void SetDeltaX(double deltaX)
+        public void SetDeltaX(float deltaX)
         {
             this.deltaX = deltaX;
         }
 
-        public double GetDeltaY()
+        public float GetDeltaY()
         {
             return this.deltaY;
         }
 
-        public void SetDeltaY(double deltaY)
+        public void SetDeltaY(float deltaY)
         {
             this.deltaY = deltaY;
         }
 
-        public void AddToDeltaX(double val)
+        public void AddToDeltaX(float val)
         {
             this.deltaX += val;
         }
 
-        public void AddToDeltaY(double val)
+        public void AddToDeltaY(float val)
         {
             this.deltaY += val;
         }
 
         public void Clear()
         {
-            this.SetDeltaX(0.0d);
-            this.SetDeltaY(0.0d);
+            this.SetDeltaX(0.0f);
+            this.SetDeltaY(0.0f);
         }
 
-        public ISimplexData2D.IDataRequest Request()
+        public virtual ISimplexData2D.IDataRequest Request()
         {
             return new Disk.DiskDataRequest(this);
         }
@@ -86,7 +86,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise
 
             }
 
-            public ISimplexData2D.IDataRequest Request()
+            public override ISimplexData2D.IDataRequest Request()
             {
                 return new DiskDataRequest(this);
             }
@@ -100,13 +100,13 @@ namespace OpenAPI.WorldGenerator.Utils.Noise
                     Data = data2D;
                 }
 
-                public void Apply(double attn, double extrapolation, double gx, double gy, int gi_sph2, double dx,
-                    double dy)
+                public void Apply(float attn, float extrapolation, float gx, float gy, int gi_sph2, float dx,
+                    float dy)
                 {
-                    double attnSq = attn * attn;
-                    double extrap = attnSq * attnSq * extrapolation;
-                    Data.AddToDeltaX(extrap * SimplexPerlin.GradientsSph2[gi_sph2]);
-                    Data.AddToDeltaY(extrap * SimplexPerlin.GradientsSph2[gi_sph2 + 1]);
+                    float attnSq = attn * attn;
+                    float extrap = attnSq * attnSq * extrapolation;
+                    Data.AddToDeltaX((float) (extrap * SimplexPerlin.GradientsSph2[gi_sph2]));
+                    Data.AddToDeltaY((float) (extrap * SimplexPerlin.GradientsSph2[gi_sph2 + 1]));
                 }
             }
         }
@@ -119,7 +119,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise
 
             }
 
-            public ISimplexData2D.IDataRequest Request()
+            public override ISimplexData2D.IDataRequest Request()
             {
                 return new DerivativeDataRequest(this);
             }
@@ -133,12 +133,12 @@ namespace OpenAPI.WorldGenerator.Utils.Noise
                     Data = data2D;
                 }
 
-                public void Apply(double attn, double extrapolation, double gx, double gy, int gi_sph2, double dx,
-                    double dy)
+                public void Apply(float attn, float extrapolation, float gx, float gy, int gi_sph2, float dx,
+                    float dy)
                 {
                     double attnSq = attn * attn;
-                    Data.AddToDeltaX((gx * attn - 8 * dx * extrapolation) * attnSq * attn);
-                    Data.AddToDeltaY((gy * attn - 8 * dy * extrapolation) * attnSq * attn);
+                    Data.AddToDeltaX((float) ((gx * attn - 8f * dx * extrapolation) * attnSq * attn));
+                    Data.AddToDeltaY((float) ((gy * attn - 8f * dy * extrapolation) * attnSq * attn));
                 }
             }
         }

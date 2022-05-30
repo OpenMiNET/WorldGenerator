@@ -1,5 +1,3 @@
-using LibNoise;
-
 namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
 {
     /// <summary>
@@ -72,7 +70,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
                 y *= _lacunarity;
 
                 // Weight successive contributions by the previous signal.
-                weight = Libnoise.Clamp01(signal*_gain);
+                weight = MathUtils.Clamp01(signal*_gain);
 
                 // Get the coherent-noise value.
                 signal = _source.GetValue(x, y);
@@ -138,7 +136,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
                 z *= _lacunarity;
 
                 // Weight successive contributions by the previous signal.
-                weight = Libnoise.Clamp01(signal*_gain);
+                weight = MathUtils.Clamp01(signal*_gain);
 
                 // Get the coherent-noise value.
                 signal = _source.GetValue(x, y, z);

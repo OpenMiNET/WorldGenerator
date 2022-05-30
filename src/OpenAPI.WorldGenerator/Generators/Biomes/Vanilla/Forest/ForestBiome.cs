@@ -1,4 +1,6 @@
+using OpenAPI.WorldGenerator.Generators.Biomes.Config;
 using OpenAPI.WorldGenerator.Generators.Terrain;
+using OpenAPI.WorldGenerator.Utils;
 
 namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Forest
 {
@@ -14,7 +16,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Forest
             MaxHeight = 0.2f;
             Terrain = new ForestTerrain();
             
-            Config.WeightMultiplier = 1f;
+            Config.Weight = Weights.Common;
+            Color = ColorUtils.FromHtml("#056621");
         }
     }
 }

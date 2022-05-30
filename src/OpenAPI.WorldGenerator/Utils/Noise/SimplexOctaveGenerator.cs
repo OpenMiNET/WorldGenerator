@@ -1,5 +1,4 @@
-using LibNoise;
-using LibNoise.Primitive;
+using OpenAPI.WorldGenerator.Utils.Noise.Primitives;
 
 namespace OpenAPI.WorldGenerator.Utils.Noise
 {
@@ -7,17 +6,17 @@ namespace OpenAPI.WorldGenerator.Utils.Noise
 	{
 		private readonly long _seed;
 		private readonly int _octaves;
-		private SimplexPerlin[] _generators;
+		private INoiseModule[] _generators;
 
 		public SimplexOctaveGenerator(int seed, int octaves)
 		{
 			_seed = seed;
 			_octaves = octaves;
 
-			_generators = new SimplexPerlin[octaves];
+			_generators = new INoiseModule[octaves];
 			for (int i = 0; i < _generators.Length; i++)
 			{
-				_generators[i] = new SimplexPerlin(seed, NoiseQuality.Best);
+				_generators[i] = new SimplexPerlin(seed, NoiseQuality.Fast);
 			}
 		}
 
@@ -75,12 +74,12 @@ namespace OpenAPI.WorldGenerator.Utils.Noise
 			return result;
 		}
 
-		public double Noise(double x, double y, double z, double w, double frequency, double amplitude)
+		/*public double Noise(double x, double y, double z, double w, double frequency, double amplitude)
 		{
 			return Noise(x, y, z, w, frequency, amplitude, false);
-		}
+		}*/
 
-		public double Noise(double x, double y, double z, double w, double frequency, double amplitude, bool normalized)
+		/*public double Noise(double x, double y, double z, double w, double frequency, double amplitude, bool normalized)
 		{
 			double result = 0;
 			double amp = 1;
@@ -106,19 +105,19 @@ namespace OpenAPI.WorldGenerator.Utils.Noise
 			}
 
 			return result;
-		}
+		}*/
 
 		public double XScale { get; set; }
 		public double YScale { get; set; }
 		public double ZScale { get; set; }
-		public double WScale { get; set; }
+		//public double WScale { get; set; }
 
 		public void SetScale(double scale)
 		{
 			XScale = scale;
 			YScale = scale;
 			ZScale = scale;
-			WScale = scale;
+			//WScale = scale;
 		}
 	}
 }

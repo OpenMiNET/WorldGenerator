@@ -80,7 +80,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return (-1f) * (float) MathF.Pow((-1f) * number, power);
         }
 
-        public static float Hills(float x, float y, float hillStrength, OverworldGeneratorV2 generator)
+        public static float Hills(OverworldGeneratorV2 generator, float x, float y, float hillStrength)
         {
 
             float m = generator.SimplexInstance(0).GetValue(x / 150f, y / 150f);
@@ -101,7 +101,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return generator.Preset.GetTerrainBase() * river;
         }
         
-        public static float GetGroundNoise(int x, int y, float amplitude, OverworldGeneratorV2 generator)
+        public static float GetGroundNoise(OverworldGeneratorV2 generator, int x, int y, float amplitude)
         {
 
             float h = BlendedHillHeight(generator.SimplexInstance(0).GetValue(x / 49f, y / 49f), 0.2f) * amplitude;
@@ -110,7 +110,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return h;
         }
 
-        public static float GetGroundNoise(float x, float y, float amplitude, OverworldGeneratorV2 generator)
+        public static float GetGroundNoise(OverworldGeneratorV2 generator, float x, float y, float amplitude)
         {
 
             float h = BlendedHillHeight(generator.SimplexInstance(0).GetValue(x / 49f, y / 49f), 0.2f) * amplitude;
@@ -149,12 +149,12 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return baseH + (height - baseH) * river;
         }
 
-        public static float TerrainBeach(int x, int y, OverworldGeneratorV2 generator, float river, float baseHeight)
+        public static float TerrainBeach(OverworldGeneratorV2 generator, int x, int y, float river, float baseHeight)
         {
-            return Riverized(generator, baseHeight + GetGroundNoise(x, y, 4f, generator), river);
+            return Riverized(generator, baseHeight + GetGroundNoise(generator, x, y, 4f), river);
         }
 
-        public static float TerrainBryce(int x, int y, OverworldGeneratorV2 generator, float river, float height)
+        public static float TerrainBryce(OverworldGeneratorV2 generator, int x, int y, float river, float height)
         {
 
             var simplex = generator.SimplexInstance(0);
@@ -168,7 +168,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return Riverized(generator, generator.Preset.GetTerrainBase() + n, river);
         }
 
-        public static float TerrainFlatLakes(int x, int y, OverworldGeneratorV2 generator, float river, float baseHeight)
+        public static float TerrainFlatLakes(OverworldGeneratorV2 generator, int x, int y, float river, float baseHeight)
         {
             /*float h = simplex.GetValue(x / 300f, y / 300f) * 40f * river;
             h = h > hMax ? hMax : h;
@@ -181,11 +181,11 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             );
 
             ruggedNoise = BlendedHillHeight(ruggedNoise);
-            float h = GetGroundNoise(x, y, 2f * (ruggedNoise + 1f), generator); // ground noise
+            float h = GetGroundNoise(generator, x, y, 2f * (ruggedNoise + 1f)); // ground noise
             return Riverized(generator, baseHeight + h, river);
         }
 
-        public static float TerrainForest(int x, int y, OverworldGeneratorV2 generator, float river, float baseHeight)
+        public static float TerrainForest(OverworldGeneratorV2 generator, int x, int y, float river, float baseHeight)
         {
             var simplex = generator.SimplexInstance(0);
 
@@ -197,7 +197,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return Riverized(generator, baseHeight + 20f + (float) h, river);
         }
 
-        public static float TerrainGrasslandFlats(int x, int y, OverworldGeneratorV2 generator, float river,
+        public static float TerrainGrasslandFlats(OverworldGeneratorV2 generator, int x, int y, float river,
             float mPitch, float baseHeight)
         {
 
@@ -215,7 +215,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return Riverized(generator, baseHeight + h + m, river);
         }
 
-        public static float TerrainGrasslandHills(int x, int y, OverworldGeneratorV2 generator, float river,
+        public static float TerrainGrasslandHills(OverworldGeneratorV2 generator, int x, int y, float river,
             float vWidth, float vHeight, float hWidth, float hHeight, float bHeight)
         {
 
@@ -229,12 +229,12 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             h *= vHeight * river;
             m *= hHeight * river;
 
-            h += TerrainBase.GetGroundNoise(x, y, 4f, generator);
+            h += GetGroundNoise(generator, x, y, 4f);
 
             return Riverized(generator, bHeight + h, river) + m;
         }
 
-        public static float TerrainGrasslandMountains(int x, int y, OverworldGeneratorV2 generator, float river,
+        public static float TerrainGrasslandMountains(OverworldGeneratorV2 generator, int x, int y, float river,
             float hFactor, float mFactor, float baseHeight)
         {
 
@@ -257,7 +257,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return Riverized(generator, baseHeight + h + m, river);
         }
 
-        public static float TerrainHighland(float x, float y, OverworldGeneratorV2 generator, float river, float start,
+        public static float TerrainHighland(OverworldGeneratorV2 generator, float x, float y, float river, float start,
             float width, float height, float baseAdjust)
         {
 
@@ -293,7 +293,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return (GetTerrainBase(generator, river)) + (h + baseAdjust) * river;
         }
 
-        public static float TerrainLonelyMountain(int x, int y, OverworldGeneratorV2 generator, float river,
+        public static float TerrainLonelyMountain(OverworldGeneratorV2 generator, int x, int y, float river,
             float strength, float width, float terrainHeight)
         {
 
@@ -329,7 +329,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return Riverized(generator, terrainHeight + h + m, river);
         }
 
-        public static float TerrainMarsh(int x, int y, OverworldGeneratorV2 generator, float baseHeight, float river)
+        public static float TerrainMarsh(OverworldGeneratorV2 generator, int x, int y, float baseHeight, float river)
         {
             var simplex = generator.SimplexInstance(0);
             float h = simplex.GetValue(x / 130f, y / 130f) * 20f;
@@ -348,7 +348,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return Riverized(generator, baseHeight + h, river);
         }
 
-        public static float TerrainMesa(int x, int y, OverworldGeneratorV2 generator, float river, float border) {
+        public static float TerrainMesa(OverworldGeneratorV2 generator, int x, int y, float river, float border) {
 
             var simplex = generator.SimplexInstance(0);
             float b = simplex.GetValue(x / 130f, y / 130f) * 50f * river;
@@ -393,7 +393,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return 74f + b;
         }
         
-        public static float TerrainOcean(int x, int y, OverworldGeneratorV2 generator, float river, float averageFloor)
+        public static float TerrainOcean(OverworldGeneratorV2 generator, int x, int y, float river, float averageFloor)
         {
 
             var simplex = generator.SimplexInstance(0);
@@ -408,7 +408,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return floNoise;
         }
 
-        public static float TerrainOceanCanyon(int x, int y, OverworldGeneratorV2 generator, float river, float[] height,
+        public static float TerrainOceanCanyon(OverworldGeneratorV2 generator, int x, int y, float river, float[] height,
             float border, float strength, int heightLength, bool booRiver)
         {
             //float b = simplex.GetValue(x / cWidth, y / cWidth) * cHeigth * river;
@@ -473,7 +473,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return floNoise;
         }
 
-        public static float TerrainPlains(int x, int y, OverworldGeneratorV2 generator, float river, float stPitch,
+        public static float TerrainPlains(OverworldGeneratorV2 generator, int x, int y, float river, float stPitch,
             float stFactor, float hPitch, float heightScale, float baseHeight)
         {
 
@@ -492,7 +492,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return floNoise;
         }
 
-        public static float TerrainPlateau(float x, float y, OverworldGeneratorV2 generator, float river, float[] height,
+        public static float TerrainPlateau(OverworldGeneratorV2 generator, float x, float y, float river, float[] height,
             float border, float strength, int heightLength, float selectorWaveLength, bool isM)
         {
 
@@ -547,7 +547,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return Riverized(generator, generator.Preset.GetTerrainBase(), river) + b;
         }
 
-        public static float TerrainPolar(float x, float y, OverworldGeneratorV2 generator, float river, float stPitch,
+        public static float TerrainPolar(OverworldGeneratorV2 generator, float x, float y, float river, float stPitch,
             float stFactor, float hPitch, float hDivisor, float baseHeight)
         {
 
@@ -566,33 +566,33 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return floNoise;
         }
 
-        public static float TerrainRollingHills(int x, int y, OverworldGeneratorV2 generator, float river,
+        public static float TerrainRollingHills(OverworldGeneratorV2 generator, int x, int y, float river,
             float hillStrength, float addedHeight, float groundNoiseAmplitudeHills, float lift)
         {
 
-            float groundNoise = GetGroundNoise(x, y, groundNoiseAmplitudeHills, generator);
-            float m = Hills(x, y, hillStrength, generator);
+            float groundNoise = GetGroundNoise(generator, x, y, groundNoiseAmplitudeHills);
+            float m = Hills(generator, x, y, hillStrength);
             float floNoise = addedHeight + groundNoise + m;
             return Riverized(generator, floNoise + lift, river);
         }
 
-        public static float TerrainRollingHills(int x, int y, OverworldGeneratorV2 generator, float river,
+        public static float TerrainRollingHills(OverworldGeneratorV2 generator, int x, int y, float river,
             float hillStrength, float groundNoiseAmplitudeHills, float baseHeight)
         {
 
-            float groundNoise = GetGroundNoise(x, y, groundNoiseAmplitudeHills, generator);
-            float m = Hills(x, y, hillStrength, generator);
+            float groundNoise = GetGroundNoise(generator, x, y, groundNoiseAmplitudeHills);
+            float m = Hills(generator, x, y, hillStrength);
             float floNoise = groundNoise + m;
             return Riverized(generator, floNoise + baseHeight, river);
         }
 
-        public static float TerrainVolcano(int x, int y, OverworldGeneratorV2 generator, float border, float baseHeight)
+        public static float TerrainVolcano(OverworldGeneratorV2 generator, int x, int y, float border, float baseHeight)
         {
 
             var simplex = generator.SimplexInstance(0);
             var cellularNoise = generator.CellularInstance(0);
 
-            float st = 15f - (float) (cellularNoise.Eval2D(x / 500d, y / 500d).ShortestDistance * 42d) +
+            float st = 15f - (float) (cellularNoise.Eval2D(x / 500f, y / 500f).ShortestDistance * 42d) +
                        (simplex.GetValue(x / 30f, y / 30f) * 2f);
 
             float h = st < 0f ? 0f : st;
@@ -602,7 +602,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             if (h > 10f)
             {
                 float d2 = (h - 10f) / 1.5f > 30f ? 30f : (h - 10f) / 1.5f;
-                h += (float)cellularNoise.Eval2D(x / 25D, y / 25D).ShortestDistance * d2;
+                h += (float)cellularNoise.Eval2D(x / 25f, y / 25f).ShortestDistance * d2;
             }
 
             h += simplex.GetValue(x / 18f, y / 18f) * 3;
@@ -611,13 +611,13 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
             return baseHeight + h * border;
         }
 
-        public static float GetRiverStrength(int x, int z, OverworldGeneratorV2 generator)
+        public static float GetRiverStrength(OverworldGeneratorV2 generator, int x, int z)
         {
 
             int worldX = x;
             int worldZ = z;
-            double pX = worldX;
-            double pZ = worldZ;
+            float pX = worldX;
+            float pZ = worldZ;
             var jitterData = SimplexData2D.NewDisk();
             //New river curve function. No longer creates worldwide curve correlations along cardinal axes.
             generator.SimplexInstance(1).GetValue((float) worldX / 240.0f, (float) worldZ / 240.0f, jitterData);

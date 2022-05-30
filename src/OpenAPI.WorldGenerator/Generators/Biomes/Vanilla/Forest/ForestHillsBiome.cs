@@ -1,4 +1,6 @@
+using OpenAPI.WorldGenerator.Generators.Biomes.Config;
 using OpenAPI.WorldGenerator.Generators.Terrain;
+using OpenAPI.WorldGenerator.Utils;
 
 namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Forest
 {
@@ -7,14 +9,15 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Forest
         public ForestHillsBiome()
         {
             Id = 18;
-            Name = "Forest Hills";
+            Name = "Wooded Hills";
             Temperature = 0.7f;
             Downfall = 0.8f;
             MinHeight = 0.2f;
             MaxHeight = 0.6f;
             Terrain = new ForestHillsTerrain();
             
-            Config.WeightMultiplier = 1.05f;
+            Config.Weight = Weights.Common;
+            Color = ColorUtils.FromHtml("#22551C");
         }
     }
 }
