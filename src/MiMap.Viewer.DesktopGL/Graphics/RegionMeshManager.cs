@@ -8,7 +8,9 @@ namespace MiMap.Viewer.DesktopGL.Graphics
 {
     public interface IRegionMeshManager : IDisposable
     {
+        ICollection<CachedRegionMesh> Regions { get; }
         CachedRegionMesh CacheRegion(MapRegion region);
+        void CacheRegionChunk(MapChunk chunk);
         CachedChunkMesh CacheChunk(MapChunk chunk);
     }
 
@@ -18,6 +20,8 @@ namespace MiMap.Viewer.DesktopGL.Graphics
 
         private IDictionary<Point, CachedRegionMesh> _regionCache = new Dictionary<Point, CachedRegionMesh>();
         private IDictionary<Point, CachedChunkMesh> _chunkCache = new Dictionary<Point, CachedChunkMesh>();
+
+        public ICollection<CachedRegionMesh> Regions => _regionCache.Values;
 
         public RegionMeshManager(GraphicsDevice graphics)
         {
@@ -33,12 +37,27 @@ namespace MiMap.Viewer.DesktopGL.Graphics
             _regionCache[i] = cached;
             return cached;
         }
+        
+        public void CacheRegionChunk(MapChunk chunk)
+        {
+            var i = new Point(chunk.X >> 5, chunk.Z >> 5);
+            
+            CachedRegionMesh cachedRegion;
+            if (!_regionCache.TryGetValue(i, out cachedRegion))
+            {
+                cachedRegion = new CachedRegionMesh(_graphics, i.X, i.Y);
+                _regionCache[i] = cachedRegion;
+            }
+            
+            cachedRegion.UpdateChunk(chunk);
+        }
 
         public CachedChunkMesh CacheChunk(MapChunk chunk)
         {
             var i = new Point(chunk.X, chunk.Z);
             CachedChunkMesh cached;
-            if (_chunkCache.TryGetValue(i, out cached)) return cached;
+            if (_chunkCache.TryGetValue(i, out cached)) 
+                return cached;
             cached = new CachedChunkMesh(_graphics, chunk);
             _chunkCache[i] = cached;
             return cached;

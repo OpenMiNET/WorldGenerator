@@ -24,13 +24,20 @@ namespace MiMap.Viewer.DesktopGL.Graphics
         public Texture2D Texture { get; }
 
         public Matrix World { get; }
-        
-        public CachedRegionMesh(GraphicsDevice graphics, MapRegion region)
+
+        public CachedRegionMesh(GraphicsDevice graphics, int x, int z)
         {
-            X = region.X;
-            Z = region.Z;
+            X = x;
+            Z = z;
             Position = new Point(X << 9, Z << 9);
             var t = new Texture2D(graphics, 1 << 9, 1 << 9);
+            
+            Texture = t;
+            World = Matrix.CreateWorld(new Vector3(Position.X, Position.Y, 0f), Vector3.Forward, Vector3.Up);
+        }
+        
+        public CachedRegionMesh(GraphicsDevice graphics, MapRegion region) : this(graphics, region.X, region.Z)
+        {
             var d = new Color[(1 << 9) * (1 << 9)];
             
             int x, y, z;
@@ -41,16 +48,19 @@ namespace MiMap.Viewer.DesktopGL.Graphics
             for (int cz = 0; cz < 32; cz++)
             {
                 var chunk = region[cx, cz];
-                for (int bx = 0; bx < 16; bx++)
-                for (int bz = 0; bz < 16; bz++)
+                if (chunk != default)
                 {
-                    x = (cx << 4) + bx;
-                    z = (cz << 4) + bz;
-                    b = chunk.GetBiome(bx, bz);
-                    y = chunk.GetHeight(bx, bz);
-                    c = chunk.GetColor(bx, bz);
+                    for (int bx = 0; bx < 16; bx++)
+                    for (int bz = 0; bz < 16; bz++)
+                    {
+                        x = (cx << 4) + bx;
+                        z = (cz << 4) + bz;
+                        b = chunk.GetBiome(bx, bz);
+                        y = chunk.GetHeight(bx, bz);
+                        c = chunk.GetColor(bx, bz);
 
-                    SetData(d, x, z, c);
+                        SetData(d, x, z, c);
+                    }
                 }
             }
 
@@ -61,9 +71,34 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                 SetData(d, j, i, Color.Blue);
             }
             
-            t.SetData(d);
-            Texture = t;
-            World = Matrix.CreateWorld(new Vector3((region.X << 9), (region.Z << 9), 0f), Vector3.Forward, Vector3.Up);
+            Texture.SetData(d);
+        }
+
+        public void UpdateChunk(MapChunk chunk)
+        {
+            if (chunk == default) 
+                return;
+            
+            var cx = chunk.X & 0x1F;
+            var cz = chunk.Z & 0x1F;
+            
+            int x, y, z;
+            byte b;
+            Color c;
+            var d = new Color[(1 << 4) * (1 << 4)];
+
+            for (int bx = 0; bx < 16; bx++)
+            for (int bz = 0; bz < 16; bz++)
+            {
+                b = chunk.GetBiome(bx, bz);
+                y = chunk.GetHeight(bx, bz);
+                c = chunk.GetColor(bx, bz);
+
+                d[(bz * 16) + bx] = c;
+            }
+
+            var r = new Rectangle(cx << 4, cz << 4, 16, 16);
+            Texture.SetData(0, r, d, 0, 16*16);
         }
 
         public void Dispose()

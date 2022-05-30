@@ -23,6 +23,15 @@ namespace MiMap.Viewer.DesktopGL.Graphics
 
 
 	    /// <summary>
+	    /// Draw a line between the two supplied points.
+	    /// </summary>
+	    /// <param name="start">Starting point.</param>
+	    /// <param name="end">End point.</param>
+	    /// <param name="color">The draw color.</param>
+	    public static void DrawLine(this SpriteBatch sb, float thickness, Vector2 start, Vector2 end, Color color)
+		    => DrawLine(sb, thickness, start, end, color, Vector2.One, 0);
+	    
+		/// <summary>
         /// Draw a line between the two supplied points.
         /// </summary>
         /// <param name="start">Starting point.</param>

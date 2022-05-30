@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
+using MiMap.Viewer.DesktopGL.Utilities;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using NLog;
@@ -64,6 +65,7 @@ namespace MiMap.Viewer.DesktopGL
                         var sw = Stopwatch.StartNew();
                         Regions[r] = new MapRegion(r.X, r.Y);
                         _regionsToGenerate.TryDequeue(out _);
+                        var chunkGenTimes = new float[32 * 32];
                         Parallel.For(0, 32 * 32, new ParallelOptions()
                             {
                                 MaxDegreeOfParallelism = Environment.ProcessorCount / 2,
@@ -81,11 +83,15 @@ namespace MiMap.Viewer.DesktopGL
                                 csw.Restart();
                                 Regions[r][cx, cz] = ExtractChunkData(chunk);
                                 csw.Stop();
-                                //Log.Info($"Generated Chunk: {chunkPosition.X:000}, {chunkPosition.Z:000} in {t1:F2}ms (extract data in {csw.ElapsedMilliseconds:F2}ms)");
+                                chunkGenTimes[(cx * 32) + cz] = t1;
+                                Log.Debug($"Completed Chunk {chunkPosition.X:000}, {chunkPosition.Z:000} in {t1:N3} ms (generation: {t1:N3} ms, dataExtraction: {csw.ElapsedMilliseconds:N3} ms)");
                                 ChunkGenerated?.Invoke(this, new Point(chunkPosition.X, chunkPosition.Z));
                             });
                         sw.Stop();
-                        Log.Info($"Generated Region: {r.X:000}, {r.Y:000} in {sw.ElapsedMilliseconds:F2}ms");
+                        var ctMin = chunkGenTimes.Min();
+                        var ctMax = chunkGenTimes.Max();
+                        var ctAvg = chunkGenTimes.Average();
+                        Log.Info($"Generated Region: {r.X:000}, {r.Y:000} in {sw.ElapsedMilliseconds:N3} ms (ChunkGen: min = {ctMin:N3}, max = {ctMax:N3}, avg = {ctAvg:N3})");
                         Regions[r].IsComplete = true;
                         RegionGenerated?.Invoke(this, r);
                     }
@@ -162,13 +168,13 @@ namespace MiMap.Viewer.DesktopGL
 
         public void EnqueueChunks(Rectangle blockBounds)
         {
+            _regionsToGenerate.Clear();
+            
             var regionMin = new Point(blockBounds.X >> 9, blockBounds.Y >> 9 );
             var regionMax = new Point((blockBounds.X + blockBounds.Width) >> 9, (blockBounds.Y + blockBounds.Height) >> 9);
             
-            for (int rx = regionMin.X; rx <= regionMax.X; rx++)
-            for (int rz = regionMin.Y; rz <= regionMax.Y; rz++)
+            foreach(var p in Spiral.FillRegionFromCenter(new Rectangle(regionMin - new Point(1,1), (regionMax - regionMin) + new Point(2,2))))
             {
-                var p = new Point(rx, rz);
                 if (!Regions.ContainsKey(p))
                 {
                     EnqueueRegion(p);
