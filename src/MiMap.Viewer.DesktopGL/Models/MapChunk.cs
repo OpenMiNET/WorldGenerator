@@ -58,9 +58,9 @@ namespace MiMap.Viewer.DesktopGL
             var hIntensity = MathHelper.Clamp((height % (255f / 25f)) / 25f, 0f, 1f) / 2;
 
             // var c1 = Globals.BiomeColors[biome];
-            var c1d = MiMapViewer.Instance.Map.BiomeProvider.GetBiome(biome)?.Color;
+            var c1d = MiMapViewer.Instance.Map.BiomeRegistry.GetBiome(biome)?.Color;
             var c1 = c1d.HasValue 
-                ? new Color(c1d.Value.R, c1d.Value.G, c1d.Value.B, c1d.Value.A) 
+                ? new Color((byte)c1d.Value.R, c1d.Value.G, c1d.Value.B, c1d.Value.A) 
                 : Color.HotPink;
             var c2 = Color.Black;
             // Colors[i] = Color.Lerp(c1, c2, hIntensity);

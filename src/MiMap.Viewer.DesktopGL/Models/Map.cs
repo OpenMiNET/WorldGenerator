@@ -28,7 +28,7 @@ namespace MiMap.Viewer.DesktopGL
         private AutoResetEvent _trigger;
         private bool _running;
 
-        public readonly BiomeProvider BiomeProvider = new BiomeProvider();
+        public readonly BiomeRegistry BiomeRegistry = new BiomeRegistry();
 
         public Map(IWorldGenerator worldGenerator)
         {

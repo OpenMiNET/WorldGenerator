@@ -2,8 +2,8 @@ using OpenAPI.WorldGenerator.Generators.Biomes.Config;
 using OpenAPI.WorldGenerator.Generators.Terrain;
 using OpenAPI.WorldGenerator.Utils;
 
-namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Forest;
-
+namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Forest
+{
 public class FlowerForestBiome : BiomeBase
 {
 	public FlowerForestBiome()
@@ -20,4 +20,5 @@ public class FlowerForestBiome : BiomeBase
 		
 		Color = ColorUtils.FromHtml("#2D8E49");
 	}
+}
 }

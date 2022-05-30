@@ -84,7 +84,7 @@ namespace MiMap.Viewer.DesktopGL
 
             foreach (var mapping in map.ColorMap)
             {
-                var biome = Map.BiomeProvider.GetBiome(mapping.BiomeId);
+                var biome = Map.BiomeRegistry.GetBiome(mapping.BiomeId);
                 if (biome != default)
                 {
                     biome.Color = System.Drawing.Color.FromArgb(mapping.JColor.R, mapping.JColor.G, mapping.JColor.B);

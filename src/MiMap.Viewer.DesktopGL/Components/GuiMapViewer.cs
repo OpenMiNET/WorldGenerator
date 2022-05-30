@@ -268,14 +268,14 @@ namespace MiMap.Viewer.DesktopGL.Components
                             var cfgAllowScenicLakes = cfg?.AllowScenicLakes ?? false;
                             var cfgSurfaceBlendIn = cfg?.SurfaceBlendIn ?? false;
                             var cfgSurfaceBlendOut = cfg?.SurfaceBlendOut ?? false;
-                            var cfgWeightMultiplier = cfg?.WeightMultiplier ?? 0;
+                            var cfgWeight = cfg?.Weight ?? 0;
 
                             Checkbox("Is Edge Biome", ref cfgIsEdgeBiome);
                             Checkbox("Allow Rivers", ref cfgAllowRivers);
                             Checkbox("Allow Scenic Lakes", ref cfgAllowScenicLakes);
                             Checkbox("Surface Blend In", ref cfgSurfaceBlendIn);
                             Checkbox("Surface Blend Out", ref cfgSurfaceBlendOut);
-                            InputFloat("Weight Multiplier", ref cfgWeightMultiplier);
+                            InputInt("Weight", ref cfgWeight);
 
                             EndDisabled();
 
@@ -293,7 +293,7 @@ namespace MiMap.Viewer.DesktopGL.Components
                 {
                     if (BeginTable("biomeclr", 3))
                     {
-                        foreach (var c in Map.BiomeProvider.Biomes)
+                        foreach (var c in Map.BiomeRegistry.Biomes)
                         {
                             TableNextRow();
                             TableNextColumn();
@@ -471,7 +471,7 @@ namespace MiMap.Viewer.DesktopGL.Components
                 var z = _cursorBlock[2] & 16;
                 _cursorBlock[1] = (int)cursorBlockChunk.GetHeight(x, z);
                 _cursorBlockBiomeId = (int)cursorBlockChunk.GetBiome(x, z);
-                _cursorBlockBiome = Map.BiomeProvider.GetBiome(_cursorBlockBiomeId);
+                _cursorBlockBiome = Map.BiomeRegistry.GetBiome(_cursorBlockBiomeId);
             }
 
             if (isCursorDown)
