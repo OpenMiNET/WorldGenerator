@@ -576,8 +576,8 @@ namespace MiMap.Viewer.DesktopGL.Components
             var p = MapPosition;
             Transform = Matrix.Identity
                         // * Matrix.CreateRotationX(MathHelper.Pi)
-                        * Matrix.CreateScale(_scale, _scale, 1f)
                         * Matrix.CreateTranslation(-p.X, -p.Y, 0)
+                        * Matrix.CreateScale(_scale, _scale, 1f)
                 ;
 
             RecalculateMapBounds();
@@ -679,7 +679,7 @@ namespace MiMap.Viewer.DesktopGL.Components
 
         private Point Unproject(Point cursor)
         {
-            return _mapPosition + (cursor.ToVector2() / _scale).ToPoint();
+            return (cursor.ToVector2() / _scale).ToPoint() + _mapPosition;
 
 //            return Vector2.Transform(cursor, InverseTransform);
             // return GraphicsDevice.Viewport.Unproject(new Vector3(cursor.X, cursor.Y, 0f), _effect.Projection, _effect.View, Matrix.CreateTranslation(-_mapPosition.X, -_mapPosition.Y, 0f));
