@@ -27,12 +27,12 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Cellular
             this.SetPoints();
         }
 
-        private static double MinimalToroidalDistanceSquared(Vector2 point, Vector2[] existing, int count)
+        private static float MinimalToroidalDistanceSquared(Vector2 point, Vector2[] existing, int count)
         {
-            double result = 1.0;
+            float result = 1.0f;
             for (int i = 0; i < count; i++)
             {
-                double distance = ToroidalDistanceSquared(point, existing[i]);
+                var distance = ToroidalDistanceSquared(point, existing[i]);
                 if (distance < result)
                 {
                     result = distance;
@@ -42,30 +42,30 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Cellular
             return result;
         }
 
-        private static double ToroidalDistanceSquared(Vector2 first, Vector2 second)
+        private static float ToroidalDistanceSquared(Vector2 first, Vector2 second)
         {
-            double xDist = Math.Abs(first.X - second.X);
-            if (xDist > 0.5)
+            float xDist = MathF.Abs(first.X - second.X);
+            if (xDist > 0.5f)
             {
-                xDist = 1.0 - xDist;
+                xDist = 1.0f - xDist;
             }
 
-            double yDist = Math.Abs(first.Y - second.Y);
-            if (yDist > 0.5)
+            float yDist = MathF.Abs(first.Y - second.Y);
+            if (yDist > 0.5f)
             {
-                yDist = 1.0 - yDist;
+                yDist = 1.0f - yDist;
             }
 
             return (xDist * xDist) + (yDist * yDist);
         }
 
         private const float TOLERANCE = 0.001f;
-        public VoronoiResult Eval2D(double x, double y)
+        public VoronoiResult Eval2D(float x, float y)
         {
             // this algorithm places the points about five times more frequently
             // so I'm adjusting the passed values rather than recalibrating all the routings
-            x /= 5.0;
-            y /= 5.0;
+            //x /= 5.0;
+            //y /= 5.0;
 
             int xInt = (x > 0.0 ? (int) x : (int) x - 1);
             int yInt = (y > 0.0 ? (int) y : (int) y - 1);
@@ -78,51 +78,51 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Cellular
             result.Evaluate(this.AreaPoints(square), x, y);
 
             // now horizontally adjacent squares as appropriate
-            double distance = y - yInt;
-            if (Math.Abs(distance - result.NextDistance) > TOLERANCE)
+            float distance = y - yInt;
+            if (MathF.Abs(distance - result.NextDistance) > TOLERANCE)
             {
                 result.Evaluate(this.AreaPoints(new Vector2(xInt, yInt - 1)), x, y);
             }
 
             distance = x - xInt;
-            if (Math.Abs(distance - result.NextDistance) > TOLERANCE)
+            if (MathF.Abs(distance - result.NextDistance) > TOLERANCE)
             {
                 result.Evaluate(this.AreaPoints(new Vector2(xInt - 1, yInt)), x, y);
             }
 
-            distance = yInt - y + 1.0;
-            if (Math.Abs(distance - result.NextDistance) > TOLERANCE)
+            distance = yInt - y + 1.0f;
+            if (MathF.Abs(distance - result.NextDistance) > TOLERANCE)
             {
                 result.Evaluate(this.AreaPoints(new Vector2(xInt, yInt + 1)), x, y);
             }
 
-            distance = xInt - x + 1.0;
-            if (Math.Abs(distance - result.NextDistance) > TOLERANCE)
+            distance = xInt - x + 1.0f;
+            if (MathF.Abs(distance - result.NextDistance) > TOLERANCE)
             {
                 result.Evaluate(this.AreaPoints(new Vector2(xInt + 1, yInt)), x, y);
             }
 
             // now diagonally adjacent squares
-            distance = Math.Min(y - yInt, x - xInt);
-            if (Math.Abs(distance - result.NextDistance) > TOLERANCE)
+            distance = MathF.Min(y - yInt, x - xInt);
+            if (MathF.Abs(distance - result.NextDistance) > TOLERANCE)
             {
                 result.Evaluate(this.AreaPoints(new Vector2(xInt - 1, yInt - 1)), x, y);
             }
 
-            distance = Math.Min(yInt - y + 1.0, x - xInt);
-            if (Math.Abs(distance - result.NextDistance) > TOLERANCE)
+            distance = MathF.Min(yInt - y + 1.0f, x - xInt);
+            if (MathF.Abs(distance - result.NextDistance) > TOLERANCE)
             {
                 result.Evaluate(this.AreaPoints(new Vector2(xInt - 1, yInt + 1)), x, y);
             }
 
-            distance = Math.Min(yInt - y + 1.0, xInt - x + 1.0);
-            if (Math.Abs(distance - result.NextDistance) > TOLERANCE)
+            distance = MathF.Min(yInt - y + 1.0f, xInt - x + 1.0f);
+            if (MathF.Abs(distance - result.NextDistance) > TOLERANCE)
             {
                 result.Evaluate(this.AreaPoints(new Vector2(xInt + 1, yInt + 1)), x, y);
             }
 
-            distance = Math.Min(y - yInt, xInt - x + 1.0);
-            if (Math.Abs(distance - result.NextDistance) > TOLERANCE)
+            distance = MathF.Min(y - yInt, xInt - x + 1.0f);
+            if (MathF.Abs(distance - result.NextDistance) > TOLERANCE)
             {
                 result.Evaluate(this.AreaPoints(new Vector2(xInt + 1, yInt - 1)), x, y);
             }
@@ -149,7 +149,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Cellular
         }
         
         private Vector2[] GeneratedAreaPoints(Vector2 area) {
-            FastRandom random = new FastRandom(area.GetHashCode());
+            FastRandom random = new FastRandom((int) (area.X + area.Y * area.X * area.Y));
             bool[] used = new bool[_totalPoints];
             Vector2[] result = new Vector2[_pointsPerTorus];
             int index = 0;

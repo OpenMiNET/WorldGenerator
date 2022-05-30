@@ -19,6 +19,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Taiga
             Surface = new TaigaSurface(Config, new Grass(), new Dirt());
 
             Config.AllowRivers = false;
+            Color = OpenAPI.WorldGenerator.Utils.ColorUtils.FromHtml("#163933");
         }
     }
 }

@@ -5,7 +5,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
 		/// <inheritdoc />
 		public override float GenerateNoise(OverworldGeneratorV2 generator, int x, int y, float border, float river)
 		{
-			return TerrainMarsh(x, y, generator, generator.Preset.SeaLevel - .5f, river);
+			return TerrainMarsh(generator, x, y, generator.Preset.SeaLevel - .5f, river);
 		}
 	}
 }

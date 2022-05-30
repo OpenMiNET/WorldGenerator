@@ -17,12 +17,14 @@ namespace OpenAPI.WorldGenerator.Generators.Surfaces
         protected int       FillerBlock;
         protected int       CliffStoneBlock;
         protected int       CliffCobbleBlock;
+        protected int IceBlock;
         protected BiomeConfig BiomeConfig;
 
         protected FastRandom Rnd { get; } = new FastRandom();
         
         protected static readonly int AirId = new Air().Id;
         protected static readonly int StoneId = new Stone().Id;
+        protected static readonly int WaterId = new Water().Id;
         
         public SurfaceBase(BiomeConfig config, Block top, Block filler)
         {
@@ -34,6 +36,7 @@ namespace OpenAPI.WorldGenerator.Generators.Surfaces
             CliffCobbleBlock = new Cobblestone().GetRuntimeId();
             ShadowStoneBlock = new Stone().GetRuntimeId();
             ShadowDesertBlock = new Sand().GetRuntimeId();
+            IceBlock = new Ice().GetRuntimeId();
         }
 
         public virtual void PaintTerrain(ChunkColumn column, int blockX, int blockZ, int x, int z, int depth,
@@ -58,13 +61,13 @@ namespace OpenAPI.WorldGenerator.Generators.Surfaces
                         column.SetBlockByRuntimeId(x, y, z, FillerBlock);
                     }
                 }
-                /*else if (b is Water && y >= generator.Preset.SeaLevel)
+                else if (b == WaterId && y >= generator.Preset.SeaLevel)
                 {
                     if ((biomes[NoiseMap.GetIndex(x, z)].Type & BiomeType.Snowy) != 0)
                     {
-                        column.SetBlock(x,y,z, new Ice());
+                        column.SetBlockByRuntimeId(x,y,z, IceBlock);
                     }
-                }*/
+                }
             }
             
             /*for (int y = 255; y > -1; y--) {

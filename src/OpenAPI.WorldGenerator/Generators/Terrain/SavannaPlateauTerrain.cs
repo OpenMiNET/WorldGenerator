@@ -16,9 +16,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
         public SavannaPlateauTerrain(bool riverGen, float heightStrength, float canyonWidth, float canyonHeight, float canyonStrength, float baseHeight, bool isModified) : base(baseHeight)
         {
             _booRiver = true;
-            /*    Values come in pairs per layer. First is how high to step up.
-             * 	Second is a value between 0 and 1, signifying when to step up.
-             */
+            
             _height = new float[]{12.0f, 0.5f, 6f, 0.7f};
             _strength = heightStrength;
             _heightLength = _height.Length;
@@ -31,7 +29,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
         
         public override float GenerateNoise(OverworldGeneratorV2 generator, int x, int y, float border, float river)
         {
-            return TerrainPlateau(x, y, generator, river, _height, border, _strength, _heightLength, 50f, _isModified);
+            return TerrainPlateau(generator, x, y, river, _height, border, _strength, _heightLength, 50f, _isModified);
         }
     }
 }

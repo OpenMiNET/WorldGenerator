@@ -17,6 +17,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Taiga
             
             Terrain = new TaigaTerrain();
             Surface = new TaigaSurface(Config, new Grass(), new Dirt());
+            
+            Color = OpenAPI.WorldGenerator.Utils.ColorUtils.FromHtml("#0B6659");
         }
     }
 }

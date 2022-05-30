@@ -1,4 +1,6 @@
+using OpenAPI.WorldGenerator.Generators.Biomes.Config;
 using OpenAPI.WorldGenerator.Generators.Terrain;
+using OpenAPI.WorldGenerator.Utils;
 
 namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Ocean
 {
@@ -16,7 +18,12 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Ocean
             
             
             Type = BiomeType.Ocean;
-            Config.WeightMultiplier = 1.05f;
+            Config.Weight = Weights.Common;
+            
+            Config.AllowScenicLakes = false;
+            Config.AllowRivers = false;
+            
+            Color = ColorUtils.FromHtml("#000030");
         }
     }
 }

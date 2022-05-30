@@ -5,13 +5,13 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Cellular
 {
     public class VoronoiResult
     {
-        public double ShortestDistance { get; set; } = 32000000.0;
-        public double NextDistance { get; set; } = 32000000.0;
-        public double ClosestX { get; set; } = 32000000.0;
-        public double ClosestZ { get; set; } = 32000000.0;
+        public float ShortestDistance { get; set; } = 32000000.0f;
+        public float NextDistance { get; set; } = 32000000.0f;
+        public float ClosestX { get; set; } = 32000000.0f;
+        public float ClosestZ { get; set; } = 32000000.0f;
         
-        public double BorderValue => ShortestDistance / NextDistance;
-        public double InteriorValue => (NextDistance - ShortestDistance) / NextDistance;
+        public float BorderValue => ShortestDistance / NextDistance;
+        public float InteriorValue => (NextDistance - ShortestDistance) / NextDistance;
 
         public VoronoiResult(VoronoiSettings settings)
         {
@@ -30,16 +30,16 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Cellular
             return new Vector2((float) (this.ClosestX + xDist), (float) (this.ClosestZ + zDist));
         }
 
-        private static double Distance(Vector2 map, double px, double py)
+        private static float Distance(Vector2 map, float px, float py)
         {
             px -= map.X;
             py -= map.Y;
-            return Math.Sqrt(px * px + py * py);
+            return MathF.Sqrt(px * px + py * py);
         }
 
-        public void Evaluate(Vector2[] points, double x, double z) {
+        public void Evaluate(Vector2[] points, float x, float z) {
             foreach (Vector2 point in points) {
-                double distance = Distance(point, x, z);
+                float distance = Distance(point, x, z);
                 if (distance < this.ShortestDistance) {
                     this.NextDistance = this.ShortestDistance;
                     this.ShortestDistance = distance;

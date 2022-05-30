@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -13,19 +12,8 @@ using Newtonsoft.Json;
 using OpenAPI.WorldGenerator.Generators;
 using OpenAPI.WorldGenerator.Generators.Biomes;
 using OpenAPI.WorldGenerator.Utils;
-using OpenAPI.WorldGenerator.Utils.Noise;
-using QuickType;
-using BiomeUtils = OpenAPI.WorldGenerator.Utils.BiomeUtils;
-
 namespace WorldGenerator.Tweaking
 {
-	public class NoiseData
-	{
-		public ChunkColumn Chunk;
-		public int X;
-		public int Z;
-	}
-	
 	public class TestGame : Game
 	{
 		private int                      _chunks, _resolution;
@@ -33,7 +21,6 @@ namespace WorldGenerator.Tweaking
 		private GraphicsDeviceManager _graphics;
 
 		private OverworldGeneratorV2   _worldGen;
-		private Dictionary<int, Color> _biomeColors = new Dictionary<int, Color>();
 		private Dictionary<string, uint> _blockColors;
 		public TestGame(OverworldGeneratorV2 worldGen, int chunks, int resolution)
 		{
@@ -44,19 +31,6 @@ namespace WorldGenerator.Tweaking
 
 			_blockColors = JsonConvert.DeserializeObject<Dictionary<string, uint>>(
 				File.ReadAllText(Path.Combine("Resources", "blockColors.json")));
-			
-			var data =
-				"{ \"name\":\"test\", \"colorMap\":[\r\n[ 0, { \"r\":0, \"g\":0, \"b\":112 } ],\r\n[ 1, { \"r\":141, \"g\":179, \"b\":96 } ],\r\n[ 2, { \"r\":250, \"g\":148, \"b\":24 } ],\r\n[ 3, { \"r\":96, \"g\":96, \"b\":96 } ],\r\n[ 4, { \"r\":5, \"g\":102, \"b\":33 } ],\r\n[ 5, { \"r\":11, \"g\":2, \"b\":89 } ],\r\n[ 6, { \"r\":7, \"g\":249, \"b\":178 } ],\r\n[ 7, { \"r\":0, \"g\":0, \"b\":255 } ],\r\n[ 8, { \"r\":255, \"g\":0, \"b\":0 } ],\r\n[ 9, { \"r\":128, \"g\":128, \"b\":255 } ],\r\n[ 10, { \"r\":112, \"g\":112, \"b\":214 } ],\r\n[ 11, { \"r\":160, \"g\":160, \"b\":255 } ],\r\n[ 12, { \"r\":255, \"g\":255, \"b\":255 } ],\r\n[ 13, { \"r\":160, \"g\":160, \"b\":160 } ],\r\n[ 14, { \"r\":255, \"g\":0, \"b\":255 } ],\r\n[ 15, { \"r\":160, \"g\":0, \"b\":255 } ],\r\n[ 16, { \"r\":250, \"g\":222, \"b\":85 } ],\r\n[ 17, { \"r\":210, \"g\":95, \"b\":18 } ],\r\n[ 18, { \"r\":34, \"g\":85, \"b\":28 } ],\r\n[ 19, { \"r\":22, \"g\":57, \"b\":51 } ],\r\n[ 20, { \"r\":114, \"g\":120, \"b\":154 } ],\r\n[ 21, { \"r\":83, \"g\":123, \"b\":9 } ],\r\n[ 22, { \"r\":44, \"g\":66, \"b\":5 } ],\r\n[ 23, { \"r\":98, \"g\":139, \"b\":23 } ],\r\n[ 24, { \"r\":0, \"g\":0, \"b\":48 } ],\r\n[ 25, { \"r\":162, \"g\":162, \"b\":132 } ],\r\n[ 26, { \"r\":250, \"g\":240, \"b\":192 } ],\r\n[ 27, { \"r\":48, \"g\":116, \"b\":68 } ],\r\n[ 28, { \"r\":31, \"g\":5, \"b\":50 } ],\r\n[ 29, { \"r\":64, \"g\":81, \"b\":26 } ],\r\n[ 30, { \"r\":49, \"g\":85, \"b\":74 } ],\r\n[ 31, { \"r\":36, \"g\":63, \"b\":54 } ],\r\n[ 32, { \"r\":89, \"g\":102, \"b\":81 } ],\r\n[ 33, { \"r\":69, \"g\":7, \"b\":62 } ],\r\n[ 34, { \"r\":80, \"g\":112, \"b\":80 } ],\r\n[ 35, { \"r\":189, \"g\":18, \"b\":95 } ],\r\n[ 36, { \"r\":167, \"g\":157, \"b\":100 } ],\r\n[ 37, { \"r\":217, \"g\":69, \"b\":21 } ],\r\n[ 38, { \"r\":17, \"g\":151, \"b\":101 } ],\r\n[ 39, { \"r\":202, \"g\":140, \"b\":101 } ],\r\n[ 40, { \"r\":128, \"g\":128, \"b\":255 } ],\r\n[ 41, { \"r\":128, \"g\":128, \"b\":255 } ],\r\n[ 42, { \"r\":128, \"g\":128, \"b\":255 } ],\r\n[ 43, { \"r\":128, \"g\":128, \"b\":255 } ],\r\n[ 44, { \"r\":0, \"g\":0, \"b\":172 } ],\r\n[ 45, { \"r\":0, \"g\":0, \"b\":144 } ],\r\n[ 46, { \"r\":32, \"g\":32, \"b\":112 } ],\r\n[ 47, { \"r\":0, \"g\":0, \"b\":80 } ],\r\n[ 48, { \"r\":0, \"g\":0, \"b\":64 } ],\r\n[ 49, { \"r\":32, \"g\":32, \"b\":56 } ],\r\n[ 50, { \"r\":64, \"g\":64, \"b\":144 } ],\r\n[ 127, { \"r\":0, \"g\":0, \"b\":0 } ],\r\n[ 129, { \"r\":181, \"g\":219, \"b\":136 } ],\r\n[ 130, { \"r\":255, \"g\":188, \"b\":64 } ],\r\n[ 131, { \"r\":136, \"g\":136, \"b\":136 } ],\r\n[ 132, { \"r\":45, \"g\":142, \"b\":73 } ],\r\n[ 133, { \"r\":51, \"g\":142, \"b\":19 } ],\r\n[ 134, { \"r\":47, \"g\":255, \"b\":18 } ],\r\n[ 140, { \"r\":180, \"g\":20, \"b\":220 } ],\r\n[ 149, { \"r\":123, \"g\":13, \"b\":49 } ],\r\n[ 151, { \"r\":138, \"g\":179, \"b\":63 } ],\r\n[ 155, { \"r\":88, \"g\":156, \"b\":108 } ],\r\n[ 156, { \"r\":71, \"g\":15, \"b\":90 } ],\r\n[ 157, { \"r\":104, \"g\":121, \"b\":66 } ],\r\n[ 158, { \"r\":89, \"g\":125, \"b\":114 } ],\r\n[ 160, { \"r\":129, \"g\":142, \"b\":121 } ],\r\n[ 161, { \"r\":109, \"g\":119, \"b\":102 } ],\r\n[ 162, { \"r\":120, \"g\":52, \"b\":120 } ],\r\n[ 163, { \"r\":229, \"g\":218, \"b\":135 } ],\r\n[ 164, { \"r\":207, \"g\":197, \"b\":140 } ],\r\n[ 165, { \"r\":255, \"g\":109, \"b\":61 } ],\r\n[ 166, { \"r\":216, \"g\":191, \"b\":141 } ],\r\n[ 167, { \"r\":242, \"g\":180, \"b\":141 } ],\r\n[ 168, { \"r\":118, \"g\":142, \"b\":20 } ],\r\n[ 169, { \"r\":59, \"g\":71, \"b\":10 } ],\r\n[ 170, { \"r\":82, \"g\":41, \"b\":33 } ],\r\n[ 171, { \"r\":221, \"g\":8, \"b\":8 } ],\r\n[ 172, { \"r\":73, \"g\":144, \"b\":123 } ] ] }";
-
-			var colors = BiomeColors.FromJson(data);
-
-			foreach (var element in colors.ColorMap)
-			{
-				var e0 = element[0].Integer.Value;
-				var e1 = element[1].ColorMapClass;
-
-				_biomeColors.TryAdd(e0, new Color(e1.R, e1.G, e1.B));
-			}
 		}
 
 		/// <inheritdoc />
@@ -87,16 +61,17 @@ namespace WorldGenerator.Tweaking
 			Content.RootDirectory = "Resources";
 			_spriteFont = Content.Load<SpriteFont>("Arial");
 
-			foreach (RenderStage stage in Enum.GetValues<RenderStage>())
+			_stageDatas.Add(RenderStage.Biomes, new StageData(RenderStage.Biomes, GraphicsDevice, width, height, this));
+			_stageDatas.Add(RenderStage.Temperature, new StageData(RenderStage.Temperature, GraphicsDevice, width, height, this));
+			_stageDatas.Add(RenderStage.Height, new StageData(RenderStage.Height, GraphicsDevice, width, height, this));
+			/*foreach (RenderStage stage in Enum.GetValues<RenderStage>())
 			{
 				_stageDatas.Add(stage, new StageData(stage, GraphicsDevice, width, height, this));
-			}
+			}*/
 		}
-
-		private Stopwatch _sw = Stopwatch.StartNew();
-
-		private ConcurrentQueue<NoiseData> _newQueue = new ConcurrentQueue<NoiseData>();
-		public void Add(NoiseData chunk)
+		
+		private ConcurrentQueue<ChunkColumn> _newQueue = new ConcurrentQueue<ChunkColumn>();
+		public void Add(ChunkColumn chunk)
 		{
 			_newQueue.Enqueue(chunk);
 			//Chunks.Add(chunk);
@@ -106,36 +81,50 @@ namespace WorldGenerator.Tweaking
 
 		private BiomeBase ClickedBiome { get; set; } = null;
 		private Point CursorPos { get; set; } = Point.Zero;
+
+		private Stopwatch _biomeInfoSw = Stopwatch.StartNew();
 		/// <inheritdoc />
 		protected override void Update(GameTime gameTime)
 		{
 			base.Update(gameTime);
-			
-			var state = Mouse.GetState(Window);
 
-			var width = GraphicsDevice.Viewport.Width / 2;
-			var height = GraphicsDevice.Viewport.Height / 2;
-			if (state != _mouseState && state.LeftButton == ButtonState.Released && _mouseState.LeftButton == ButtonState.Pressed)
+			if (_biomeInfoSw.ElapsedMilliseconds >= 500)
 			{
-				var pos = state.Position;
+				var state = Mouse.GetState(Window);
 
-				if (pos.X <= width && pos.Y <= height)
+				var width = GraphicsDevice.Viewport.Width / 2;
+				var height = GraphicsDevice.Viewport.Height;
+
+				if (state != _mouseState)
 				{
-					if (_stageDatas.TryGetValue(RenderStage.Biomes, out var stageData))
+					var pos = state.Position;
+
+					if (pos.X >= 0 && pos.X <= width && pos.Y >= 0 && pos.Y <= height)
 					{
-						var scale = new Vector2((float)width / (float)stageData.Texture.Width, (float)height / (float)stageData.Texture.Height);
-						pos = new Point((int)(pos.X * scale.X), (int)(pos.Y * scale.Y));
-						var color = stageData.GetColorAt(pos.X, pos.Y);
-						var biomeId = _biomeColors.FirstOrDefault(x => x.Value == color).Key;
-						var biome = _worldGen.BiomeProvider.GetBiome(biomeId);
-						ClickedBiome = biome;
-						
-						CursorPos = pos;
+						if (_stageDatas.TryGetValue(RenderStage.Biomes, out var stageData))
+						{
+							var scale = new Vector2(
+								(float) stageData.Texture.Width / width, (float) stageData.Texture.Height / height);
+
+							pos = new Point((int) (pos.X * scale.X), (int) (pos.Y * scale.Y));
+							var color = stageData.GetColorAt(pos.X, pos.Y);
+							var biome = _worldGen.BiomeRegistry.Biomes.FirstOrDefault(x =>
+							{
+								var c = x.Color.GetValueOrDefault();
+
+								return c.R == color.R && c.B == color.B && c.G == color.G;
+							});
+							ClickedBiome = biome;
+
+							CursorPos = pos;
+						}
 					}
 				}
+
+				_biomeInfoSw.Restart();
+				_mouseState = state;
 			}
-			
-			_mouseState = state;
+
 		}
 
 		/// <inheritdoc />
@@ -157,7 +146,7 @@ namespace WorldGenerator.Tweaking
 					stage.Value.AddChunk(chunk);
 				}
 				
-				chunk.Chunk?.Dispose();
+				chunk?.Dispose();
 				updates++;
 			}
 
@@ -165,17 +154,21 @@ namespace WorldGenerator.Tweaking
 			
 			DrawChunks(RenderStage.Biomes, new Rectangle(0, 0, width, height * 2));
 			//DrawChunks(RenderStage.Temperature, new Rectangle(0, height, width, height));
-			DrawChunks(RenderStage.Temperature, new Rectangle(width, 0, width, height * 2));
-			//DrawChunks(RenderStage.Humidity, new Rectangle(width, height, width, height));
+			DrawChunks(RenderStage.Temperature, new Rectangle(width, 0, width, height));
+			DrawChunks(RenderStage.Height, new Rectangle(width, height, width, height));
 
 			if (ClickedBiome != null)
 			{
-				string text = $"Cursor: {CursorPos}\nBiome: {ClickedBiome.DefinitionName ?? "N/A"}";
+				string text = $"Cursor: {CursorPos}\nBiome: {ClickedBiome.Name ?? "N/A"}";
 				var size = _spriteFont.MeasureString(text);
-				_spriteBatch.DrawString(_spriteFont, text, new Vector2(0, height - size.Y), Color.White);
+				_spriteBatch.DrawString(_spriteFont, text, new Vector2(width - size.X, 10), Color.White);
 			}
 
-			var updateText = $"Updates: {updates:000}\nTemp: min={_worldGen.MinTemp:F3} max={_worldGen.MaxTemp:F3}  range={(_worldGen.MaxTemp - _worldGen.MinTemp):F3}\nRain: min={_worldGen.MinRain:F3} max={_worldGen.MaxRain:F3} range={(_worldGen.MaxRain - _worldGen.MinRain):F3}";
+			var updateText = $"Updates: {updates:000}\n" 
+			                 + $"Temp: min={_worldGen.MinTemp:F3} max={_worldGen.MaxTemp:F3} range={(_worldGen.MaxTemp - _worldGen.MinTemp):F3}\n"
+			                 + $"Rain: min={_worldGen.MinRain:F3} max={_worldGen.MaxRain:F3} range={(_worldGen.MaxRain - _worldGen.MinRain):F3}\n"
+			                 + $"Selector: min={_worldGen.MinSelector:F3} max={_worldGen.MaxSelector:F3} range={(_worldGen.MaxSelector - _worldGen.MinSelector):F3/*}\n"/*
+			                 + $"Height: min={_worldGen.MinHeight:F3} max={_worldGen.MaxHeight:F3} range={(_worldGen.MaxHeight - _worldGen.MinHeight):F3}\n"*/;
 			var updateTextSize = _spriteFont.MeasureString(updateText);
 			_spriteBatch.DrawString(_spriteFont, updateText, new Vector2(GraphicsDevice.Viewport.Width - (updateTextSize.X + 5), 5), Color.White);
 			_spriteBatch.End();
@@ -217,18 +210,17 @@ namespace WorldGenerator.Tweaking
 			{
 				int yOffset = offset.Y + 32;
 				int xOffset = offset.X + 5;
-				foreach (var biome in _biomeColors)
+				foreach (var biome in _worldGen.BiomeRegistry.Biomes)
 				{
-					var b = _worldGen.BiomeProvider.GetBiome(biome.Key);
-
-					if (!string.IsNullOrWhiteSpace(b?.Name))
+					if (!string.IsNullOrWhiteSpace(biome?.Name))
 					{
-						var textSize = _spriteFont.MeasureString(b.Name);
-						_spriteBatch.Draw(_pixel, new Rectangle(xOffset, yOffset + 2, (int)textSize.X + 10, ((int)textSize.Y)), Color.Black * 0.75f);
-						_spriteBatch.Draw(_pixel, new Rectangle(xOffset, yOffset + 2, 16, 16), biome.Value);
+						var biomeColor = biome.Color.GetValueOrDefault();
+						var textSize = _spriteFont.MeasureString(biome.Name ?? "Unknown");
+						_spriteBatch.Draw(_pixel, new Rectangle(xOffset, yOffset, (int)textSize.X + 20, ((int)textSize.Y)), Color.Black * 0.75f);
+						_spriteBatch.Draw(_pixel, new Rectangle(xOffset, yOffset + 2, 16, 16), new Color(biomeColor.R, biomeColor.G, biomeColor.B));
 
 						_spriteBatch.DrawString(
-							_spriteFont, b?.Name ?? "Unknown", new Vector2(xOffset + 16, yOffset), Color.White, 0f,
+							_spriteFont, biome?.Name ?? "Unknown", new Vector2(xOffset + 18, yOffset), Color.White, 0f,
 							Vector2.Zero, 1f, SpriteEffects.None, 0);
 						
 						yOffset += ((int)textSize.Y) + 2;
@@ -242,11 +234,10 @@ namespace WorldGenerator.Tweaking
 
 		public enum RenderStage
 		{
-			Humidity,
 			Temperature,
 			Height,
 			Biomes,
-			//Blocks
+			Blocks
 		}
 		
 			private class StageData
@@ -276,7 +267,7 @@ namespace WorldGenerator.Tweaking
 				return colors[0];
 			}
 
-			public void AddChunk(NoiseData data)
+			public void AddChunk(ChunkColumn data)
 			{
 				_device.SetRenderTarget(RenderTarget2D);
 				_spriteBatch.Begin();
@@ -297,67 +288,109 @@ namespace WorldGenerator.Tweaking
 					Texture.SetData(0, new Rectangle((data.X * (16)), data.Z * (16), 16, 16), d, 0, d.Length);
 				}
 			}
+
+			Color InterpolateColors(Color c1, Color c2, float value)
+			{
+				var v1 = c1.ToVector3();
+				var v2 = c2.ToVector3();
+				return new Color(MathUtils.Lerp(v1.X, v2.X, value), MathUtils.Lerp(v1.Y, v2.Y, value), MathUtils.Lerp(v1.Z, v2.Z, value));
+			}
 			
-			private void DrawChunk(NoiseData data)
+			Color GetHeatMapColor(float value)
+			{
+				const int NUM_COLORS = 4;
+
+				float[][] color = new float[NUM_COLORS][]
+				{
+					new float[] {0, 0, 1}, new float[] {0, 1, 0}, new float[] {1, 1, 0}, new float[] {1, 0, 0}
+				};
+				// A static array of 4 colors:  (blue,   green,  yellow,  red) using {r,g,b} for each.
+  
+				int idx1;        // |-- Our desired color will be between these two indexes in "color".
+				int idx2;        // |
+				float fractBetween = 0;  // Fraction between "idx1" and "idx2" where our value is.
+  
+				if(value <= 0)      {  idx1 = idx2 = 0;            }    // accounts for an input <=0
+				else if(value >= 1)  {  idx1 = idx2 = NUM_COLORS-1; }    // accounts for an input >=0
+				else
+				{
+					value = value * (NUM_COLORS-1);        // Will multiply value by 3.
+					idx1  = (int)MathF.Floor(value);                  // Our desired color will be after this index.
+					idx2  = idx1+1;                        // ... and before this index (inclusive).
+					fractBetween = value - idx1;    // Distance between the two indexes (0-1).
+				}
+    
+				var red   = (color[idx2][0] - color[idx1][0])*fractBetween + color[idx1][0];
+				var green = (color[idx2][1] - color[idx1][1])*fractBetween + color[idx1][1];
+				var blue  = (color[idx2][2] - color[idx1][2])*fractBetween + color[idx1][2];
+
+				return new Color(red, green, blue);
+			}
+			
+			public static Color ChangeColorBrightness(Color color, float correctionFactor)
+			{
+				float red = (float)color.R;
+				float green = (float)color.G;
+				float blue = (float)color.B;
+
+				if (correctionFactor < 0)
+				{
+					correctionFactor = 1 + correctionFactor;
+					red *= correctionFactor;
+					green *= correctionFactor;
+					blue *= correctionFactor;
+				}
+				else
+				{
+					red = (255 - red) * correctionFactor + red;
+					green = (255 - green) * correctionFactor + green;
+					blue = (255 - blue) * correctionFactor + blue;
+				}
+
+				return new Color((int)red, (int)green, (int)blue, color.A);
+			}
+			
+			private void DrawChunk(ChunkColumn data)
 			{
 				for (int x = 0; x < 16; x++)
 				{
 					for (int y = 0; y < 16; y++)
 					{
 						var pixelPosition = new Rectangle(x, y, 1, 1);
-						var biome         = _parent._worldGen.BiomeProvider.GetBiome(data.Chunk.GetBiome(x, y));
-							
-						var temp  = (int) Math.Max(0, Math.Min(255, (255 * (biome.Temperature / 2f))));
-						var humid = (int) Math.Max(0, Math.Min(255, (255 * biome.Downfall)));
-						
-						/*var t    = data.Temperature[NoiseMap.GetIndex(cx, cz)];
-						var temp = (int) Math.Max(0,
-							Math.Min(255, (255 * (t / 2f))));
-	
-						var r = data.Humidity[NoiseMap.GetIndex(cx, cz)];// MathF.Abs(_worldGen.RainfallNoise.GetValue(rx, rz));
-						var humid = (int) Math.Max(0,
-							Math.Min(255, (255 * r)));*/
 
 						switch (_stage)
 						{
-							case RenderStage.Humidity:
-								_spriteBatch.Draw(_pixel, pixelPosition, new Color(0, 0, humid));
-								break;
-
 							case RenderStage.Temperature:
-								_spriteBatch.Draw(_pixel, pixelPosition, new Color(temp, 0, humid));
-								break;
+							{
+								var biome = _parent._worldGen.BiomeRegistry.GetBiome(data.GetBiome(x, y));
+
+								_spriteBatch.Draw(
+									_pixel, pixelPosition, new Color(biome.Temperature / 2f, 0f, biome.Downfall));
+							} break;
 
 							case RenderStage.Height:
 							{
-								var column = data.Chunk;
-								int height = column.GetHeight(x, y);
+								float height = (1f / 255f) * data.GetHeight(x, y);
 								_spriteBatch.Draw(_pixel, pixelPosition, new Color(height, height, height));
-
-								//	_spriteBatch.Draw(_pixel, pixelPosition, new Color(temp, temp, temp));
-								break;
-							}
+							} break;
 
 							case RenderStage.Biomes:
-								//	var biome = _worldGen.BiomeProvider.GetBiome(t, r);
-								//	var c = biome.Color.GetValueOrDefault(System.Drawing.Color.White);
-								if (_parent._biomeColors.TryGetValue(biome.Id, out var c))
-								{
-									_spriteBatch.Draw(_pixel, pixelPosition, new Color(c.R, c.G, c.B));
-								}
-
-								break;
-
-							/*case RenderStage.Blocks:
 							{
-								var column = data.Chunk;
-								var block = column.GetBlockObject(x, column.GetHeight(x,y), y);
+								var biome = _parent._worldGen.BiomeRegistry.GetBiome(data.GetBiome(x, y));
+								var c = biome.Color.GetValueOrDefault();
+								_spriteBatch.Draw(_pixel, pixelPosition, new Color(c.R, c.G, c.B));
+							} break;
+
+							case RenderStage.Blocks:
+							{
+								var block = data.GetBlockObject(x, data.GetHeight(x,y), y);
 
 								if (_parent._blockColors.TryGetValue(block.Name, out uint color))
 								{
-									_spriteBatch.Draw(_pixel, pixelPosition, new Color(color));
+									int height = data.GetHeight(x, y);
+									_spriteBatch.Draw(_pixel, pixelPosition, ChangeColorBrightness(new Color(color), -(1f / 255f) * height));
 								}
-							} break;*/
+							} break;
 						}
 					}
 				}

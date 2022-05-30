@@ -11,11 +11,11 @@ using Newtonsoft.Json;
 using OpenAPI.Entities;
 using OpenAPI.Events;
 using OpenAPI.Events.Player;
+using OpenAPI.Player;
 using OpenAPI.Plugins;
 using OpenAPI.World;
 using OpenAPI.WorldGenerator.Generators;
 using OpenAPI.WorldGenerator.Generators.Biomes;
-using BiomeUtils = OpenAPI.WorldGenerator.Utils.BiomeUtils;
 
 namespace OpenAPI.WorldGenerator
 {
@@ -27,16 +27,23 @@ namespace OpenAPI.WorldGenerator
         private OpenApi Api { get; set; }
         private Timer _timer { get; set; }
       //  private WorldGeneratorPreset Preset { get; }
+        private BiomeRegistry _biomeRegistry = new BiomeRegistry();
         public WorldGeneratorPlugin()
         {
         }
 
         [EventHandler(EventPriority.Monitor)]
-        protected void OnPlayerJoin(PlayerJoinEvent e)
+        public void OnPlayerJoin(PlayerSpawnedEvent e)
         {
-            e.Player.SetEffect(new Speed()
+            SetSpeed(e.Player);
+        }
+
+        private void SetSpeed(OpenPlayer player)
+        {
+            return;
+           player.SetEffect(new Speed()
             {
-                Duration = int.MaxValue,
+                Duration = 320,
                 Level = 10,
                 Particles = false,
             });
@@ -62,13 +69,14 @@ namespace OpenAPI.WorldGenerator
                 {
                     if (debugWorldProvider.Generator is OverworldGeneratorV2 gen)
                     {
-                        result = gen.BiomeProvider.GetBiome(biome);
+                        result = gen.BiomeRegistry.GetBiome(biome);
                     }
                 }
                 
                 if (result == null)
-                    result = BiomeUtils.GetBiomeById(biome);
-                
+                    result = _biomeRegistry.GetBiome(biome);
+
+                SetSpeed(player);
                 player.SendTitle($"Biome: {(result?.Name ?? "N/A")}, Temperature: {(result?.Temperature.ToString() ?? "N/A")}, Downfall: {(result?.Downfall.ToString() ?? "N/A")}", TitleType.ActionBar, 0, 0, 25);
             }
         }

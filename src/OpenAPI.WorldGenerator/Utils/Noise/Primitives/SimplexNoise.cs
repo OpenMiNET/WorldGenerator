@@ -1,5 +1,4 @@
-using LibNoise;
-using LibNoise.Primitive;
+using OpenAPI.Utils;
 using OpenAPI.WorldGenerator.Utils.Noise.Api;
 
 namespace OpenAPI.WorldGenerator.Utils.Noise.Primitives
@@ -22,16 +21,16 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Primitives
 
         /// Skewing and unskewing factors for 2D, 3D and 4D, 
         /// some of them pre-multiplied.
-        private const float F2 = 0.5f*(Libnoise.Sqrt3 - 1.0f);
+        private const float F2 = 0.5f*(MathUtils.Sqrt3 - 1.0f);
 
-        private const float G2 = (3.0f - Libnoise.Sqrt3)/6.0f;
+        private const float G2 = (3.0f - MathUtils.Sqrt3)/6.0f;
         private const float G22 = G2*2.0f - 1f;
 
         private const float F3 = 1.0f/3.0f;
         private const float G3 = 1.0f/6.0f;
 
-        private const float F4 = (Libnoise.Sqrt5 - 1.0f)/4.0f;
-        private const float G4 = (5.0f - Libnoise.Sqrt5)/20.0f;
+        private const float F4 = (MathUtils.Sqrt5 - 1.0f)/4.0f;
+        private const float G4 = (5.0f - MathUtils.Sqrt5)/20.0f;
         private const float G42 = G4*2.0f;
         private const float G43 = G4*3.0f;
         private const float G44 = G4*4.0f - 1.0f;
@@ -265,8 +264,8 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Primitives
             // Skew the input space to determine which simplex cell we're in
             float s = (x + y)*F2; // Hairy factor for 2D
 
-            int i = Libnoise.FastFloor(x + s);
-            int j = Libnoise.FastFloor(y + s);
+            int i = FastMath.Floor(x + s);
+            int j = FastMath.Floor(y + s);
 
             float t = (i + j)*G2;
 
@@ -358,9 +357,9 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Primitives
             float s = (x + y + z)*F3;
 
             // for 3D
-            int i = Libnoise.FastFloor(x + s);
-            int j = Libnoise.FastFloor(y + s);
-            int k = Libnoise.FastFloor(z + s);
+            int i = FastMath.Floor(x + s);
+            int j = FastMath.Floor(y + s);
+            int k = FastMath.Floor(z + s);
 
             float t = (i + j + k)*G3;
 
@@ -531,10 +530,10 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Primitives
             // Skew the (x,y,z,w) space to determine which cell of 24 simplices
             float s = (x + y + z + w)*F4; // Factor for 4D skewing
 
-            int i = Libnoise.FastFloor(x + s);
-            int j = Libnoise.FastFloor(y + s);
-            int k = Libnoise.FastFloor(z + s);
-            int l = Libnoise.FastFloor(w + s);
+            int i = FastMath.Floor(x + s);
+            int j = FastMath.Floor(y + s);
+            int k = FastMath.Floor(z + s);
+            int l = FastMath.Floor(w + s);
 
             float t = (i + j + k + l)*G4; // Factor for 4D unskewing
 
@@ -733,8 +732,8 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Primitives
             double ys = y + s;
 
             //Get base points and offsets
-            int xsb = Libnoise.FastFloor(xs);
-            int ysb = Libnoise.FastFloor(ys);
+            int xsb = FastMath.Floor(xs);
+            int ysb = FastMath.Floor(ys);
             double xsi = xs - xsb;
             double ysi = ys - ysb;
 
@@ -772,7 +771,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Primitives
                 double gy = Gradients2D[gi + 1];
                 double extrp = gx * dx + gy * dy;
                 int giSph2 = _perm2DSph2[giP];
-                data.Request().Apply(attn, extrp, gx, gy, giSph2, dx, dy);
+                data.Request().Apply((float) attn, (float) extrp, (float) gx, (float) gy, giSph2, (float) dx, (float) dy);
             }
         }
         

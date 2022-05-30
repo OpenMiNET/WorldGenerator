@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using MiNET.Blocks;
+using OpenAPI.Utils;
 using OpenAPI.WorldGenerator.Generators.Biomes.Vanilla;
 using OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Beach;
 using OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Desert;
@@ -14,43 +15,43 @@ using OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Jungle;
 using OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Mesa;
 using OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Mushroom;
 using OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Ocean;
+using OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Plains;
+using OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Savanna;
 using OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Swamp;
 using OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Taiga;
 using OpenAPI.WorldGenerator.Generators.Surfaces;
-using OpenAPI.WorldGenerator.Utils;
-using OpenAPI.WorldGenerator.Utils.Noise;
 
 namespace OpenAPI.WorldGenerator.Generators.Biomes
 {
-    public class BiomeProvider
+    public class BiomeRegistry
     {
-        //public INoiseModule RainfallProvider { get; set; }
-        //public INoiseModule TemperatureProvider { get; set; }
-        
         public BiomeBase[] Biomes { get; }
         private Dictionary<int, BiomeBase> ById { get; }
-        public BiomeProvider()
+        public BiomeRegistry()
         {
+            //Colors found here:
+            //https://github.com/toolbox4minecraft/amidst/wiki/Biome-Color-Table
+            
             //Biomes = BiomeUtils.Biomes.Where(b => b.Terrain != null).ToArray();
             Biomes = new BiomeBase[]
             {
                 new BirchForestBiome(),
                 new BirchForestHillsBiome(),
-                /* new BirchForestHillsMBiome(),
+                 new BirchForestHillsMBiome(),
                  new BirchForestMBiome(),
-                 new ColdTaigaBiome(),
+               /*  new ColdTaigaBiome(),
                  new ColdTaigaHillsBiome(),
                  new ColdTaigaMBiome(),*/
                 new DeepOceanBiome(),
                 new DesertBiome(),
                 new DesertHillsBiome(),
                 //    new DesertMBiome(),
-                new ExtremeHillsBiome(),
-                new ExtremeHillsEdgeBiome(),
+                //new ExtremeHillsBiome(),
+               // new ExtremeHillsEdgeBiome(),
                 /*    new ExtremeHillsMBiome(),
                     new ExtremeHillsPlusBiome(),
-                    new ExtremeHillsPlusMBiome(),
-                    new FlowerForestBiome(),*/
+                    new ExtremeHillsPlusMBiome(),*/
+                new FlowerForestBiome(),
                 new ForestBiome(),
                 new ForestHillsBiome(),
                 new FrozenOceanBiome(),
@@ -99,7 +100,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
                 new StoneBeachBiome().SetEdgeBiome(true), 
             };
 
-            Random rnd = new Random();
+            FastRandom rnd = new FastRandom();
             for (int i = 0; i < Biomes.Length; i++)
             {
                 var b = Biomes[i];
@@ -163,6 +164,18 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
                 byId.TryAdd(biome.Id, biome);
             }
 
+            foreach (var group in Biomes.Where(x => !x.Config.IsEdgeBiome).GroupBy(x => x.Temperature * x.Downfall * x.Config.Weight))
+            {
+                if (group.Count() > 1)
+                {
+                    Console.WriteLine($"Detected issues!");
+                    foreach (var biome in group)
+                    {
+                        Console.WriteLine($"\t {biome.Name}");
+                    }
+                }
+            }
+            
             ById = byId;
             Console.WriteLine($"Temperature (min: {minTemp} max: {maxTemp}) Downfall (min:{minRain} max: {maxRain}) Height (min: {minHeight} max: {maxHeight})");
         }
@@ -180,78 +193,60 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
             //return Biomes.Where(x => x.Terrain != null && x.Surface != null && !x.Config.IsEdgeBiome).ToArray();
         }
 
-        public BiomeBase GetBiome(float temperature, float downfall, float selector)
+        public int GetBiome(float temperature, float downfall, float selector)
         {
             var biomes = GetBiomes();
-         //   selector = Math.Clamp(selector, 0, 1f);
+            //   selector = Math.Clamp(selector, 0, 1f);
 
-         
+
             float[] weights = new float[biomes.Length];
 
-            int totalItems = 0;
             float minDifference = float.MaxValue;
+            float sum = 0f;
+
             for (int i = 0; i < biomes.Length; i++)
             {
-                var temperatureDifference = biomes[i].Temperature - temperature;
-                var humidityDifference = biomes[i].Downfall - downfall;
+                var temperatureDifference = MathF.Abs((biomes[i].Temperature - temperature));
+                var humidityDifference = MathF.Abs(biomes[i].Downfall - downfall);
 
-                temperatureDifference *= 4.5f;
-                humidityDifference *= 2.5f;
+                //   temperatureDifference *= 5.5f;
+                //   humidityDifference *= 1.5f;
 
-                var difference = MathF.Abs(
-                    (temperatureDifference * temperatureDifference + humidityDifference * humidityDifference));
+                var difference =
+                    (temperatureDifference * temperatureDifference + humidityDifference * humidityDifference) / 3f;
 
-                if (difference > 0f)
+                var w = (float)biomes[i].Config.Weight;
+                /*if (biomes[i].MaxHeight < height || biomes[i].MinHeight > height)
                 {
-                    if (difference < minDifference)
-                        minDifference = difference;
+                    var mdifference = MathF.Min(
+                        MathF.Abs(biomes[i].MaxHeight - height), MathF.Abs(biomes[i].MinHeight - height)) * 4f;
                     
-                    weights[i] = difference;
-                    totalItems++;
-                }
+                    w -= mdifference;
+                }*/
+                weights[i] = w * (1f + difference);
+
+                sum += weights[i];
             }
-            
-            for (int biomeIndex = 0; biomeIndex < weights.Length; biomeIndex++)
+
+            selector *= sum;
+
+            int result = 0;
+
+            float currentWeightIndex = 0;
+            for (int i = 0; i < weights.Length; i++)
             {
-                if (weights[biomeIndex] > minDifference)
+                var value = weights[i];
+
+                if (value > 0f)
                 {
-                    weights[biomeIndex] = 0f;
-                }
-                else
-                {
-                    weights[biomeIndex] *= biomes[biomeIndex].Config.WeightMultiplier;
+                    currentWeightIndex += value;
+
+                    if (currentWeightIndex >= selector)
+                        return biomes[i].Id;
                 }
             }
-            
-            float sum = weights.Sum();
 
-            for (int biomeIndex = 0; biomeIndex < weights.Length; biomeIndex++)
-            {
-                weights[biomeIndex] /= sum;
-            }
-            //selector *= weights.Length;
-           //  selector /= totalItems;
-           int result = 0;
-
-         //  while (selector > 0f)
-           {
-               for (int i = 0; i < weights.Length; i++)
-               {
-                   var value = weights[i];
-
-                   if (value > 0f)
-                   {
-                       result = i;
-                       selector -= value;
-                       weights[i] = 0;
-                       
-                       if (selector <= 0f)
-                           break;
-                   }
-               }
-           }
-
-           return biomes[result];
+            return biomes[result].Id;
         }
 
         public BiomeBase GetBiome(int id)
@@ -260,7 +255,6 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
                 return value;
 
             return default;
-            return Biomes.FirstOrDefault(x => x.Id == id);//.Where(x => x.Terrain != null && x.Surface != null).FirstOrDefault(x => x.Id == id);
         }
     }
 }

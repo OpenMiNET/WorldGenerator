@@ -5,7 +5,8 @@ using OpenAPI.Utils;
 using OpenAPI.WorldGenerator.Generators.Biomes;
 using OpenAPI.WorldGenerator.Generators.Structures;
 using OpenAPI.WorldGenerator.Utils.Noise;
-using Biome = OpenAPI.WorldGenerator.Utils.Biome;
+using OpenAPI.WorldGenerator.Utils.Noise.Primitives;
+using Biome = OpenAPI.WorldGenerator.Generators.Biomes.Biome;
 using Structure = OpenAPI.WorldGenerator.Generators.Structures.Structure;
 
 namespace OpenAPI.WorldGenerator.Generators.Decorators
@@ -22,6 +23,8 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 
 		private static readonly int SugerCaneId = new Reeds().GetRuntimeId();
 		private static readonly int TallGrassId = new Tallgrass().GetRuntimeId();
+		private static readonly int WaterBlockId = new Water().Id;
+		private static readonly int JungleLeavesId = new Leaves() {OldLeafType = "jungle"}.GetRuntimeId();
 		public override void Decorate(ChunkColumn column,
 			int chunkX,
 			int chunkZ,
@@ -36,9 +39,9 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 
 			var currentTemperature = biome.Temperature;
 
-			if (y > 64)
+			if (y > Preset.SeaLevel)
 			{
-				int distanceToSeaLevel = y - 64;
+				var distanceToSeaLevel = y - Preset.SeaLevel;
 				currentTemperature = biome.Temperature - (0.00166667f * distanceToSeaLevel);
 			}
 
@@ -49,7 +52,8 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 
 			if (surface && y >= Preset.SeaLevel)
 			{
-				var noise = Simplex.Noise(rx, rz, Math.Min(biome.Downfall * 0.32f, 0.03f), 0.5, true);
+				var m = Math.Min(biome.Downfall * 0.32f, 0.03f);
+				var noise = Simplex.GetValue(rx * m, rz * m);
 
 				if (x >= 3 && x <= 13 && z >= 3 && z <= 13)
 				{
@@ -121,23 +125,20 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 				{
 					if (noise > 0.5) //Threshold 1
 					{
-						/*if (currentTemperature > 0.3f && currentTemperature < 1.5f && biome.Downfall >= 0.85f)
+						if (currentTemperature > 0.3f && currentTemperature < 1.5f && biome.Downfall >= 0.85f)
 						{
-							column.SetBlock(x, y + 1, z, 18); //Leaves
-							column.SetMetadata(x, y + 1, z, 3); //Jungle Leaves
+							column.SetBlockByRuntimeId(x, y + 1, z, JungleLeavesId); //Leaves
 						}
-						else*/
-						if (currentTemperature > 0.3f && currentTemperature < 1.5f && biome.Downfall > 0)
+						else if (currentTemperature > 0.3f && currentTemperature < 1.5f && biome.Downfall > 0)
 						{
 							var blockBeneath = column.GetBlockId(x, y, z); // column.GetBlock(x, y, z);
-
-							var sugarPosibility = GetRandom(18);
-
+							
 							if ( /*sugarPosibility <= 11*/ noise > 0.75f
 							                               && (blockBeneath == 3 || blockBeneath == 2
 								                               || blockBeneath == 12) && IsValidSugarCaneLocation(
 								                               column, x, y, z))
 							{
+								var sugarPosibility = GetRandom(18);
 								int height = 1;
 
 								if (sugarPosibility <= 2)
@@ -167,10 +168,10 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 									}
 								}
 							}
-							else if (noise > 0.8 && blockBeneath == 3
-							         || blockBeneath == 2) //If above 0.8, we generate flowers :)
+							else if (noise > 0.8 && (blockBeneath == 3
+							         || blockBeneath == 2)) //If above 0.8, we generate flowers :)
 							{
-								if (Simplex.Noise(rx, rz, 0.5f, 0.5f, true) > 0.5)
+								if (Simplex.GetValue(rx * 0.5f, rz * 0.5f) > 0.5)
 								{
 									column.SetBlockByRuntimeId(
 										x, y + 1, z,
@@ -210,6 +211,16 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 			{
 				if (z - 1 >= 0 && z + 1 < 16)
 				{
+					for (int mx = -1; mx < 1; mx++)
+					{
+						for (int mz = -1; mz < 1; mz++)
+						{
+							if (column.GetBlockId(x + mx, y, mz + z) == WaterBlockId)
+							{
+								return true;
+							}
+						}
+					}
 					/*if (blocks[OverworldGenerator.GetIndex(x + 1, y, z)] == 8 
 						|| blocks[OverworldGenerator.GetIndex(x - 1, y, z)] == 8 
 						          || blocks[OverworldGenerator.GetIndex(x, y, z + 1)] == 8 
@@ -228,11 +239,11 @@ namespace OpenAPI.WorldGenerator.Generators.Decorators
 		}
 
 		private FastRandom Rnd { get; set; }
-		private SimplexOctaveGenerator Simplex { get; set; }
+		private INoiseModule Simplex { get; set; }
 		protected override void InitSeed(int seed)
 		{
-			Simplex = new SimplexOctaveGenerator(seed, 1);
-			Simplex.SetScale(1.5);
+			Simplex = new SimplexPerlin(seed, NoiseQuality.Fast);
+		//	Simplex.SetScale(1.5);
 
 			Rnd = new FastRandom(seed);
 		}

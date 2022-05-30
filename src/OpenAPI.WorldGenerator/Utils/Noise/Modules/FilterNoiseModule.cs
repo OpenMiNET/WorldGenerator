@@ -1,18 +1,10 @@
 using System;
-using LibNoise;
 using OpenAPI.WorldGenerator.Utils.Noise.Attributes;
 
 namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
 {
   public class FilterNoise
   {
-    protected float _frequency = 1f;
-    protected float _gain = 2f;
-    protected float _lacunarity = 2f;
-    protected float _octaveCount = 6f;
-    protected float _offset = 1f;
-    protected float _spectralExponent = 0.9f;
-    protected float[] _spectralWeights = new float[30];
     public const float DEFAULT_FREQUENCY = 1f;
     public const float DEFAULT_LACUNARITY = 2f;
     public const float DEFAULT_OCTAVE_COUNT = 6f;
@@ -20,6 +12,16 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
     public const float DEFAULT_OFFSET = 1f;
     public const float DEFAULT_GAIN = 2f;
     public const float DEFAULT_SPECTRAL_EXPONENT = 0.9f;
+    
+    protected float _frequency = DEFAULT_FREQUENCY;
+    protected float _gain = DEFAULT_GAIN;
+    protected float _lacunarity = DEFAULT_LACUNARITY;
+    protected float _octaveCount = DEFAULT_OCTAVE_COUNT;
+    protected float _offset = DEFAULT_OFFSET;
+    protected float _spectralExponent = DEFAULT_SPECTRAL_EXPONENT;
+    protected float[] _spectralWeights = new float[30];
+    
+
     protected INoiseModule _source;
 
     /// <summary>
@@ -50,7 +52,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
     public float OctaveCount
     {
       get { return this._octaveCount; }
-      set { this._octaveCount = Libnoise.Clamp(value, 1f, 30f); }
+      set { this._octaveCount = Math.Clamp(value, 1f, MAX_OCTAVE); }
     }
 
     [Modifier]

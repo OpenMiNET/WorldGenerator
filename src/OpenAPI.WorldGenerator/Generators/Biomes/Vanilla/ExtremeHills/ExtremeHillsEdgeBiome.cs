@@ -13,6 +13,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.ExtremeHills
             MinHeight = 0.2f;
             MaxHeight = 0.8f;
             Terrain = new RidgedExtremeHillsTerrain(125f, 67f, 200f);
+            Color = OpenAPI.WorldGenerator.Utils.ColorUtils.FromHtml("#72789A");
         }
     }
 }

@@ -2,17 +2,17 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Cellular
 {
     public class VoronoiSettings
     {
-        public double ShortestDistance { get; set; } = 32000000.0;
-        public double NextDistance { get; set; } = 32000000.0;
-        public double ClosestX { get; set; } = 32000000.0;
-        public double ClosestZ { get; set; } = 32000000.0;
+        public float ShortestDistance { get; set; } = 32000000.0f;
+        public float NextDistance { get; set; } = 32000000.0f;
+        public float ClosestX { get; set; } = 32000000.0f;
+        public float ClosestZ { get; set; } = 32000000.0f;
 
-        public VoronoiSettings() : this(32000000.0)
+        public VoronoiSettings() : this(32000000.0f)
         {
             
         }
 
-        public VoronoiSettings(double defaultValues)
+        public VoronoiSettings(float defaultValues)
         {
             ShortestDistance = defaultValues;
             NextDistance = defaultValues;

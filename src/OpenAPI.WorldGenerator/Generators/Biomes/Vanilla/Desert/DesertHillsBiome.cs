@@ -1,6 +1,7 @@
 using MiNET.Blocks;
 using OpenAPI.WorldGenerator.Generators.Surfaces;
 using OpenAPI.WorldGenerator.Generators.Terrain;
+using OpenAPI.WorldGenerator.Utils;
 
 namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Desert
 {
@@ -17,6 +18,11 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Desert
 
             Terrain = new DesertHillsTerrain(10f, 80f, 68f, 200f);
             Surface = new SurfaceBase(Config, new Sand(), new Sandstone());
+
+            Config.AllowScenicLakes = false;
+            Config.AllowRivers = false;
+            
+            Color = ColorUtils.FromHtml("#D25F12");
         }
     }
 }

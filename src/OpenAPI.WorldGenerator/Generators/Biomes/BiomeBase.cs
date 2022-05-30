@@ -66,10 +66,10 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
             float lakeFlattening = LakeFlattening(lakePressure, generator.LakeShoreLevel,
                 generator.LakeDepressionLevel);
 
-            if (!this.Config.AllowScenicLakes)
+            /*if (!this.Config.AllowScenicLakes)
             {
                 return Terrain.GenerateNoise(generator, x, y, border, river);
-            }
+            }*/
             
             // combine rivers and lakes
             if ((river < 1) && (lakeFlattening < 1))
@@ -125,6 +125,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
             return this.ErodedNoise(generator, x, y, river, border, terrainNoise);
         }
         
+        /*
         public float ErodedNoise(OverworldGeneratorV2 generator, int x, int y, float river, float border, float biomeHeight)
         {
             float r;
@@ -144,8 +145,9 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
             }
             else return biomeHeight;
         }
+        */
 
-        /*public float ErodedNoise(OverworldGeneratorV2 generator, int x, int y, float river, float border, float biomeHeight)
+        public float ErodedNoise(OverworldGeneratorV2 generator, int x, int y, float river, float border, float biomeHeight)
         {
             float r;
 
@@ -174,7 +176,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
             }
 
             return biomeHeight;
-        }*/
+        }
 
         public float LakePressure(OverworldGeneratorV2 generator, int x, int y, float border, float lakeInterval,
             float largeBendSize, float mediumBendSize, float smallBendSize)
@@ -182,8 +184,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
             if (!this.Config.AllowScenicLakes)
                 return 1f;
 
-            double pX = x;
-            double pY = y;
+            float pX = x;
+            float pY = y;
             ISimplexData2D jitterData = SimplexData2D.NewDisk();
 
             generator.SimplexInstance(1).GetValue(x / 240.0d, y / 240.0d, jitterData);
@@ -312,34 +314,34 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
            return flags;
        }
 
-       public int GetRiverBiome()
+       public BiomeBase GetRiverBiome()
        {
            if ((Type & BiomeType.Snowy) != 0)
            {
-               return new FrozenRiverBiome().Id;
+               return new FrozenRiverBiome();
            }
            else
            {
-               return new RiverBiome().Id;
+               return new RiverBiome();
            }
        }
 
-       public int GetBeachBiome()
+       public BiomeBase GetBeachBiome()
        {
            var beachType = DetermineBeachType();
            if (beachType == BeachType.Cold)
-               return new ColdBeachBiome().Id;
+               return new ColdBeachBiome();
            
-           if (beachType == BeachType.Normal)
-               return new BeachBiome().Id;
+           if (beachType == BeachType.Stone)
+               return new StoneBeachBiome();
            
-           return new StoneBeachBiome().Id;
+           return new BeachBiome();
        }
        
        
        protected BeachType DetermineBeachType()
        {
-           if (Temperature <= 0.05f || Type.HasFlag(BiomeType.Snowy))
+           if (Temperature <= 0.05f || (Type & BiomeType.Snowy) != 0)
                return BeachType.Cold;
 
            if (IsTaigaBiome())
@@ -350,7 +352,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
 
        protected bool IsTaigaBiome()
        {
-           return Type.HasFlag(BiomeType.Cold) && Type.HasFlag(BiomeType.Coniferous) && Type.HasFlag(BiomeType.Forest);
+           return (Type & BiomeType.Cold) != 0 && (Type & BiomeType.Coniferous) != 0 && (Type & BiomeType.Forest) != 0;
        }
        
        public BiomeBase SetEdgeBiome(bool value)

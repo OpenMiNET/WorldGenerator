@@ -1,23 +1,10 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using LibNoise;
-using MiNET.Utils;
 using MiNET.Utils.Vectors;
-using MiNET.Worlds;
-using Newtonsoft.Json;
-using OpenAPI.Utils;
 using OpenAPI.WorldGenerator.Generators;
-using OpenAPI.WorldGenerator.Utils;
-using OpenAPI.WorldGenerator.Utils.Noise;
-using Biome = OpenAPI.WorldGenerator.Utils.Biome;
-using BiomeUtils = OpenAPI.WorldGenerator.Utils.BiomeUtils;
 
 namespace WorldGenerator.Tweaking
 {
@@ -52,44 +39,21 @@ namespace WorldGenerator.Tweaking
                 }
             }
 
+            var cancellationToken = new CancellationTokenSource();
             new Thread(() =>
             {
                 Stopwatch timer = Stopwatch.StartNew();
                 Parallel.ForEach(
                     gen, new ParallelOptions()
                     {
-                        
+                        CancellationToken = cancellationToken.Token
                     }, coords =>
                     {
                         Stopwatch timing = new Stopwatch();
                         timing.Restart();
+                        
+                        Game.Add(WorldGen.GenerateChunkColumn(coords));
 
-                        // ChunkColumn column = WorldGen.GenerateChunkColumn(coords);
-                        NoiseData nd = new NoiseData();
-                        nd.X = coords.X;
-                        nd.Z = coords.Z;
-                        nd.Chunk = WorldGen.GenerateChunkColumn(coords);
-
-                        /*   for (int x = 0; x < 16; x++)
-                            {
-                                for (int z = 0; z < 16; z++)
-                                {
-                                    var index = NoiseMap.GetIndex(x, z);
-                                    var temp = WorldGen.TemperatureNoise.GetValue((coords.X * 16) + x, (coords.Z * 16) + z) + 1f;
-                                    var rain = MathF.Abs(WorldGen.RainfallNoise.GetValue((coords.X * 16) + x, (coords.Z * 16) + z));
-        
-                                    nd.Temperature[index] = temp;
-                                    nd.Humidity[index] = rain;
-                                }
-                            }
-        */
-                        //lock (Game.Lock)
-                        //{
-                        Game.Add(nd);
-
-
-                        // generatedChunks[(coords.X * chunks) + coords.Z] = column;
-                        // Finished.Enqueue(column);
                         chunskGenerated++;
 
                         timing.Stop();
@@ -109,8 +73,10 @@ namespace WorldGenerator.Tweaking
             
                 Console.WriteLine($"Generating {Radius * Radius} chunks took: {timer.Elapsed}");
             }).Start();
-
+            
             Game.Run();
+            
+            cancellationToken.Cancel();
             //Console.WriteLine($"Min Height: {gen.MinHeight} Max Height: {gen.MaxHeight}");
         }
 

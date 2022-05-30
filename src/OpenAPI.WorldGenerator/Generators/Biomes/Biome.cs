@@ -1,6 +1,4 @@
-using OpenAPI.WorldGenerator.Generators.Biomes;
-
-namespace OpenAPI.WorldGenerator.Utils
+namespace OpenAPI.WorldGenerator.Generators.Biomes
 {
     public class Biome : BiomeBase
     {

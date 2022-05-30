@@ -12,6 +12,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla
             MaxHeight = 0f;
 
             Type = BiomeType.River;
+            
+            Color = OpenAPI.WorldGenerator.Utils.ColorUtils.FromHtml("#0000FF");
         }
     }
 }

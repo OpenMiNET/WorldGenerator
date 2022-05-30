@@ -14,6 +14,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Jungle
             MaxHeight = 0.2f;
 
             Terrain = new JungleEdgeTerrain();
+            Color = OpenAPI.WorldGenerator.Utils.ColorUtils.FromHtml("#628B17");
         }
     }
 }

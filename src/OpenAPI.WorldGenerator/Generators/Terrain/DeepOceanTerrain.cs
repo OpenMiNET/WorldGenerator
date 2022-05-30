@@ -4,7 +4,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
     {
         public override float GenerateNoise(OverworldGeneratorV2 generator, int x, int y, float border, float river)
         {
-            return TerrainOcean(x, y, generator, river, 40f);
+            return TerrainOcean(generator, x, y, river, 40f);
         }
     }
 }
