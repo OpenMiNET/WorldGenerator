@@ -12,14 +12,14 @@ namespace OpenAPI.WorldGenerator
 {
     public class DebugWorldProvider : IWorldProvider, ICachingWorldProvider
     {
-        private readonly ConcurrentDictionary<ChunkCoordinates, ChunkColumn> _chunkCache = new ConcurrentDictionary<ChunkCoordinates, ChunkColumn>();
-        public bool IsCaching { get; private set; }
+       private readonly ConcurrentDictionary<ChunkCoordinates, ChunkColumn> _chunkCache = new ConcurrentDictionary<ChunkCoordinates, ChunkColumn>();
+       public bool IsCaching => true;
 
         public IWorldGenerator Generator { get; }
         public DebugWorldProvider(IWorldGenerator worldGenerator)
         {
             Generator = worldGenerator;
-            IsCaching = true;
+          //  IsCaching = true;
         }
         
         public void Initialize()
@@ -61,7 +61,7 @@ namespace OpenAPI.WorldGenerator
 
         public string GetName()
         {
-            return "Cool world";
+            return "OpenMiNET.WorldGenerator World Provider";
         }
 
         public int SaveChunks()
@@ -93,7 +93,7 @@ namespace OpenAPI.WorldGenerator
         {
             int removed = 0;
 
-            lock (_chunkCache)
+           // lock (_chunkCache)
             {
                 List<ChunkCoordinates> coords = new List<ChunkCoordinates> {spawn};
 
@@ -109,13 +109,13 @@ namespace OpenAPI.WorldGenerator
                     if (!keep)
                     {
                         _chunkCache.TryRemove(chunkColumn.Key, out ChunkColumn waste);
-
                         if (waste != null)
                         {
                             foreach (var chunk in waste)
                             {
-                                chunk.PutPool();
+                                chunk.Dispose();
                             }
+                            waste.Dispose();
                         }
 
                         Interlocked.Increment(ref removed);

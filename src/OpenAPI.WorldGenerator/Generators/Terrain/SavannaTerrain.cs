@@ -4,11 +4,14 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
 {
     public class SavannaTerrain : TerrainBase
     {
-        private GroundEffect GroundEffect { get; set; }= new GroundEffect(4f);
+        public SavannaTerrain()
+        {
+            HeightEffect = new GroundEffect(4f);
+        }
         
         public override float GenerateNoise(OverworldGeneratorV2 generator, int x, int y, float border, float river)
         {
-            return Riverized(generator, generator.Preset.SeaLevel + 3 + GroundEffect.Added(generator, x, y), river);
+            return Riverized(generator, generator.Preset.SeaLevel + 3 + HeightEffect.Added(generator, x, y), river);
         }
     }
 }

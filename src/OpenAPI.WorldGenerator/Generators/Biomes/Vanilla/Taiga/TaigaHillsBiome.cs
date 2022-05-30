@@ -15,10 +15,12 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Taiga
             MinHeight = 0.2f;
             MaxHeight = 0.7f;
             
+            Config.AllowRivers = false;
+            Config.AllowScenicLakes = false;
+            
             Terrain = new TaigaHillsTerrain();
             Surface = new TaigaSurface(Config, new Grass(), new Dirt());
-
-            Config.AllowRivers = false;
+            
             Color = OpenAPI.WorldGenerator.Utils.ColorUtils.FromHtml("#163933");
         }
     }

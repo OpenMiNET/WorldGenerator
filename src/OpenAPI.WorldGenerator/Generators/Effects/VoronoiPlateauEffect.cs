@@ -6,9 +6,9 @@ namespace OpenAPI.WorldGenerator.Generators.Effects
 {
     public class VoronoiPlateauEffect : HeightEffect
     {
-        public float PointWavelength = 200;
-        public float MinimumDivisor = 0;//low divisors can produce excessive rates of change
-        public float AdjustmentRadius = 3f;
+        public float PointWavelength { get; set; } = 200;
+        public float MinimumDivisor { get; set; } = 0;//low divisors can produce excessive rates of change
+        public float AdjustmentRadius { get; set; } = 3f;
 
         
         public override float Added(OverworldGeneratorV2 generator, float x, float y)

@@ -4,19 +4,21 @@ using OpenAPI.WorldGenerator.Utils.Noise.Attributes;
 
 namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
 {
-    public class VoronoiNoseModule : FilterNoise, INoiseModule
+    public class VoronoiNoseModule : INoiseModule
     {
         public const float DefaultDisplacement = 1.0f;
 
-        public VoronoiNoseModule()
+        private INoiseModule Source { get; }
+
+        public VoronoiNoseModule(INoiseModule source)
         {
-            
+            Source = source;
         }
         
         private float _displacement = DefaultDisplacement;
 
         private bool _distance;
-
+        protected float _frequency = 1f;
         
         /// <summary>
         /// This noise module assigns each Voronoi cell with a random constant
@@ -43,8 +45,17 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
             set { _distance = value; }
         }
 
+        /// <summary>
+        /// The number of cycles per unit length that a specific coherent-noise function outputs.
+        /// </summary>
+        [Modifier]
+        public float Frequency
+        {
+            get { return this._frequency; }
+            set { this._frequency = value; }
+        }
+
         public int Size { get; set; } = 2;
-        
         public float GetValue(float x, float y)
         {
             x *= _frequency;
@@ -66,10 +77,11 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
                 {
                     // Calculate the position and distance to the seed point inside of
                     // this unit cube.
-                    var off = _source.GetValue(xCur, yCur);
-                    float xPos = xCur + off;//_source2D.GetValue(xCur, yCur);
-                    float yPos = yCur + off;//_source2D.GetValue(xCur, yCur);
-
+                    var off = Source.GetValue(xCur, yCur);
+                    
+                    float xPos = xCur + off;
+                    float yPos = yCur + off;
+                    
                     float xDist = xPos - x;
                     float yDist = yPos - y;
                     float dist = xDist * xDist + yDist * yDist;
@@ -99,7 +111,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
                 value = 0.0f;
 
             // Return the calculated distance with the displacement value applied.
-            return value + (_displacement * _source.GetValue(
+            return value + (_displacement * Source.GetValue(
                                 MathF.Floor(xCandidate),
                                 MathF.Floor(yCandidate))
                    );
@@ -139,9 +151,11 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
                     {
                         // Calculate the position and distance to the seed point inside of
                         // this unit cube.
-                        float xPos = xCur + _source.GetValue(xCur, yCur, zCur);
-                        float yPos = yCur + _source.GetValue(xCur, yCur, zCur);
-                        float zPos = zCur + _source.GetValue(xCur, yCur, zCur);
+                        var off = Source.GetValue(xCur, yCur, zCur);
+                        
+                        float xPos = xCur + off;
+                        float yPos = yCur + off;
+                        float zPos = zCur + off;
 
                         float xDist = xPos - x;
                         float yDist = yPos - y;
@@ -176,7 +190,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
                 value = 0.0f;
 
             // Return the calculated distance with the displacement value applied.
-            return value + (_displacement*_source.GetValue(
+            return value + (_displacement*Source.GetValue(
                  (MathF.Floor(xCandidate)),
                  (MathF.Floor(yCandidate)),
                 (MathF.Floor(zCandidate)))

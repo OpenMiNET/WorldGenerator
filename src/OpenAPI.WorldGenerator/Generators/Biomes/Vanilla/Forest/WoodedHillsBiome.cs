@@ -4,9 +4,9 @@ using OpenAPI.WorldGenerator.Utils;
 
 namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Forest
 {
-    public class ForestHillsBiome : BiomeBase
+    public class WoodedHillsBiome : BiomeBase
     {
-        public ForestHillsBiome()
+        public WoodedHillsBiome()
         {
             Id = 18;
             Name = "Wooded Hills";
@@ -14,6 +14,10 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Forest
             Downfall = 0.8f;
             MinHeight = 0.2f;
             MaxHeight = 0.6f;
+            
+            Config.AllowRivers = false;
+            Config.AllowScenicLakes = false;
+            
             Terrain = new ForestHillsTerrain();
             
             Config.Weight = Weights.Common;

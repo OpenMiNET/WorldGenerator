@@ -16,7 +16,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Api
 
         void Clear();
 
-        IDataRequest Request();
+        void Request(float attn, float extrapolation, float gx, float gy, int giSph2, float dx, float dy);
         
         public interface IDataRequest {
 

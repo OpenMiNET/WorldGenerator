@@ -2,20 +2,20 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
 {
     public class DesertHillsTerrain : TerrainBase
     {
-        private float _start;
-        private float _height;
-        private float _width;
+        private float _hillStart;
+        private float _landHeight;
+        private float _hillWidth;
 
         public DesertHillsTerrain(float hillStart, float landHeight, float baseHeight, float hillWidth) : base(baseHeight) {
 
-            _start = hillStart;
-            _height = landHeight;
-            _width = hillWidth;
+            _hillStart = hillStart;
+            _landHeight = landHeight;
+            _hillWidth = hillWidth;
         }
         
         public override float GenerateNoise(OverworldGeneratorV2 generator, int x, int y, float border, float river)
         {
-            return TerrainHighland(generator, x, y, river, _start, _width, _height, BaseHeight /*- generator.Preset.SeaLevel*/);
+            return TerrainHighland(generator, x, y, river, _hillStart, _hillWidth, _landHeight, BaseHeight - generator.Preset.SeaLevel);
         }
     }
 }

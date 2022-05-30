@@ -14,6 +14,10 @@ public class BirchForestHillsMBiome : BiomeBase
 		Downfall = 0.6f;
 		MinHeight = 0.35f;
 		MaxHeight = 0.45f;
+		
+		Config.AllowRivers = false;
+		Config.AllowScenicLakes = false;
+		
 		Terrain = new BirchForestHillsMTerrain();
 		Config.Weight = Weights.Rare;
 		

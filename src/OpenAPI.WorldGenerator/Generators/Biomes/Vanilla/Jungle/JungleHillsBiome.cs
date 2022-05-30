@@ -13,10 +13,15 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Jungle
             Downfall = 0.9f;
             MinHeight = 0.2f;
             MaxHeight = 1.8f;
-
-            Terrain = new JungleHillsTerrain(72f, 40f);
-            Config.Weight = Weights.Uncommon;
             
+            Config.AllowRivers = false;
+            Config.AllowScenicLakes = false;
+            
+            Config.Weight = Weights.Uncommon;
+            Config.Weight = Weights.Common;
+            Config.TreeDensity = 0.4f;
+            
+            Terrain = new JungleHillsTerrain(72f, 40f);
             Color = OpenAPI.WorldGenerator.Utils.ColorUtils.FromHtml("#2C4205");
         }
     }

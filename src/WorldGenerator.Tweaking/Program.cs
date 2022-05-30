@@ -3,83 +3,143 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
 using MiNET.Utils.Vectors;
 using OpenAPI.WorldGenerator.Generators;
+using OpenAPI.WorldGenerator.Utils.Noise;
+using OpenAPI.WorldGenerator.Utils.Noise.Modules;
+using OpenAPI.WorldGenerator.Utils.Noise.Primitives;
+using OpenAPI.WorldGenerator.Utils.Noise.Transformers;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace WorldGenerator.Tweaking
 {
     class Program
     {
-        private static TestGame Game { get; set; }
-        public const int Radius     = 372;
+        private static Game Game { get; set; }
+        public const int Radius     = 512;
         public const int Resolution = 1;
-        //private static ConcurrentQueue<ChunkColumn> Finished = new ConcurrentQueue<ChunkColumn>();
+
         static void Main(string[] args)
         {
             WorldGen = new OverworldGeneratorV2();
-            Game = new TestGame(WorldGen, Radius, Resolution);
-            //  gen.ApplyBlocks = true;
+          // RunNoiseTest();
+            RunPreviewer();
+            //Console.WriteLine($"Min Height: {gen.MinHeight} Max Height: {gen.MaxHeight}");
+        }
+
+        private static void RunNoiseTest()
+        {
+            var seed = 124;
+            var biomeScale = 4 * 16f;
+
+            INoiseModule temperatureNoise = new VoronoiNoseModule(new AverageSelectorModule(new SimplexPerlin(seed ^ 3, NoiseQuality.Fast), new SimplexPerlin(seed ^ 64, NoiseQuality.Fast)))
+            {
+                Distance = true,
+                Frequency = 0.0325644f,
+                Displacement = 2f
+            };
+
+            temperatureNoise = new ScaledNoiseModule(temperatureNoise)
+            {
+                ScaleX = 1f / biomeScale, ScaleY = 1f / biomeScale, ScaleZ = 1f / biomeScale
+            };
+            
+            Image<Rgba32> output = new Image<Rgba32>(Radius, Radius);
+            for (int x = 0; x < Radius; x++)
+            {
+                for (int z = 0; z < Radius; z++)
+                {
+                    var temp = MathF.Abs(temperatureNoise.GetValue(x * 16f, z* 16f));
+                    //  var rain = WorldGen.RainfallNoise.GetValue(x* 16f, z* 16f);
+
+                    output[x, z] = new Rgba32((1f / 2f) * temp, 0f, 0f);
+                }
+            }
+            output.SaveAsPng("test.png");
+
+            return;
+        }
+
+        private static void RunPreviewer()
+        {
+            var game = new TestGame(WorldGen, Radius, Resolution);
+            Game = game;
             
             bool done = false;
-          //  ChunkColumn[] generatedChunks = new ChunkColumn[chunks * chunks];
+
             long average = 0;
             long min = long.MaxValue;
             long max = long.MinValue;
 
-            int      chunskGenerated = 0;
-            // threads[0] = new Thread(() => { GenerateBiomeMap(chunks); });
+            int chunskGenerated = 0;
 
             List<ChunkCoordinates> gen = new List<ChunkCoordinates>();
 
-            for (int z = 0; z < Radius; z+= Resolution)
+
+            for (int z = 0; z < Radius; z++)
             {
-                for(int x= 0; x < Radius; x+= Resolution)
+                for (int x = 0; x < Radius; x++)
                 {
-                    gen.Add(new ChunkCoordinates(x, z));
+                    var cc = new ChunkCoordinates((x), (z));
+                    gen.Add(cc);
                 }
             }
 
+
             var cancellationToken = new CancellationTokenSource();
-            new Thread(() =>
-            {
-                Stopwatch timer = Stopwatch.StartNew();
-                Parallel.ForEach(
-                    gen, new ParallelOptions()
-                    {
-                        CancellationToken = cancellationToken.Token
-                    }, coords =>
-                    {
-                        Stopwatch timing = new Stopwatch();
-                        timing.Restart();
-                        
-                        Game.Add(WorldGen.GenerateChunkColumn(coords));
 
-                        chunskGenerated++;
+            new Thread(
+                () =>
+                {
+                    int total = gen.Count;
+                    Stopwatch timer = Stopwatch.StartNew();
 
-                        timing.Stop();
+                    Parallel.ForEach(
+                        gen, new ParallelOptions() {CancellationToken = cancellationToken.Token}, coords =>
+                        {
+                            try
+                            {
+                                Stopwatch timing = new Stopwatch();
+                                timing.Restart();
 
-                        average += timing.ElapsedMilliseconds;
+                                game.Add(WorldGen.GenerateChunkColumn(coords));
 
-                        if (timing.ElapsedMilliseconds < min)
-                            min = timing.ElapsedMilliseconds;
+                                timing.Stop();
 
-                        if (timing.ElapsedMilliseconds > max)
-                            max = timing.ElapsedMilliseconds;
-                    });
-                
-                timer.Stop();
-            
-                Console.Clear();
-            
-                Console.WriteLine($"Generating {Radius * Radius} chunks took: {timer.Elapsed}");
-            }).Start();
-            
+                                average += timing.ElapsedMilliseconds;
+
+                                if (timing.ElapsedMilliseconds < min)
+                                    min = timing.ElapsedMilliseconds;
+
+                                if (timing.ElapsedMilliseconds > max)
+                                    max = timing.ElapsedMilliseconds;
+
+                                if (Interlocked.Increment(ref chunskGenerated) % 500 == 0)
+                                {
+                                    float progress = (1f / total) * chunskGenerated;
+                                    Console.WriteLine($"[{progress:P000}] Generated {chunskGenerated} of {total} chunks. Average={(average / chunskGenerated):F2}ms");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Ehhh: {ex}");
+                            }
+                        });
+
+                    timer.Stop();
+
+                    Console.Clear();
+
+                    Console.WriteLine($"Generating {chunskGenerated} chunks took: {timer.Elapsed}");
+                }).Start();
+
             Game.Run();
-            
-            cancellationToken.Cancel();
-            //Console.WriteLine($"Min Height: {gen.MinHeight} Max Height: {gen.MaxHeight}");
-        }
 
+            cancellationToken.Cancel();
+        }
+        
         public static OverworldGeneratorV2 WorldGen { get; set; }
     }
 }

@@ -15,7 +15,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Forest
             MinHeight = 0.1f;
             MaxHeight = 0.2f;
             Terrain = new BirchForestTerrain();
-            Config.Weight = Weights.Common;
+            Config.Weight = Weights.Common - 1;
 
             Color = ColorUtils.FromHtml("#307444");
         }

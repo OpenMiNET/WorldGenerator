@@ -33,7 +33,7 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Modules
       get { return this._frequency; }
       set { this._frequency = value; }
     }
-
+    
     /// <summary>
     ///   A multiplier that determines how quickly the frequency increases for each successive octave in a Perlin-noise function.
     /// </summary>

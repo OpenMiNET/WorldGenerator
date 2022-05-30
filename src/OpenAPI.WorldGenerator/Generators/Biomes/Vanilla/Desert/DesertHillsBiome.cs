@@ -15,13 +15,13 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Desert
             Downfall = 0.0f;
             MinHeight = 0.2f;
             MaxHeight = 0.7f;
-
+            
+            Config.AllowRivers = false;
+            Config.AllowScenicLakes = false;
+            
             Terrain = new DesertHillsTerrain(10f, 80f, 68f, 200f);
             Surface = new SurfaceBase(Config, new Sand(), new Sandstone());
 
-            Config.AllowScenicLakes = false;
-            Config.AllowRivers = false;
-            
             Color = ColorUtils.FromHtml("#D25F12");
         }
     }
