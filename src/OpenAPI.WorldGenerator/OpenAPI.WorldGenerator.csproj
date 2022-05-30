@@ -5,6 +5,11 @@
         <LangVersion>10</LangVersion>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <DefineConstants />
+        <Optimize>true</Optimize>
+    </PropertyGroup>
+
     <ItemGroup>
       <PackageReference Include="OpenMiNET.OpenAPI" Version="1.0.117" />
     </ItemGroup>
