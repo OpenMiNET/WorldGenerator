@@ -123,6 +123,14 @@ namespace MiMap.Viewer.DesktopGL
             return null;
         }
 
+        public MapChunk GetChunk(Point chunkPosition)
+        {
+            var regionPosition = new Point(chunkPosition.X >> 5, chunkPosition.Y >> 5);
+            if (Regions.TryGetValue(regionPosition, out var region))
+                return region[chunkPosition.X % 32,chunkPosition.Y % 32];
+            return null;
+        }
+
         public IEnumerable<MapRegion> GetRegions()
         {
             var v = Regions.Values.ToArray();
@@ -131,7 +139,7 @@ namespace MiMap.Viewer.DesktopGL
                 yield return region;
             }
         }
-        
+
         public IEnumerable<MapRegion> GetRegions(Rectangle blockBounds)
         {
             var regionMin = new Point((blockBounds.X >> 9) - 1, (blockBounds.Y >> 9) - 1);
@@ -144,6 +152,57 @@ namespace MiMap.Viewer.DesktopGL
                 if (Regions.TryGetValue(p, out var region))
                 {
                     yield return region;
+                }
+                else
+                {
+                    EnqueueRegion(p);
+                }
+            }
+        }
+
+        public void EnqueueChunks(Rectangle blockBounds)
+        {
+            var regionMin = new Point(blockBounds.X >> 9, blockBounds.Y >> 9 );
+            var regionMax = new Point((blockBounds.X + blockBounds.Width) >> 9, (blockBounds.Y + blockBounds.Height) >> 9);
+            
+            for (int rx = regionMin.X; rx <= regionMax.X; rx++)
+            for (int rz = regionMin.Y; rz <= regionMax.Y; rz++)
+            {
+                var p = new Point(rx, rz);
+                if (!Regions.ContainsKey(p))
+                {
+                    EnqueueRegion(p);
+                }
+            }
+        }
+        
+        public IEnumerable<MapChunk> GetChunks(Rectangle blockBounds)
+        {
+            var regionMin = new Point((blockBounds.X >> 9), (blockBounds.Y >> 9) );
+            var regionMax = new Point(((blockBounds.X + blockBounds.Width) >> 9), ((blockBounds.Y + blockBounds.Height) >> 9));
+
+            var chunkMin = new Point((blockBounds.X >> 4), (blockBounds.Y >> 4));
+            var chunkMax = new Point(((blockBounds.X + blockBounds.Width) >> 4), ((blockBounds.Y + blockBounds.Height) >> 4));
+
+            for (int rx = regionMin.X; rx <= regionMax.X; rx++)
+            for (int rz = regionMin.Y; rz <= regionMax.Y; rz++)
+            {
+                var p = new Point(rx, rz);
+                if (Regions.TryGetValue(p, out var region))
+                {
+                    for (int cx = 0; cx < 32; cx++)
+                    for (int cz = 0; cz < 32; cz++)
+                    {
+                        var x = (rx << 5) + cx;
+                        var z = (rz << 5) + cz;
+                        if (x >= chunkMin.X && x <= chunkMax.X &&
+                            z >= chunkMin.Y && z <= chunkMax.Y)
+                        {
+                            var chunk = region[cx, cz];
+                            if (chunk != default)
+                                yield return chunk;
+                        }
+                    }
                 }
                 else
                 {

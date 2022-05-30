@@ -1,24 +1,35 @@
 using System;
+using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace MiMap.Viewer.DesktopGL.Graphics
 {
-    public class CachedRegionMesh : IDisposable
+    public interface ITile
+    {
+        int X { get; }
+        int Z { get; }
+        Point Position { get; }
+        Texture2D Texture { get; }
+        Matrix World { get; }
+    }
+    public class CachedRegionMesh : ITile, IDisposable
     {
         // FaceGroupOptimizer
         // FaceGroupUtil
         
         public int X { get; }
         public int Z { get; }
-        public Texture2D Texture { get; private set; }
+        public Point Position { get; }
+        public Texture2D Texture { get; }
 
-        public Matrix World { get; private set; }
+        public Matrix World { get; }
         
         public CachedRegionMesh(GraphicsDevice graphics, MapRegion region)
         {
             X = region.X;
             Z = region.Z;
+            Position = new Point(X << 9, Z << 9);
             var t = new Texture2D(graphics, 1 << 9, 1 << 9);
             var d = new Color[(1 << 9) * (1 << 9)];
             
@@ -39,7 +50,6 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     y = chunk.GetHeight(bx, bz);
                     c = chunk.GetColor(bx, bz);
 
-//                    d[(((((chunk.Z & 31) << 4)) + cz) * (1 << 9)) + (((chunk.X & 31) << 4) + cx)] = c;
                     SetData(d, x, z, c);
                 }
             }
@@ -61,6 +71,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
             Texture?.Dispose();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void SetData(Color[] data, int blockX, int blockZ, Color color)
         {
             data[(blockZ * 512) + blockX] = color;

@@ -17,18 +17,18 @@ namespace MiMap.Viewer.DesktopGL
 
         public void SetChunk(int cx, int cz, MapChunk chunk)
         {
-            Chunks[GetIndex(cx & 31, cz & 31)] = chunk;
+            Chunks[GetIndex(cx, cz)] = chunk;
         }
 
         public MapChunk this[int cx, int cz]
         {
-            get => Chunks[GetIndex(cx & 31, cz & 31)];
-            set => Chunks[GetIndex(cx & 31, cz & 31)] = value;
+            get => Chunks[GetIndex(cx, cz)];
+            set => Chunks[GetIndex(cx, cz)] = value;
         }
 
         private int GetIndex(int x, int z)
         {
-            return (x * 32) + z;
+            return ((x & 0x1F) * 32) + (z & 0x1F);
         }
     }
 }

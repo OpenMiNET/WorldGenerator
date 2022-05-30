@@ -24,29 +24,29 @@ namespace MiMap.Viewer.DesktopGL
 
         public int GetHeight(int x, int z)
         {
-            return Heights[GetIndex(x & 15, z & 15)];
+            return Heights[GetIndex(x, z)];
         }
 
         public byte GetBiome(int x, int z)
         {
-            return Biomes[GetIndex(x & 15, z & 15)];
+            return Biomes[GetIndex(x, z)];
         }
 
         public Color GetColor(int x, int z)
         {
-            return Colors[GetIndex(x & 15, z & 15)];
+            return Colors[GetIndex(x, z)];
         }
 
         public void SetHeight(int x, int z, int height)
         {
-            var i = GetIndex(x & 15, z & 15);
+            var i = GetIndex(x, z);
             Heights[i] = height;
             UpdateColor(i);
         }
 
         public void SetBiome(int x, int z, byte biome)
         {
-            var i = GetIndex(x & 15, z & 15);
+            var i = GetIndex(x, z);
             Biomes[i] = biome;
             UpdateColor(i);
         }
@@ -69,7 +69,7 @@ namespace MiMap.Viewer.DesktopGL
 
         private int GetIndex(int x, int z)
         {
-            return (x * 16) + z;
+            return ((x & 0x0F) * 16) + (z & 0x0F);
         }
     }
 }

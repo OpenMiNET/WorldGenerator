@@ -63,6 +63,8 @@ namespace MiMap.Viewer.DesktopGL
             UpdateViewport();
             Window.ClientSizeChanged += (s, o) => UpdateViewport();
 
+            SpriteBatchExtensions.Init(GraphicsDevice);
+            
             ImGuiRenderer = new ImGuiRenderer(this);
             ImGuiRenderer.RebuildFontAtlas();
             

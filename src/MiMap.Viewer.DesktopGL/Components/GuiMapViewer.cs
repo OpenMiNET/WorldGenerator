@@ -6,6 +6,7 @@
 //  * /
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using ImGuiNET;
@@ -20,16 +21,24 @@ using static ImGuiNET.ImGui;
 
 namespace MiMap.Viewer.DesktopGL.Components
 {
+    public enum MapViewMode
+    {
+        Region,
+        Chunk
+    }
+
     public class GuiMapViewer : DrawableGameComponent
     {
         private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
         private Point _position = Point.Zero;
+        private Rectangle _visibleChunkBounds;
         private Rectangle _mapBounds;
         private float _scale = 1f;
         private readonly object _chunkSync = new object();
         private List<CachedRegionMesh> _regions;
-        private List<MapChunk> _chunks;
+        private List<CachedChunkMesh> _chunks;
+        private ConcurrentQueue<MapChunk> _pendingChunks;
         private bool _chunksDirty = false;
         private Map _map;
         private Point _mapPosition;
@@ -38,17 +47,23 @@ namespace MiMap.Viewer.DesktopGL.Components
         private bool _visible = true;
         private IRegionMeshManager _regionMeshManager;
         private BasicEffect _effect;
+        private BasicEffect _spriteBatchEffect;
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
         private ImGuiRenderer _gui;
         private readonly RasterizerState _rasterizerState;
         private Rectangle _bounds;
         private MouseState _mouseState;
+        private Point _cursorPosition;
         private int[] _cursorBlock = new int[3];
         private BiomeBase _cursorBlockBiome;
         private int[] _cursorChunk = new int[2];
         private int[] _cursorRegion = new int[2];
         private int _cursorBlockBiomeId;
+
+        private SpriteBatch _spriteBatch;
+
+        private MapViewMode _mode = MapViewMode.Chunk;
 
         public Rectangle Bounds
         {
@@ -57,7 +72,7 @@ namespace MiMap.Viewer.DesktopGL.Components
             {
                 if (_bounds == value) return;
                 _bounds = value;
-                RecalculateTransform();
+                RecalculateMapBounds();
             }
         }
 
@@ -93,6 +108,7 @@ namespace MiMap.Viewer.DesktopGL.Components
                 if (_map != default)
                 {
                     _map.RegionGenerated -= OnRegionGenerated;
+                    _map.ChunkGenerated -= OnChunkGenerated;
                 }
 
                 _map = value;
@@ -100,9 +116,11 @@ namespace MiMap.Viewer.DesktopGL.Components
                 if (_map != default)
                 {
                     _map.RegionGenerated += OnRegionGenerated;
+                    _map.ChunkGenerated += OnChunkGenerated;
                 }
             }
         }
+
 
         public Matrix Transform
         {
@@ -120,7 +138,8 @@ namespace MiMap.Viewer.DesktopGL.Components
         {
             Map = map;
             _regions = new List<CachedRegionMesh>();
-            _chunks = new List<MapChunk>();
+            _chunks = new List<CachedChunkMesh>();
+            _pendingChunks = new ConcurrentQueue<MapChunk>();
             _regionMeshManager = game.RegionMeshManager;
             _gui = game.ImGuiRenderer;
             _rasterizerState = new RasterizerState()
@@ -137,12 +156,18 @@ namespace MiMap.Viewer.DesktopGL.Components
         {
             base.Initialize();
 
+            _spriteBatch = new SpriteBatch(GraphicsDevice);
             _effect = new BasicEffect(GraphicsDevice)
             {
                 LightingEnabled = false,
                 VertexColorEnabled = false,
                 TextureEnabled = true,
                 FogEnabled = false
+            };
+            _spriteBatchEffect = new BasicEffect(GraphicsDevice)
+            {
+                TextureEnabled = true,
+                VertexColorEnabled = true
             };
 
             Game.GraphicsDevice.DeviceReset += (s, o) => UpdateBounds();
@@ -169,19 +194,40 @@ namespace MiMap.Viewer.DesktopGL.Components
 
         public override void Update(GameTime gameTime)
         {
+            UpdateBounds();
             UpdateMouseInput();
+
             if (Map == default) return;
 
             if (_chunksDirty)
             {
-                var regions = Map.GetRegions(_mapBounds);
-                lock (_chunkSync)
+                if (_mode == MapViewMode.Region)
                 {
-                    _regions.Clear();
-                    _regions.AddRange(regions.Where(r => r.IsComplete).Select(r => _regionMeshManager.CacheRegion(r)));
+                    var regions = Map.GetRegions(_mapBounds);
+                    lock (_chunkSync)
+                    {
+                        _regions.Clear();
+                        _regions.AddRange(regions.Where(r => r.IsComplete).Select(r => _regionMeshManager.CacheRegion(r)));
+                    }
+                }
+                else if (_mode == MapViewMode.Chunk)
+                {
+                    Map.EnqueueChunks(_mapBounds); // generate the visible chunks
                 }
 
                 _chunksDirty = false;
+            }
+
+            if (_mode == MapViewMode.Chunk)
+            {
+                if (!_pendingChunks.IsEmpty)
+                {
+                    MapChunk c;
+                    while (_pendingChunks.TryDequeue(out c))
+                    {
+                        _chunks.Add(_regionMeshManager.CacheChunk(c));
+                    }
+                }
             }
         }
 
@@ -209,21 +255,133 @@ namespace MiMap.Viewer.DesktopGL.Components
             {
                 if (Begin("Map Viewer"))
                 {
-                    if (BeginTable("mapviewtable", 2))
+                    if (BeginTable("mapviewtable", 2, ImGuiTableFlags.Resizable | ImGuiTableFlags.BordersInner | ImGuiTableFlags.SizingStretchProp))
                     {
-                        // PushID("mapviewtable_Scale");
+                        _mapPositions[0] = _mapPosition.X;
+                        _mapPositions[1] = _mapPosition.Y;
+                        TableNextRow();
+                        TableNextColumn();
+                        Text("Map Position");
+                        TableNextColumn();
+                        InputInt2("##value", ref _mapPositions[0]);
+                        if (IsItemEdited())
+                        {
+                            MapPosition = new Point(_mapPositions[0], _mapPositions[1]);
+                        }
+
+                        var bounds = MapBounds;
+                        var boundsValues = new int[] { bounds.X, bounds.Y, bounds.Width, bounds.Height };
+
+                        TableNextRow();
+                        TableNextColumn();
+                        Text("Map Bounds");
+                        TableNextColumn();
+                        InputInt4("##value", ref boundsValues[0], ImGuiInputTextFlags.ReadOnly);
+
                         TableNextRow();
                         TableNextColumn();
                         Text("Scale");
                         TableNextColumn();
-                        // TableSetColumnIndex(1);
-                        // SetNextItemWidth(-float.MinValue);
                         SliderFloat("##value", ref _scale, 0.01f, 8f);
+                        if (IsItemEdited())
+                        {
+                            RecalculateTransform();
+                        }
 
                         TableNextRow();
 
                         // PopID();
                         EndTable();
+                    }
+
+                    Spacing();
+
+                    if (BeginTable("mapviewtable", 2, ImGuiTableFlags.Resizable | ImGuiTableFlags.BordersInner | ImGuiTableFlags.SizingStretchProp))
+                    {
+                        var cursorPositionValues = new int[]
+                        {
+                            _cursorPosition.X,
+                            _cursorPosition.Y
+                        };
+                        TableNextRow();
+                        TableNextColumn();
+                        Text("Cursor Position");
+                        TableNextColumn();
+                        InputInt2("##value", ref cursorPositionValues[0], ImGuiInputTextFlags.ReadOnly);
+
+
+                        EndTable();
+                    }
+
+                    SetNextItemOpen(true, ImGuiCond.FirstUseEver);
+                    if (TreeNodeEx("Graphics"))
+                    {
+                        if (BeginTable("graphics", 2, ImGuiTableFlags.Resizable | ImGuiTableFlags.BordersInner | ImGuiTableFlags.BordersOuter | ImGuiTableFlags.SizingFixedFit))
+                        {
+                            TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed);
+                            TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
+
+                            var v = GraphicsDevice.Viewport;
+                            var viewportValues = new int[]
+                            {
+                                v.X,
+                                v.Y,
+                                v.Width,
+                                v.Height
+                            };
+
+                            TableNextRow();
+                            TableNextColumn();
+                            Text("Viewport");
+                            TableNextColumn();
+                            InputInt4("##value", ref viewportValues[0], ImGuiInputTextFlags.ReadOnly);
+
+                            EndTable();
+                        }
+
+                        TreePop();
+                    }
+
+                    SetNextItemOpen(true, ImGuiCond.FirstUseEver);
+                    if (TreeNodeEx("Window"))
+                    {
+                        if (BeginTable("window", 2, ImGuiTableFlags.Resizable | ImGuiTableFlags.BordersInner | ImGuiTableFlags.BordersOuter | ImGuiTableFlags.SizingFixedFit))
+                        {
+                            TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed);
+                            TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
+
+                            var p = Game.Window.Position;
+                            var windowPositionValues = new int[]
+                            {
+                                p.X,
+                                p.Y
+                            };
+                            TableNextRow();
+                            TableNextColumn();
+                            Text("Position");
+                            TableNextColumn();
+                            InputInt2("##value", ref windowPositionValues[0], ImGuiInputTextFlags.ReadOnly);
+                            
+                            
+                            var c = Game.Window.ClientBounds;
+                            var windowClientBoundsValues = new int[]
+                            {
+                                c.X,
+                                c.Y,
+                                c.Width,
+                                c.Height
+                            };
+                            TableNextRow();
+                            TableNextColumn();
+                            Text("Client Bounds");
+                            TableNextColumn();
+                            InputInt4("##value", ref windowClientBoundsValues[0], ImGuiInputTextFlags.ReadOnly);
+
+
+                            EndTable();
+                        }
+
+                        TreePop();
                     }
 
                     End();
@@ -291,7 +449,7 @@ namespace MiMap.Viewer.DesktopGL.Components
 
                 if (Begin("Biome Colors"))
                 {
-                    if (BeginTable("biomeclr", 3))
+                    if (BeginTable("biomeclr", 3, ImGuiTableFlags.Resizable | ImGuiTableFlags.BordersInner | ImGuiTableFlags.SizingStretchProp))
                     {
                         foreach (var c in Map.BiomeRegistry.Biomes)
                         {
@@ -304,10 +462,10 @@ namespace MiMap.Viewer.DesktopGL.Components
                             TableSetBgColor(ImGuiTableBgTarget.CellBg, GetColor(c.Color ?? System.Drawing.Color.Transparent));
                             Text(" ");
                         }
-                        
+
                         EndTable();
                     }
-                    
+
                     End();
                 }
             }
@@ -333,8 +491,37 @@ namespace MiMap.Viewer.DesktopGL.Components
             //     | 0xFF
             // );
         }
-        
+
         private void DrawMap(GameTime gameTime)
+        {
+            if (_mode == MapViewMode.Region)
+                DrawMap_Region(gameTime);
+            else if (_mode == MapViewMode.Chunk)
+                DrawMap_Chunk(gameTime);
+        }
+
+        private static readonly Point RegionSize = new Point(512, 512);
+        private static readonly Rectangle ChunkSize = new Rectangle(0, 0, 16, 16);
+        private int[] _mapPositions = new int[2];
+
+        private void DrawMap_Chunk(GameTime gameTime)
+        {
+            _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone, _spriteBatchEffect, Transform);
+
+            foreach (var chunk in _chunks)
+            {
+                _spriteBatch.Draw(chunk.Texture, chunk.Position.ToVector2(), Color.White);
+                // _spriteBatch.Draw(chunk.Texture, chunk.Position.ToVector2(), ChunkSize, Color.White, 0, Vector2.Zero, _scale,SpriteEffects.FlipVertically, 0);
+            }
+
+            _spriteBatch.DrawRectangle(new Rectangle(_cursorBlock[0], _cursorBlock[2], 1, 1), Color.White);
+            _spriteBatch.DrawRectangle(new Rectangle(_cursorChunk[0] << 4, _cursorChunk[1] << 4, 16, 16), Color.Yellow);
+            _spriteBatch.DrawRectangle(new Rectangle(_cursorRegion[0] << 9, _cursorRegion[1] << 9, 512, 512), Color.PaleGreen);
+
+            _spriteBatch.End();
+        }
+
+        private void DrawMap_Region(GameTime gameTime)
         {
             using (var cxt = GraphicsContext.CreateContext(GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.None, _rasterizerState, SamplerState.PointClamp))
             {
@@ -372,17 +559,25 @@ namespace MiMap.Viewer.DesktopGL.Components
 
         #endregion
 
+        private Rectangle _previousClientBounds = Rectangle.Empty;
+
         private void UpdateBounds()
         {
-            Bounds = new Rectangle(Point.Zero, Game.Window.ClientBounds.Size);
+            var clientBounds = Game.Window.ClientBounds;
+            if (clientBounds != _previousClientBounds)
+            {
+                Bounds = new Rectangle(Point.Zero, Game.Window.ClientBounds.Size);
+                RecalculateMapBounds();
+            }
         }
 
         private void RecalculateTransform()
         {
             var p = MapPosition;
             Transform = Matrix.Identity
-                        * Matrix.CreateTranslation(-p.X, -p.Y, 0)
+                        // * Matrix.CreateRotationX(MathHelper.Pi)
                         * Matrix.CreateScale(_scale, _scale, 1f)
+                        * Matrix.CreateTranslation(-p.X, -p.Y, 0)
                 ;
 
             RecalculateMapBounds();
@@ -390,42 +585,69 @@ namespace MiMap.Viewer.DesktopGL.Components
 
         private void RecalculateMapBounds()
         {
-            var screenBounds = Bounds;
-            var screenSize = new Vector2(screenBounds.Width, screenBounds.Height);
-
-            var blockBoundsMin = Unproject(Vector2.Zero);
-            var blockBoundsSize = Unproject(screenSize) - blockBoundsMin;
-
-            var bbSize = new Point((int)Math.Ceiling(blockBoundsSize.X), (int)Math.Ceiling(blockBoundsSize.Y));
-            var bbMin = new Point((int)Math.Floor(blockBoundsMin.X), (int)Math.Floor(blockBoundsMin.Y));
-
+            var screenBounds = _bounds;
+            
+            // var bbSize = (_bounds.Size.ToVector2()) / _scale;
+            // var bbCenter = (_mapPosition.ToVector2() + _bounds.Center.ToVector2()) / _scale;
+            // var bbMin = _mapPosition.ToVector2() / _scale;
+            var bbMin = Unproject(Point.Zero);
+            var bbSize = Unproject(_bounds.Size) - bbMin;
+            
             MapBounds = new Rectangle(bbMin, bbSize);
-
+            
             if (_effect != default)
             {
                 _effect.Projection = Matrix.CreateOrthographic(screenBounds.Width, screenBounds.Height, 0.1f, 100f);
-
-                var p = Vector3.Transform(new Vector3(0f, 0f, 0f), Transform);
-
+                
                 _effect.View = Matrix.CreateLookAt(new Vector3(0, 0, 10), new Vector3(0, 0, 0), Vector3.Up);
                 _effect.World = Matrix.CreateWorld(Vector3.Zero, Vector3.Forward, Vector3.Up);
+            }
+
+            if (_spriteBatchEffect != default)
+            {
+                _spriteBatchEffect.World = Transform;
+                _spriteBatchEffect.View = Matrix.CreateLookAt(Vector3.Backward, Vector3.Zero, Vector3.Up);
+                // _spriteBatchEffect.Projection = Matrix.CreateOrthographicOffCenter(0, screenSize.X / _scale, 0, screenSize.Y / _scale, 0.1f, 100f);
+                _spriteBatchEffect.Projection = Matrix.CreateOrthographicOffCenter(0, screenBounds.Width, screenBounds.Height, 0,  0f, 1f);
             }
         }
 
         private void OnMapBoundsChanged()
         {
-            _chunksDirty = true;
+            //_chunksDirty = true;
+            var b = _mapBounds;
+            var visibleChunkBounds = new Rectangle(b.X >> 4, b.Y >> 4, b.Width >> 4, b.Height >> 4);
+            if (visibleChunkBounds != _visibleChunkBounds)
+            {
+                _chunksDirty = true;
+            }
+
+            _visibleChunkBounds = visibleChunkBounds;
+
             Log.Info($"Map bounds changed: {_mapBounds.X:000}, {_mapBounds.Y:000} => {_mapBounds.Width:0000} x {_mapBounds.Height:0000}");
         }
 
         private void OnRegionGenerated(object sender, Point regionPosition)
         {
             //_chunksDirty = true;
-            var region = Map.GetRegion(regionPosition);
-            if (region != null)
+            // var region = Map.GetRegion(regionPosition);
+            // if (region != null)
+            // {
+            //     _regions.Add(_regionMeshManager.CacheRegion(region));
+            //
+            //     Log.Info($"Region generated: {regionPosition.X:000}, {regionPosition.Y:000}");
+            // }
+        }
+
+        private void OnChunkGenerated(object sender, Point chunkPosition)
+        {
+            // _chunksDirty = true;
+            var chunk = Map.GetChunk(chunkPosition);
+            if (chunk != null)
             {
-                _regions.Add(_regionMeshManager.CacheRegion(region));
-                Log.Info($"Region generated: {regionPosition.X:000}, {regionPosition.Y:000}");
+                _pendingChunks.Enqueue(chunk);
+
+                Log.Debug($"Chunk generated: {chunkPosition.X:000}, {chunkPosition.Y:000}");
             }
         }
 
@@ -440,35 +662,47 @@ namespace MiMap.Viewer.DesktopGL.Components
 
             if (_mouseState.Position != newState.Position)
             {
-                OnCursorMove(newState.Position, _mouseState.Position, _mouseState.LeftButton == ButtonState.Pressed);
+                var bounds = Game.Window.ClientBounds;
+                // var currPos = new Point(newState.X - bounds.X, bounds.Height - (newState.Y - bounds.Y));
+                // var prevPos = new Point(_mouseState.X - bounds.X, bounds.Height - (_mouseState.Y - bounds.Y));
+                //var currPos = new Point(newState.X - bounds.X, newState.Y - bounds.Y);
+                //var prevPos = new Point(_mouseState.X - bounds.X, _mouseState.Y - bounds.Y);
+
+                var currPos = new Point(newState.X, newState.Y);
+                var prevPos = new Point(_mouseState.X, _mouseState.Y);
+                OnCursorMove(currPos, prevPos, _mouseState.LeftButton == ButtonState.Pressed);
+                _cursorPosition = currPos;
             }
 
             _mouseState = newState;
         }
 
-        private Vector3 Unproject(Vector2 cursor)
+        private Point Unproject(Point cursor)
         {
+            return _mapPosition + (cursor.ToVector2() * _scale).ToPoint();
+
+//            return Vector2.Transform(cursor, InverseTransform);
             // return GraphicsDevice.Viewport.Unproject(new Vector3(cursor.X, cursor.Y, 0f), _effect.Projection, _effect.View, Matrix.CreateTranslation(-_mapPosition.X, -_mapPosition.Y, 0f));
-            return GraphicsDevice.Viewport.Unproject(new Vector3(cursor.X, cursor.Y, 0f), _effect.Projection, _effect.View, Transform);
+            //return GraphicsDevice.Viewport.Unproject(new Vector3(cursor.X, cursor.Y, 0f), _effect.Projection, _effect.View, Transform);
         }
 
         private void OnCursorMove(Point cursorPosition, Point previousCursorPosition, bool isCursorDown)
         {
-            var cursorBlockPos = Unproject(cursorPosition.ToVector2());
+            var cursorBlockPos = Unproject(cursorPosition);
             // var cursorBlockPos = Vector3.Transform(new Vector3(cursorPosition.X, cursorPosition.Y, 0f), Transform*_effect.View);
-            _cursorBlock[0] = (int)cursorBlockPos.X;
-            _cursorBlock[2] = (int)cursorBlockPos.Y;
-            _cursorChunk[0] = _cursorBlock[0] >> 5;
-            _cursorChunk[1] = _cursorBlock[2] >> 5;
+            _cursorBlock[0] = cursorBlockPos.X;
+            _cursorBlock[2] = cursorBlockPos.Y;
+            _cursorChunk[0] = _cursorBlock[0] >> 4;
+            _cursorChunk[1] = _cursorBlock[2] >> 4;
             _cursorRegion[0] = _cursorBlock[0] >> 9;
             _cursorRegion[1] = _cursorBlock[2] >> 9;
 
             var cursorBlockRegion = Map.GetRegion(new Point(_cursorRegion[0], _cursorRegion[1]));
             if (cursorBlockRegion?.IsComplete ?? false)
             {
-                var cursorBlockChunk = cursorBlockRegion[_cursorChunk[0] & 31, _cursorChunk[1] & 31];
-                var x = _cursorBlock[0] & 16;
-                var z = _cursorBlock[2] & 16;
+                var cursorBlockChunk = cursorBlockRegion[_cursorChunk[0] % 32, _cursorChunk[1] % 32];
+                var x = _cursorBlock[0] % 16;
+                var z = _cursorBlock[2] % 16;
                 _cursorBlock[1] = (int)cursorBlockChunk.GetHeight(x, z);
                 _cursorBlockBiomeId = (int)cursorBlockChunk.GetBiome(x, z);
                 _cursorBlockBiome = Map.BiomeRegistry.GetBiome(_cursorBlockBiomeId);
@@ -477,7 +711,7 @@ namespace MiMap.Viewer.DesktopGL.Components
             if (isCursorDown)
             {
                 var p = (cursorPosition - previousCursorPosition);
-                MapPosition += new Point(-p.X, p.Y);
+                MapPosition += new Point(-p.X, -p.Y);
             }
         }
 
