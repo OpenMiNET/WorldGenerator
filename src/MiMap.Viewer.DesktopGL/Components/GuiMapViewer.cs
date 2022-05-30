@@ -679,7 +679,7 @@ namespace MiMap.Viewer.DesktopGL.Components
 
         private Point Unproject(Point cursor)
         {
-            return _mapPosition + (cursor.ToVector2() * _scale).ToPoint();
+            return _mapPosition + (cursor.ToVector2() / _scale).ToPoint();
 
 //            return Vector2.Transform(cursor, InverseTransform);
             // return GraphicsDevice.Viewport.Unproject(new Vector3(cursor.X, cursor.Y, 0f), _effect.Projection, _effect.View, Matrix.CreateTranslation(-_mapPosition.X, -_mapPosition.Y, 0f));
