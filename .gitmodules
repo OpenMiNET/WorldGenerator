@@ -1,0 +1,3 @@
+[submodule "src/submodules/ElementEngine"]
+	path = src/submodules/ElementEngine
+	url = https://github.com/pandepic/ElementEngine.git
