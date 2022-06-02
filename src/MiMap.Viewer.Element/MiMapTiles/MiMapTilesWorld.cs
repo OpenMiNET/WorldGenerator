@@ -1,6 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using ElementEngine;
+using MiMap.Viewer.DesktopGL.Utilities;
+using MiMap.Viewer.Element.Graphics;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using NLog;
@@ -9,8 +11,8 @@ namespace MiMap.Viewer.Element.MiMapTiles
 {
     public class ConcurrentWorkItemQueue<T> : IDisposable
     {
-        public event EventHandler<T> ItemCompleted; 
-        public event EventHandler<T> ItemStarted; 
+        public event EventHandler<T> ItemCompleted;
+        public event EventHandler<T> ItemStarted;
 
         private readonly int _threadCount;
         private readonly Action<T> _processWorkItem;
@@ -18,7 +20,7 @@ namespace MiMap.Viewer.Element.MiMapTiles
         private Queue<T> _pending;
         private HashSet<T> _inProgress;
         private HashSet<T> _completed;
-        
+
         private Thread[] _threads;
         private AutoResetEvent _trigger;
         private bool _running;
@@ -43,12 +45,12 @@ namespace MiMap.Viewer.Element.MiMapTiles
                     Name = "WorldGenerator",
                     IsBackground = false
                 };
-                _threads[i].Start();
             }
         }
 
         public void Start()
         {
+            if (_running) return;
             _running = true;
             for (int i = 0; i < _threadCount; i++)
             {
@@ -58,12 +60,15 @@ namespace MiMap.Viewer.Element.MiMapTiles
 
         public void Stop()
         {
+            if (!_running) return;
+
             _running = false;
             _trigger.Set();
             for (int i = 0; i < _threads.Length; i++)
             {
                 _threads[i].Join();
             }
+
             _trigger?.Dispose();
         }
 
@@ -71,9 +76,9 @@ namespace MiMap.Viewer.Element.MiMapTiles
         {
             lock (_chunksSync)
             {
-                if (_pending.Contains(item) || _inProgress.Contains(item) || _completed.Contains(item)) 
+                if (_pending.Contains(item) || _inProgress.Contains(item) || _completed.Contains(item))
                     return false;
-                
+
                 _pending.Enqueue(item);
                 return true;
             }
@@ -114,17 +119,16 @@ namespace MiMap.Viewer.Element.MiMapTiles
             while (_running)
             {
                 _trigger.WaitOne(1000);
-                
+
                 while (_running && TryDequeue(50, out var c))
                 {
                     ItemStarted?.Invoke(this, c);
-                    
+
                     _processWorkItem.Invoke(c);
-                    
+
                     MarkComplete(c);
                     ItemCompleted?.Invoke(this, c);
                 }
-                
             }
         }
 
@@ -157,6 +161,8 @@ namespace MiMap.Viewer.Element.MiMapTiles
     public class MiMapTilesWorld : IDisposable
     {
         private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
+
+        public event EventHandler<MiMapTilesWorldChunk> ChunkAdded;
         public IWorldGenerator WorldGenerator { get; }
         public const int BLANK_TILE = -1;
 
@@ -171,10 +177,15 @@ namespace MiMap.Viewer.Element.MiMapTiles
         public MiMapTilesWorld(IWorldGenerator worldGenerator)
         {
             WorldGenerator = worldGenerator;
-            ChunkSize = new Vector2I(512, 512);
-            TileSize = new Vector2I(16, 16);
+            ChunkSize = new Vector2I(16, 16);
+            TileSize = new Vector2I(1, 1);
             _workItemQueue = new ConcurrentWorkItemQueue<Vector2I>(GenerateChunk);
             _newChunks = new ConcurrentBag<MiMapTilesWorldChunk>();
+        }
+
+        public void StartBackgroundGeneration()
+        {
+            _workItemQueue.Start();
         }
 
         public void EnqueueChunk(Vector2I chunkCoords)
@@ -182,12 +193,12 @@ namespace MiMap.Viewer.Element.MiMapTiles
             if (!_workItemQueue.TryEnqueue(chunkCoords))
                 return;
 
-            Log.Info($"Enqueue Chunk: {chunkCoords.X:N2}, {chunkCoords.Y:N2}");
+            Logging.Information($"Enqueue Chunk: {chunkCoords.X:N2}, {chunkCoords.Y:N2}");
         }
 
         private void GenerateChunk(Vector2I chunkCoords)
         {
-            Log.Info($"Generating Chunk: {chunkCoords.X:N2}, {chunkCoords.Y:N2}");
+            Logging.Information($"Generating Chunk: {chunkCoords.X:N2}, {chunkCoords.Y:N2}");
             var csw = Stopwatch.StartNew();
             var chunkPosition = new ChunkCoordinates(chunkCoords.X, chunkCoords.Y);
             using var chunk = WorldGenerator.GenerateChunkColumn(chunkPosition);
@@ -197,7 +208,7 @@ namespace MiMap.Viewer.Element.MiMapTiles
             var worldChunk = ExtractWorldChunk(chunkCoords, chunk);
             _newChunks.Add(worldChunk);
             csw.Stop();
-            Log.Debug($"Completed Chunk {chunkPosition.X:N2}, {chunkPosition.Z:N2} in {t1:N3} ms (generation: {t1:N3} ms, dataExtraction: {csw.ElapsedMilliseconds:N3} ms)");
+            Logging.Debug($"Completed Chunk {chunkPosition.X:N2}, {chunkPosition.Z:N2} in {t1:N3} ms (generation: {t1:N3} ms, dataExtraction: {csw.ElapsedMilliseconds:N3} ms)");
         }
 
         private MiMapTilesWorldChunk ExtractWorldChunk(Vector2I coords, ChunkColumn chunkColumn)
@@ -206,32 +217,53 @@ namespace MiMap.Viewer.Element.MiMapTiles
 
             var biomeTiles = new int[chunk.TotalTiles];
             var heightTiles = new int[chunk.TotalTiles];
-            // var temperatureTiles = new int[chunk.TotalTiles];
-            // var humidityTiles = new int[chunk.TotalTiles];
+            var temperatureTiles = new int[chunk.TotalTiles];
+            var downfallTiles = new int[chunk.TotalTiles];
 
             int i = 0;
+            byte b = 0;
+            var tw = BiomeTileTexture.Width;
             for (int x = 0; x < 16; x++)
             for (int z = 0; z < 16; z++)
             {
                 i = (z << 4) + x;
-                
-                biomeTiles[i] = (int)chunkColumn.biomeId[i];
-                heightTiles[i] = chunkColumn.height[i];
+                b = chunkColumn.biomeId[i];
+
+                biomeTiles[i] = b;
+                downfallTiles[i] = tw + b;
+                temperatureTiles[i] = (2 * tw) + b;
+                heightTiles[i] = (3 * tw) + chunkColumn.height[i];
             }
-            
+
             chunk.UpdateLayerTiles(MiMapTilesWorldLayerType.Biome, biomeTiles);
+            chunk.UpdateLayerTiles(MiMapTilesWorldLayerType.Downfall, downfallTiles);
+            chunk.UpdateLayerTiles(MiMapTilesWorldLayerType.Temperature, temperatureTiles);
             chunk.UpdateLayerTiles(MiMapTilesWorldLayerType.Height, heightTiles);
-            chunk.UpdateLayerTiles(MiMapTilesWorldLayerType.Humidity, biomeTiles);
-            chunk.UpdateLayerTiles(MiMapTilesWorldLayerType.Temperature, biomeTiles);
 
             return chunk;
         }
 
+        public void GenerateMissingChunks(Rectangle bounds)
+        {
+            foreach (var chunkCoords in Spiral.FillRegionFromCenter(bounds))
+            {
+                EnqueueChunk(chunkCoords);
+            }
+        }
+
+        public void GenerateMissingChunks(Vector2I position, int radius)
+        {
+            var region = new Rectangle(position.X - radius, position.Y - radius, 2 * radius, 2 * radius);
+            GenerateMissingChunks(region);
+        }
+
         public void Update()
         {
-            while (_newChunks.TryTake(out var chunk))
+            var sw = Stopwatch.StartNew();
+            while (sw.ElapsedMilliseconds < 10 && _newChunks.TryTake(out var chunk))
             {
                 Chunks.Add(chunk.Position, chunk);
+                ChunkAdded?.Invoke(this, chunk);
             }
         }
 

@@ -7,12 +7,21 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\OpenAPI.WorldGenerator\OpenAPI.WorldGenerator.csproj" />
-      <ProjectReference Include="..\submodules\ElementEngine\ElementEngine.csproj" />
+        <ProjectReference Include="..\OpenAPI.WorldGenerator\OpenAPI.WorldGenerator.csproj" />
+        <ProjectReference Include="..\submodules\ElementEngine\ElementEngine.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="NLog" Version="5.0.0" />
+        <PackageReference Include="NLog" Version="5.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="Content\**\*.*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <None Update="Settings.xml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
 </Project>

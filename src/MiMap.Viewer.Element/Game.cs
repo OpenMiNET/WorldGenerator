@@ -1,6 +1,8 @@
 using ElementEngine;
 using ElementEngine.EndlessTiles;
 using ElementEngine.Tiled;
+using ElementEngine.UI;
+using MiMap.Viewer.Element.GameStates;
 using MiMap.Viewer.Element.MiMapTiles;
 using MiNET.Worlds;
 using OpenAPI.WorldGenerator.Generators;
@@ -10,11 +12,7 @@ namespace MiMap.Viewer.Element
 {
     public class Game : BaseGame
     {
-        public IWorldGenerator WorldGenerator;
-        public MiMapTilesWorld TilesWorld;
-        public Texture2D TilesTexture;
-        public MiMapTilesRenderer TilesRenderer;
-        public Camera2D BackgroundCamera;
+        public GameStateView GameStateView;
 
         public override void Load()
         {
@@ -22,36 +20,41 @@ namespace MiMap.Viewer.Element
             
             var windowRect = new ElementEngine.Rectangle()
             {
-                X = SettingsManager.GetSetting<int>("Window", "X"),
-                Y = SettingsManager.GetSetting<int>("Window", "Y"),
+                X = 100,
+                Y = 100,
                 Width = SettingsManager.GetSetting<int>("Window", "Width"),
                 Height = SettingsManager.GetSetting<int>("Window", "Height")
             };
 
-            var graphicsBackend = GraphicsBackend.Vulkan;
+            var graphicsBackend = GraphicsBackend.Direct3D11;
 
 #if OPENGL
             graphicsBackend = GraphicsBackend.OpenGL;
 #endif
 
-            SetupWindow(windowRect, "Captain Shostakovich", graphicsBackend);
-            SetupAssets();
+            SetupWindow(windowRect, "MiMap Viewer", graphicsBackend);
+            SetupAssets("Content");
+            
             
             ClearColor = RgbaFloat.Black;
             
+            IMGUIManager.Setup();
+            
             InputManager.LoadGameControls();
 
-            WorldGenerator = new OverworldGeneratorV2();
+            GameStateView = new GameStateView(this);
             
-            TilesWorld = new MiMapTilesWorld(WorldGenerator);
-            
-            //todo: TilesTexture
-            TilesRenderer = new MiMapTilesRenderer(TilesWorld, TilesTexture);
-            
-            BackgroundCamera = new Camera2D(new ElementEngine.Rectangle(0, 0, ElementGlobals.TargetResolutionWidth, ElementGlobals.TargetResolutionHeight))
-            {
-                Zoom = 3
-            };
+            SetGameState(GameStateView);
+        }
+
+        public override void Update(GameTimer gameTimer)
+        {
+            IMGUIManager.Update(gameTimer);
+        }
+
+        public override void Draw(GameTimer gameTimer)
+        {
+            IMGUIManager.Draw();
         }
     }
 }

@@ -5,9 +5,9 @@ namespace MiMap.Viewer.Element.MiMapTiles
     public enum MiMapTilesWorldLayerType : int
     {
         Biome = 0,
-        Height = 1,
+        Downfall = 1,
         Temperature = 2,
-        Humidity = 3
+        Height = 3,
     }
 
     public class MiMapTilesWorldChunk

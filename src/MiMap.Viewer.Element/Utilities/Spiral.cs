@@ -1,17 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using ElementEngine;
 using MiMap.Viewer.Core.Utilities;
 using Veldrid;
+using Rectangle = ElementEngine.Rectangle;
 
 namespace MiMap.Viewer.DesktopGL.Utilities
 {
     public static class Spiral
     {
 
-        public static IEnumerable<Point> FillRegionFromCenter(Rectangle region)
+        public static IEnumerable<Vector2I> FillRegionFromCenter(Rectangle region)
         {
-            var c = region.Center();
+            var c = region.Center;
             var cX = c.X;
             var cY = c.Y;
             var r = (int)Math.Max(region.Width, region.Height);
@@ -21,13 +23,13 @@ namespace MiMap.Viewer.DesktopGL.Utilities
             var t = r;
             var dx = 0;
             var dy = -1;
-            var p = new Point();
+            var p = new Vector2I();
             
             for (var i = 0; i < (r * r); i++)
             {
                 if ((-r / 2 <= x) && (x <= r / 2) && (-r / 2 <= y) && (y <= r / 2))
                 {
-                    p = new Point(cX + x, cY + y);
+                    p = new Vector2I(cX + x, cY + y);
                     if (region.RegionContainsInclusive(p))
                         yield return p;
                 }
@@ -45,7 +47,7 @@ namespace MiMap.Viewer.DesktopGL.Utilities
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool RegionContainsInclusive(this Rectangle region, Point point)
+        private static bool RegionContainsInclusive(this Rectangle region, Vector2I point)
         => point.X >= region.X && point.X <= (region.X + region.Width) &&
            point.Y >= region.Y && point.Y <= (region.Y + region.Height);
 

@@ -33,7 +33,7 @@ namespace MiMap.Viewer.Element.MiMapTiles
                 {
                     var tileID = layer.Tiles[x + ChunkData.World.ChunkSize.X * y];
 
-                    if (tileID == 0)
+                    if (tileID <= 0)
                         continue;
 
                     TileBatch.SetTileAtPosition(x, y, tileID);
