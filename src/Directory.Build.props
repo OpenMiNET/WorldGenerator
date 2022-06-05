@@ -1,0 +1,6 @@
+<Project>
+    <PropertyGroup>
+        <LangVersion>10</LangVersion>
+        <Optimize>true</Optimize>
+    </PropertyGroup>
+</Project>
