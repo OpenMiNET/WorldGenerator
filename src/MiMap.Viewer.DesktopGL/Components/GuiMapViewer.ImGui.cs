@@ -2,6 +2,9 @@ using System;
 using System.Numerics;
 using Microsoft.Xna.Framework;
 using ImGuiNET;
+using Microsoft.Xna.Framework.Graphics;
+using MiMap.Viewer.DesktopGL.Core;
+using MiNET.Utils.Vectors;
 using OpenAPI.WorldGenerator.Generators.Biomes;
 using static ImGuiNET.ImGui;
 
@@ -187,228 +190,316 @@ namespace MiMap.Viewer.DesktopGL.Components
                 //DrawImGui_StyleEditor();
 
                 DockSpaceOverViewport(GetMainViewport(), ImGuiDockNodeFlags.NoDockingInCentralNode | ImGuiDockNodeFlags.PassthruCentralNode);
-                
-                if (Begin("Map Viewer", ImGuiWindowFlags.DockNodeHost))
-                {
-                    if (BeginTable("mapviewtable", 2, ImGuiTableFlags.Resizable | ImGuiTableFlags.BordersInner | ImGuiTableFlags.SizingStretchProp))
-                    {
-                        _mapPositions[0] = _mapPosition.X;
-                        _mapPositions[1] = _mapPosition.Y;
-                        TableNextRow();
-                        TableNextColumn();
-                        Text("Map Position");
-                        TableNextColumn();
-                        InputInt2("##value", ref _mapPositions[0]);
-                        if (IsItemEdited())
-                        {
-                            MapPosition = new Point(_mapPositions[0], _mapPositions[1]);
-                        }
 
-                        var bounds = MapBounds;
-                        var boundsValues = new int[] { bounds.X, bounds.Y, bounds.Width, bounds.Height };
-
-                        TableNextRow();
-                        TableNextColumn();
-                        Text("Map Bounds");
-                        TableNextColumn();
-                        InputInt4("##value", ref boundsValues[0], ImGuiInputTextFlags.ReadOnly);
-
-                        TableNextRow();
-                        TableNextColumn();
-                        Text("Scale");
-                        TableNextColumn();
-                        SliderFloat("##value", ref _scale, MinScale, MaxScale);
-                        if (IsItemEdited())
-                        {
-                            RecalculateTransform();
-                        }
-
-                        TableNextRow();
-
-                        // PopID();
-                        EndTable();
-                    }
-
-                    Spacing();
-
-                    if (BeginTable("mapviewtable", 2, ImGuiTableFlags.Resizable | ImGuiTableFlags.BordersInner | ImGuiTableFlags.SizingStretchProp))
-                    {
-                        var cursorPositionValues = new int[]
-                        {
-                            _cursorPosition.X,
-                            _cursorPosition.Y
-                        };
-                        TableNextRow();
-                        TableNextColumn();
-                        Text("Cursor Position");
-                        TableNextColumn();
-                        InputInt2("##value", ref cursorPositionValues[0], ImGuiInputTextFlags.ReadOnly);
-
-
-                        EndTable();
-                    }
-
-                    SetNextItemOpen(true, ImGuiCond.FirstUseEver);
-                    if (TreeNodeEx("Graphics"))
-                    {
-                        if (BeginTable("graphics", 2, ImGuiTableFlags.Resizable | ImGuiTableFlags.BordersInner | ImGuiTableFlags.BordersOuter | ImGuiTableFlags.SizingFixedFit))
-                        {
-                            TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed);
-                            TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
-
-                            var v = GraphicsDevice.Viewport;
-                            var viewportValues = new int[]
-                            {
-                                v.X,
-                                v.Y,
-                                v.Width,
-                                v.Height
-                            };
-
-                            TableNextRow();
-                            TableNextColumn();
-                            Text("Viewport");
-                            TableNextColumn();
-                            InputInt4("##value", ref viewportValues[0], ImGuiInputTextFlags.ReadOnly);
-
-                            EndTable();
-                        }
-
-                        TreePop();
-                    }
-
-                    SetNextItemOpen(true, ImGuiCond.FirstUseEver);
-                    if (TreeNodeEx("Window"))
-                    {
-                        if (BeginTable("window", 2, ImGuiTableFlags.Resizable | ImGuiTableFlags.BordersInner | ImGuiTableFlags.BordersOuter | ImGuiTableFlags.SizingFixedFit))
-                        {
-                            TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed);
-                            TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
-
-                            var p = Game.Window.Position;
-                            var windowPositionValues = new int[]
-                            {
-                                p.X,
-                                p.Y
-                            };
-                            TableNextRow();
-                            TableNextColumn();
-                            Text("Position");
-                            TableNextColumn();
-                            InputInt2("##value", ref windowPositionValues[0], ImGuiInputTextFlags.ReadOnly);
-
-
-                            var c = Game.Window.ClientBounds;
-                            var windowClientBoundsValues = new int[]
-                            {
-                                c.X,
-                                c.Y,
-                                c.Width,
-                                c.Height
-                            };
-                            TableNextRow();
-                            TableNextColumn();
-                            Text("Client Bounds");
-                            TableNextColumn();
-                            InputInt4("##value", ref windowClientBoundsValues[0], ImGuiInputTextFlags.ReadOnly);
-
-
-                            EndTable();
-                        }
-
-                        TreePop();
-                    }
-
-                    End();
-                }
-
-                if (Begin("Info"))
-                {
-                    Text("At Cursor");
-                    InputInt3("Block", ref _cursorBlock[0], ImGuiInputTextFlags.ReadOnly);
-                    InputInt2("Chunk", ref _cursorChunk[0], ImGuiInputTextFlags.ReadOnly);
-                    InputInt2("Region", ref _cursorRegion[0], ImGuiInputTextFlags.ReadOnly);
-
-                    SetNextItemOpen(true, ImGuiCond.FirstUseEver);
-                    if (TreeNode("Biome Info"))
-                    {
-                        var biome = _cursorBlockBiome;
-
-                        var biomeId = biome?.Id ?? _cursorBlockBiomeId;
-                        var biomeName = biome?.Name ?? string.Empty;
-                        var biomeDefinitionName = biome?.DefinitionName ?? string.Empty;
-                        var biomeMinHeight = biome?.MinHeight ?? 0;
-                        var biomeMaxHeight = biome?.MaxHeight ?? 0;
-                        var biomeTemperature = biome?.Temperature ?? 0;
-                        var biomeDownfall = biome?.Downfall ?? 0;
-
-                        InputInt("ID", ref biomeId, 0, 0, ImGuiInputTextFlags.ReadOnly);
-                        InputText("Name", ref biomeName, 0, ImGuiInputTextFlags.ReadOnly);
-                        InputText("Definition Name", ref biomeDefinitionName, 0, ImGuiInputTextFlags.ReadOnly);
-                        InputFloat("Min Height", ref biomeMinHeight, 0, 0, null, ImGuiInputTextFlags.ReadOnly);
-                        InputFloat("Max Height", ref biomeMaxHeight, 0, 0, null, ImGuiInputTextFlags.ReadOnly);
-                        InputFloat("Temperature", ref biomeTemperature, 0, 0, null, ImGuiInputTextFlags.ReadOnly);
-                        InputFloat("Downfall", ref biomeDownfall, 0, 0, null, ImGuiInputTextFlags.ReadOnly);
-
-                        SetNextItemOpen(true, ImGuiCond.FirstUseEver);
-                        if (TreeNode("Config"))
-                        {
-                            var cfg = biome?.Config;
-                            BeginDisabled();
-
-                            var cfgIsEdgeBiome = cfg?.IsEdgeBiome ?? false;
-                            var cfgAllowRivers = cfg?.AllowRivers ?? false;
-                            var cfgAllowScenicLakes = cfg?.AllowScenicLakes ?? false;
-                            var cfgSurfaceBlendIn = cfg?.SurfaceBlendIn ?? false;
-                            var cfgSurfaceBlendOut = cfg?.SurfaceBlendOut ?? false;
-                            var cfgWeight = cfg?.Weight ?? 0;
-
-                            Checkbox("Is Edge Biome", ref cfgIsEdgeBiome);
-                            Checkbox("Allow Rivers", ref cfgAllowRivers);
-                            Checkbox("Allow Scenic Lakes", ref cfgAllowScenicLakes);
-                            Checkbox("Surface Blend In", ref cfgSurfaceBlendIn);
-                            Checkbox("Surface Blend Out", ref cfgSurfaceBlendOut);
-                            InputInt("Weight", ref cfgWeight);
-
-                            EndDisabled();
-
-                            TreePop();
-                        }
-
-
-                        TreePop();
-                    }
-
-                    End();
-                }
-
-                if (Begin("Biome Colors"))
-                {
-                    if (BeginTable("biomeclr", 3, ImGuiTableFlags.Resizable | ImGuiTableFlags.BordersInner | ImGuiTableFlags.SizingStretchProp))
-                    {
-                        foreach (var c in Map.BiomeRegistry.Biomes)
-                        {
-                            TableNextRow();
-                            TableNextColumn();
-                            Text(c.Id.ToString());
-                            TableNextColumn();
-                            Text(c.Name);
-                            TableNextColumn();
-                            TableSetBgColor(ImGuiTableBgTarget.CellBg, GetColor(c.Color ?? System.Drawing.Color.Transparent));
-                            Text(" ");
-                        }
-
-                        EndTable();
-                    }
-
-                    End();
-                }
+                DrawImGui_MainMenu();
+                DrawImGui_Info();
+                DrawImGui_MapViewer();
+                DrawImGui_BiomeColors();
             }
             catch (Exception ex)
             {
                 Log.Error(ex, $"Drawing exception.");
             }
         }
+
+        private bool _wireframe;
+        private void DrawImGui_MainMenu()
+        {
+            if (BeginMainMenuBar())
+            {
+                if (BeginMenu("View"))
+                {
+                    if (BeginMenu("Windows"))
+                    {
+                        MenuItem("Info", null, ref _imgui_info);
+                        MenuItem("Map Viewer", null, ref _imgui_mapviewer);
+                        MenuItem("Biome Colours", null, ref _imgui_biomecolors);
+
+                        EndMenu();
+                    }
+
+                    if(MenuItem("Wireframe", "w", ref _wireframe))
+                    {
+                        EnableWireframe(_wireframe);
+                    }
+
+                    if (BeginMenu("Camera Mode"))
+                    {
+                        var vm = Camera.ViewMode;
+                        if (MenuItem("Top-down", null, vm == CameraViewMode.Top)) Camera.ViewMode = CameraViewMode.Top;
+                        if (MenuItem("Isometric 45°", null, vm == CameraViewMode.Isometric45)) Camera.ViewMode = CameraViewMode.Isometric45;
+                        if (MenuItem("Isometric 135°", null, vm == CameraViewMode.Isometric135)) Camera.ViewMode = CameraViewMode.Isometric135;
+                        if (MenuItem("Isometric 225°", null, vm == CameraViewMode.Isometric225)) Camera.ViewMode = CameraViewMode.Isometric225;
+                        if (MenuItem("Isometric 315°", null, vm == CameraViewMode.Isometric315)) Camera.ViewMode = CameraViewMode.Isometric315;
+                        
+                        EndMenu();
+                    }
+                    
+                    EndMenu();
+                }
+
+
+                EndMainMenuBar();
+            }
+        }
+
+        private bool _imgui_mapviewer;
+
+        private void DrawImGui_MapViewer()
+        {
+            if (Begin("Map Viewer", ref _imgui_mapviewer, ImGuiWindowFlags.DockNodeHost))
+            {
+                if (BeginTable("mapviewtable", 2, ImGuiTableFlags.Resizable | ImGuiTableFlags.BordersInner | ImGuiTableFlags.SizingStretchProp))
+                {
+                    var bounds = MapBounds;
+                    var boundsValues = new int[] { bounds.X, bounds.Y, bounds.Width, bounds.Height };
+                    TableNextRow();
+                    TableNextColumn();
+                    Text("Map Bounds");
+                    TableNextColumn();
+                    InputInt4("##value", ref boundsValues[0], ImGuiInputTextFlags.ReadOnly);
+
+                    var worldBounds = Camera.VisibleWorldBounds;
+                    var minX = worldBounds.X >> 4;
+                    var minY = worldBounds.Y >> 4;
+                    var maxX = (worldBounds.X + worldBounds.Width) >> 4;
+                    var maxY = (worldBounds.Y + worldBounds.Height) >> 4;
+                    var chunkBounds = new Rectangle(minX, minY, maxX - minX, maxY - minY);
+                    var chunkBoundsValues = new int[] { chunkBounds.X, chunkBounds.Y, chunkBounds.Width, chunkBounds.Height };
+                    TableNextRow();
+                    TableNextColumn();
+                    Text("Map Chunk Bounds");
+                    TableNextColumn();
+                    InputInt4("##value", ref chunkBoundsValues[0], ImGuiInputTextFlags.ReadOnly);
+
+                    var cameraPosition = Camera.Position.ToNumerics();
+                    TableNextRow();
+                    TableNextColumn();
+                    Text("Camera Position");
+                    TableNextColumn();
+                    InputFloat3("##value", ref cameraPosition);
+                    if (IsItemEdited())
+                    {
+                        Camera.Position = cameraPosition.ToXna();
+                    }
+
+                    var cameraForward = Camera.Forward.ToNumerics();
+                    TableNextRow();
+                    TableNextColumn();
+                    Text("Camera Forward");
+                    TableNextColumn();
+                    InputFloat3("##value", ref cameraForward, null, ImGuiInputTextFlags.ReadOnly);
+
+                    var cameraUp = Camera.Up.ToNumerics();
+                    TableNextRow();
+                    TableNextColumn();
+                    Text("Camera Up");
+                    TableNextColumn();
+                    InputFloat3("##value", ref cameraUp, null, ImGuiInputTextFlags.ReadOnly);
+
+                    TableNextRow();
+                    TableNextColumn();
+                    Text("Camera Scale");
+                    TableNextColumn();
+                    SliderFloat("##value", ref _scale, CameraComponent.MinScale, CameraComponent.MaxScale);
+                    if (IsItemEdited())
+                    {
+                        Camera.Scale = _scale;
+                    }
+
+                    TableNextRow();
+
+                    // PopID();
+                    EndTable();
+                }
+
+                Spacing();
+
+                if (BeginTable("mapviewtable", 2, ImGuiTableFlags.Resizable | ImGuiTableFlags.BordersInner | ImGuiTableFlags.SizingStretchProp))
+                {
+                    var cursorPositionValues = new int[]
+                    {
+                        _cursorPosition.X,
+                        _cursorPosition.Y
+                    };
+                    TableNextRow();
+                    TableNextColumn();
+                    Text("Cursor Position");
+                    TableNextColumn();
+                    InputInt2("##value", ref cursorPositionValues[0], ImGuiInputTextFlags.ReadOnly);
+
+
+                    EndTable();
+                }
+
+                SetNextItemOpen(true, ImGuiCond.FirstUseEver);
+                if (TreeNodeEx("Graphics"))
+                {
+                    if (BeginTable("graphics", 2, ImGuiTableFlags.Resizable | ImGuiTableFlags.BordersInner | ImGuiTableFlags.BordersOuter | ImGuiTableFlags.SizingFixedFit))
+                    {
+                        TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed);
+                        TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
+
+                        var v = GraphicsDevice.Viewport;
+                        var viewportValues = new int[]
+                        {
+                            v.X,
+                            v.Y,
+                            v.Width,
+                            v.Height
+                        };
+
+                        TableNextRow();
+                        TableNextColumn();
+                        Text("Viewport");
+                        TableNextColumn();
+                        InputInt4("##value", ref viewportValues[0], ImGuiInputTextFlags.ReadOnly);
+
+                        EndTable();
+                    }
+
+                    TreePop();
+                }
+
+                SetNextItemOpen(true, ImGuiCond.FirstUseEver);
+                if (TreeNodeEx("Window"))
+                {
+                    if (BeginTable("window", 2, ImGuiTableFlags.Resizable | ImGuiTableFlags.BordersInner | ImGuiTableFlags.BordersOuter | ImGuiTableFlags.SizingFixedFit))
+                    {
+                        TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed);
+                        TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
+
+                        var p = Game.Window.Position;
+                        var windowPositionValues = new int[]
+                        {
+                            p.X,
+                            p.Y
+                        };
+                        TableNextRow();
+                        TableNextColumn();
+                        Text("Position");
+                        TableNextColumn();
+                        InputInt2("##value", ref windowPositionValues[0], ImGuiInputTextFlags.ReadOnly);
+
+
+                        var c = Game.Window.ClientBounds;
+                        var windowClientBoundsValues = new int[]
+                        {
+                            c.X,
+                            c.Y,
+                            c.Width,
+                            c.Height
+                        };
+                        TableNextRow();
+                        TableNextColumn();
+                        Text("Client Bounds");
+                        TableNextColumn();
+                        InputInt4("##value", ref windowClientBoundsValues[0], ImGuiInputTextFlags.ReadOnly);
+
+
+                        EndTable();
+                    }
+
+                    TreePop();
+                }
+
+                End();
+            }
+        }
+
+        private bool _imgui_info;
+
+        private void DrawImGui_Info()
+        {
+            if (Begin("Info", ref _imgui_info))
+            {
+                Text("At Cursor");
+                InputInt3("Block", ref _cursorBlock[0], ImGuiInputTextFlags.ReadOnly);
+                InputInt2("Chunk", ref _cursorChunk[0], ImGuiInputTextFlags.ReadOnly);
+                InputInt2("Region", ref _cursorRegion[0], ImGuiInputTextFlags.ReadOnly);
+
+                SetNextItemOpen(true, ImGuiCond.FirstUseEver);
+                if (TreeNode("Biome Info"))
+                {
+                    var biome = _cursorBlockBiome;
+
+                    var biomeId = biome?.Id ?? _cursorBlockBiomeId;
+                    var biomeName = biome?.Name ?? string.Empty;
+                    var biomeDefinitionName = biome?.DefinitionName ?? string.Empty;
+                    var biomeMinHeight = biome?.MinHeight ?? 0;
+                    var biomeMaxHeight = biome?.MaxHeight ?? 0;
+                    var biomeTemperature = biome?.Temperature ?? 0;
+                    var biomeDownfall = biome?.Downfall ?? 0;
+
+                    InputInt("ID", ref biomeId, 0, 0, ImGuiInputTextFlags.ReadOnly);
+                    InputText("Name", ref biomeName, 0, ImGuiInputTextFlags.ReadOnly);
+                    InputText("Definition Name", ref biomeDefinitionName, 0, ImGuiInputTextFlags.ReadOnly);
+                    InputFloat("Min Height", ref biomeMinHeight, 0, 0, null, ImGuiInputTextFlags.ReadOnly);
+                    InputFloat("Max Height", ref biomeMaxHeight, 0, 0, null, ImGuiInputTextFlags.ReadOnly);
+                    InputFloat("Temperature", ref biomeTemperature, 0, 0, null, ImGuiInputTextFlags.ReadOnly);
+                    InputFloat("Downfall", ref biomeDownfall, 0, 0, null, ImGuiInputTextFlags.ReadOnly);
+
+                    SetNextItemOpen(true, ImGuiCond.FirstUseEver);
+                    if (TreeNode("Config"))
+                    {
+                        var cfg = biome?.Config;
+                        BeginDisabled();
+
+                        var cfgIsEdgeBiome = cfg?.IsEdgeBiome ?? false;
+                        var cfgAllowRivers = cfg?.AllowRivers ?? false;
+                        var cfgAllowScenicLakes = cfg?.AllowScenicLakes ?? false;
+                        var cfgSurfaceBlendIn = cfg?.SurfaceBlendIn ?? false;
+                        var cfgSurfaceBlendOut = cfg?.SurfaceBlendOut ?? false;
+                        var cfgWeight = cfg?.Weight ?? 0;
+
+                        Checkbox("Is Edge Biome", ref cfgIsEdgeBiome);
+                        Checkbox("Allow Rivers", ref cfgAllowRivers);
+                        Checkbox("Allow Scenic Lakes", ref cfgAllowScenicLakes);
+                        Checkbox("Surface Blend In", ref cfgSurfaceBlendIn);
+                        Checkbox("Surface Blend Out", ref cfgSurfaceBlendOut);
+                        InputInt("Weight", ref cfgWeight);
+
+                        EndDisabled();
+
+                        TreePop();
+                    }
+
+
+                    TreePop();
+                }
+
+                End();
+            }
+        }
+
+
+        private bool _imgui_biomecolors;
+
+        private void DrawImGui_BiomeColors()
+        {
+            if (Begin("Biome Colors", ref _imgui_biomecolors))
+            {
+                if (BeginTable("biomeclr", 3, ImGuiTableFlags.Resizable | ImGuiTableFlags.BordersInner | ImGuiTableFlags.SizingStretchProp))
+                {
+                    foreach (var c in Map.BiomeRegistry.Biomes)
+                    {
+                        TableNextRow();
+                        TableNextColumn();
+                        Text(c.Id.ToString());
+                        TableNextColumn();
+                        Text(c.Name);
+                        TableNextColumn();
+                        TableSetBgColor(ImGuiTableBgTarget.CellBg, GetColor(c.Color ?? System.Drawing.Color.Transparent));
+                        Text(" ");
+                    }
+
+                    EndTable();
+                }
+
+                End();
+            }
+        }
+
 
         private void OnCursorMove_ImGui(Point cursorPosition, Point previousCursorPosition, bool isCursorDown)
         {
@@ -421,14 +512,14 @@ namespace MiMap.Viewer.DesktopGL.Components
             _cursorRegion[0] = _cursorBlock[0] >> 9;
             _cursorRegion[1] = _cursorBlock[2] >> 9;
 
-            var cursorBlockRegion = Map.GetRegion(new Point(_cursorRegion[0], _cursorRegion[1]));
-            if (cursorBlockRegion?.IsComplete ?? false)
+            var cursorBlockChunk = Map.GetChunk(new ChunkCoordinates(_cursorChunk[0], _cursorChunk[1]));
+            if (cursorBlockChunk != default)
             {
-                var cursorBlockChunk = cursorBlockRegion[_cursorChunk[0] % 32, _cursorChunk[1] % 32];
                 var x = _cursorBlock[0] % 16;
                 var z = _cursorBlock[2] % 16;
-                _cursorBlock[1] = (int)cursorBlockChunk.GetHeight(x, z);
-                _cursorBlockBiomeId = (int)cursorBlockChunk.GetBiome(x, z);
+                var idx = ((z & 0xF) << 4) + (x & 0xF);
+                _cursorBlock[1] = (int)cursorBlockChunk.Heights[idx];
+                _cursorBlockBiomeId = (int)cursorBlockChunk.Biomes[idx];
                 _cursorBlockBiome = Map.BiomeRegistry.GetBiome(_cursorBlockBiomeId);
             }
         }

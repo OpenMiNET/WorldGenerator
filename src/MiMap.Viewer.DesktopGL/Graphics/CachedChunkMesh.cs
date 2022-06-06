@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Utils.Vectors;
 
 namespace MiMap.Viewer.DesktopGL.Graphics
 {
@@ -12,6 +13,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
         
         public int X { get; }
         public int Z { get; }
+        public ChunkCoordinates ChunkCoordinates { get; }
         public Point Position { get; }
         public Texture2D Texture { get; private set; }
 
@@ -21,6 +23,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
         {
             X = chunk.X;
             Z = chunk.Z;
+            ChunkCoordinates = new ChunkCoordinates(X, Z);
             Position = new Point(X << 4, Z << 4);
             
             var t = new Texture2D(graphics, 1 << 4, 1 << 4);

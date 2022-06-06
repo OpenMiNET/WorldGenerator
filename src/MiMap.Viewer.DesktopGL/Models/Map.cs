@@ -5,8 +5,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using g3;
 using Microsoft.Xna.Framework;
+using MiMap.Viewer.DesktopGL.Graphics;
 using MiMap.Viewer.DesktopGL.Utilities;
+using MiMap.Viewer.Element.MiMapTiles;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using NLog;
@@ -19,210 +22,98 @@ namespace MiMap.Viewer.DesktopGL
         private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
         private readonly IWorldGenerator _worldGenerator;
-        public Dictionary<Point, MapRegion> Regions { get; }
-
+        public event EventHandler<ChunkMesh> ChunkAdded;
+        public Dictionary<ChunkCoordinates, ChunkMesh> Chunks { get; } = new Dictionary<ChunkCoordinates, ChunkMesh>();
+        public Dictionary<Point, MapRegion> Regions { get; } = new Dictionary<Point, MapRegion>();
         public event EventHandler<Point> RegionGenerated;
         public event EventHandler<Point> ChunkGenerated;
 
-        private Thread _thread;
-        private ConcurrentQueue<Point> _regionsToGenerate;
-        private AutoResetEvent _trigger;
-        private bool _running;
 
         public readonly BiomeRegistry BiomeRegistry = new BiomeRegistry();
+
+        private ConcurrentWorkItemQueue<ChunkCoordinates> _workItemQueue;        
+        private ConcurrentBag<ChunkMesh> _newChunks;
 
         public Map(IWorldGenerator worldGenerator)
         {
             _worldGenerator = worldGenerator;
-            Regions = new Dictionary<Point, MapRegion>();
-            _regionsToGenerate = new ConcurrentQueue<Point>();
-            _trigger = new AutoResetEvent(false);
-            _thread = new Thread(Run)
-            {
-                Name = "WorldGenerator",
-                IsBackground = false
-            };
-            _thread.Start();
-        }
-
-        public void Run()
-        {
-            _running = true;
-
-            while (_running)
-            {
-                if (_trigger.WaitOne(10000))
-                {
-                    while (_regionsToGenerate.TryPeek(out var r))
-                    {
-                        if (Regions.ContainsKey(r))
-                        {
-                            _regionsToGenerate.TryDequeue(out _);
-                            continue;
-                        }
-
-                        Log.Info($"Generating Region: {r.X:000}, {r.Y:000}");
-                        var sw = Stopwatch.StartNew();
-                        Regions[r] = new MapRegion(r.X, r.Y);
-                        _regionsToGenerate.TryDequeue(out _);
-                        var chunkGenTimes = new float[32 * 32];
-                        Parallel.For(0, 32 * 32, new ParallelOptions()
-                            {
-                                MaxDegreeOfParallelism = Environment.ProcessorCount / 2,
-                                TaskScheduler = TaskScheduler.Default
-                            },
-                            (i) =>
-                            {
-                                var cx = (int)Math.Floor(i / 32f);
-                                var cz = i % 32;
-                                var chunkPosition = new ChunkCoordinates((r.X << 5) + cx, (r.Y << 5) + cz);
-                                var csw = Stopwatch.StartNew();
-                                using var chunk = _worldGenerator.GenerateChunkColumn(chunkPosition);
-                                csw.Stop();
-                                var t1 = csw.ElapsedMilliseconds;
-                                csw.Restart();
-                                Regions[r][cx, cz] = ExtractChunkData(chunk);
-                                csw.Stop();
-                                chunkGenTimes[(cx * 32) + cz] = t1;
-                                Log.Debug($"Completed Chunk {chunkPosition.X:000}, {chunkPosition.Z:000} in {t1:N3} ms (generation: {t1:N3} ms, dataExtraction: {csw.ElapsedMilliseconds:N3} ms)");
-                                ChunkGenerated?.Invoke(this, new Point(chunkPosition.X, chunkPosition.Z));
-                            });
-                        sw.Stop();
-                        var ctMin = chunkGenTimes.Min();
-                        var ctMax = chunkGenTimes.Max();
-                        var ctAvg = chunkGenTimes.Average();
-                        Log.Info($"Generated Region: {r.X:000}, {r.Y:000} in {sw.ElapsedMilliseconds:N3} ms (ChunkGen: min = {ctMin:N3}, max = {ctMax:N3}, avg = {ctAvg:N3})");
-                        Regions[r].IsComplete = true;
-                        RegionGenerated?.Invoke(this, r);
-                    }
-                }
-            }
-        }
-
-        private void EnqueueRegion(Point regionCoords)
-        {
-            if (Regions.ContainsKey(regionCoords) || _regionsToGenerate.Contains(regionCoords))
-                return;
-
-            Log.Info($"Enqueue Region: {regionCoords.X:000}, {regionCoords.Y:000}");
-            _regionsToGenerate.Enqueue(regionCoords);
-            _trigger.Set();
-        }
-
-        private MapChunk ExtractChunkData(ChunkColumn chunk)
-        {
-            var mapChunk = new MapChunk(chunk.X, chunk.Z);
-            for (int x = 0; x < 16; x++)
-            for (int z = 0; z < 16; z++)
-            {
-                mapChunk.SetHeight(x, z, chunk.GetHeight(x, z));
-                mapChunk.SetBiome(x, z, chunk.GetBiome(x, z));
-            }
-
-            return mapChunk;
-        }
-
-        public MapRegion GetRegion(Point regionPosition)
-        {
-            if (Regions.TryGetValue(regionPosition, out var region))
-                return region;
-            return null;
-        }
-
-        public MapChunk GetChunk(Point chunkPosition)
-        {
-            var regionPosition = new Point(chunkPosition.X >> 5, chunkPosition.Y >> 5);
-            if (Regions.TryGetValue(regionPosition, out var region))
-                return region[chunkPosition.X % 32,chunkPosition.Y % 32];
-            return null;
-        }
-
-        public IEnumerable<MapRegion> GetRegions()
-        {
-            var v = Regions.Values.ToArray();
-            foreach (var region in v)
-            {
-                yield return region;
-            }
-        }
-
-        public IEnumerable<MapRegion> GetRegions(Rectangle blockBounds)
-        {
-            var regionMin = new Point((blockBounds.X >> 9) - 1, (blockBounds.Y >> 9) - 1);
-            var regionMax = new Point(((blockBounds.X + blockBounds.Width) >> 9) + 1, ((blockBounds.Y + blockBounds.Height) >> 9) + 1);
-
-            for (int x = regionMin.X; x <= regionMax.X; x++)
-            for (int z = regionMin.Y; z <= regionMax.Y; z++)
-            {
-                var p = new Point(x, z);
-                if (Regions.TryGetValue(p, out var region))
-                {
-                    yield return region;
-                }
-                else
-                {
-                    EnqueueRegion(p);
-                }
-            }
-        }
-
-        public void EnqueueChunks(Rectangle blockBounds)
-        {
-            _regionsToGenerate.Clear();
+            _workItemQueue = new ConcurrentWorkItemQueue<ChunkCoordinates>(GenerateChunk);
+            _newChunks = new ConcurrentBag<ChunkMesh>();
             
-            var regionMin = new Point(blockBounds.X >> 9, blockBounds.Y >> 9 );
-            var regionMax = new Point((blockBounds.X + blockBounds.Width) >> 9, (blockBounds.Y + blockBounds.Height) >> 9);
-            
-            foreach(var p in Spiral.FillRegionFromCenter(new Rectangle(regionMin - new Point(1,1), (regionMax - regionMin) + new Point(2,2))))
-            {
-                if (!Regions.ContainsKey(p))
-                {
-                    EnqueueRegion(p);
-                }
-            }
+            ChunkMeshBuilder.InitializeColorMap(BiomeRegistry);
         }
         
-        public IEnumerable<MapChunk> GetChunks(Rectangle blockBounds)
+        public void StartBackgroundGeneration()
         {
-            var regionMin = new Point((blockBounds.X >> 9), (blockBounds.Y >> 9) );
-            var regionMax = new Point(((blockBounds.X + blockBounds.Width) >> 9), ((blockBounds.Y + blockBounds.Height) >> 9));
+            _workItemQueue.Start();
+        }
+        
+        public void EnqueueChunk(ChunkCoordinates chunkCoords)
+        {
+            if (!_workItemQueue.TryEnqueue(chunkCoords))
+                return;
 
-            var chunkMin = new Point((blockBounds.X >> 4), (blockBounds.Y >> 4));
-            var chunkMax = new Point(((blockBounds.X + blockBounds.Width) >> 4), ((blockBounds.Y + blockBounds.Height) >> 4));
+            Log.Debug($"Enqueue Chunk: {chunkCoords.X:N2}, {chunkCoords.Z:N2}");
+        }
 
-            for (int rx = regionMin.X; rx <= regionMax.X; rx++)
-            for (int rz = regionMin.Y; rz <= regionMax.Y; rz++)
+        private void GenerateChunk(ChunkCoordinates chunkCoords)
+        {
+            Log.Debug($"Generating Chunk: {chunkCoords.X:N2}, {chunkCoords.Z:N2}");
+            var csw = Stopwatch.StartNew();
+            var chunkPosition = new ChunkCoordinates(chunkCoords.X, chunkCoords.Z);
+            using var chunk = _worldGenerator.GenerateChunkColumn(chunkPosition);
+            csw.Stop();
+            var t1 = csw.ElapsedMilliseconds;
+            csw.Restart();
+            var worldChunk = ExtractWorldChunk(chunkCoords, chunk);
+            _newChunks.Add(worldChunk);
+            csw.Stop();
+            Log.Debug($"Completed Chunk {chunkPosition.X:N2}, {chunkPosition.Z:N2} in {t1:N3} ms (generation: {t1:N3} ms, dataExtraction: {csw.ElapsedMilliseconds:N3} ms)");
+        }
+
+        private ChunkMesh ExtractWorldChunk(ChunkCoordinates coords, ChunkColumn chunkColumn)
+        {
+            var chunk = ChunkMeshBuilder.GenerateMesh(MiMapViewer.Instance.GraphicsDevice, chunkColumn);
+            return chunk;
+        }
+
+        public void GenerateMissingChunks(Rectangle bounds)
+        {
+            foreach (var chunkCoords in Spiral.FillRegionFromCenter(bounds))
             {
-                var p = new Point(rx, rz);
-                if (Regions.TryGetValue(p, out var region))
-                {
-                    for (int cx = 0; cx < 32; cx++)
-                    for (int cz = 0; cz < 32; cz++)
-                    {
-                        var x = (rx << 5) + cx;
-                        var z = (rz << 5) + cz;
-                        if (x >= chunkMin.X && x <= chunkMax.X &&
-                            z >= chunkMin.Y && z <= chunkMax.Y)
-                        {
-                            var chunk = region[cx, cz];
-                            if (chunk != default)
-                                yield return chunk;
-                        }
-                    }
-                }
-                else
-                {
-                    EnqueueRegion(p);
-                }
+                EnqueueChunk(new ChunkCoordinates(chunkCoords.X, chunkCoords.Y));
+            }
+        }
+
+        public void GenerateMissingChunks(ChunkCoordinates position, int radius)
+        {
+            var region = new Rectangle(position.X - radius, position.Z - radius, 2 * radius, 2 * radius);
+            GenerateMissingChunks(region);
+        }
+
+        public void Update()
+        {
+            var sw = Stopwatch.StartNew();
+            while (sw.ElapsedMilliseconds < 10 && _newChunks.TryTake(out var chunk))
+            {
+                Chunks.Add(chunk.ChunkCoordinates, chunk);
+                ChunkAdded?.Invoke(this, chunk);
             }
         }
 
         public void Dispose()
         {
-            _running = false;
-            _trigger.Set();
-            _thread.Join();
-            _trigger?.Dispose();
+            _workItemQueue.Dispose();
+        }
+
+        public ChunkMesh GetChunk(ChunkCoordinates chunkCoordinates)
+        {
+            if (Chunks.TryGetValue(chunkCoordinates, out var chunk))
+            {
+                return chunk;
+            }
+
+            return null;
         }
     }
 }

@@ -20,7 +20,6 @@ namespace MiMap.Viewer.Element.MiMapTiles
         public Vector2I TileSize { get; set; }
         public Vector2I ChunkSize { get; set; }
         public Dictionary<Vector2I, MiMapTilesWorldChunk> Chunks { get; set; } = new Dictionary<Vector2I, MiMapTilesWorldChunk>();
-        public Dictionary<int, TileAnimation> TileAnimations { get; set; } = new Dictionary<int, TileAnimation>();
 
         private ConcurrentWorkItemQueue<Vector2I> _workItemQueue;
         private ConcurrentBag<MiMapTilesWorldChunk> _newChunks;

@@ -16,6 +16,8 @@ namespace MiMap.Viewer.DesktopGL
         public static MiMapViewer Instance { get; private set; }
 
         private readonly GraphicsDeviceManager _graphics;
+
+        public GraphicsContext GraphicsContext { get; private set; }
         public ImGuiRenderer ImGuiRenderer { get; private set; }
         private Texture2D _xnaTexture;
         private IntPtr _imGuiTexture;
@@ -63,6 +65,7 @@ namespace MiMap.Viewer.DesktopGL
             UpdateViewport();
             Window.ClientSizeChanged += (s, o) => UpdateViewport();
 
+            GraphicsContext = GraphicsContext.CreateContext(GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.None, RasterizerState.CullNone, SamplerState.LinearClamp);
             SpriteBatchExtensions.Init(GraphicsDevice);
             
             ImGuiRenderer = new ImGuiRenderer(this);

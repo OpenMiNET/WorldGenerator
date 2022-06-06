@@ -15,7 +15,7 @@ namespace MiMap.Viewer.Element.MiMapTiles
                 ChunkData.Position * (ChunkData.World.TileSize * ChunkData.World.ChunkSize),
                 ChunkData.World.TileSize * ChunkData.World.ChunkSize);
 
-            TileBatch = new TileBatch2D(ChunkData.World.ChunkSize.X, ChunkData.World.ChunkSize.Y, ChunkData.World.TileSize.X, ChunkData.World.TileSize.Y, tilesheet, TileBatch2DWrapMode.None, ChunkData.World.TileAnimations);
+            TileBatch = new TileBatch2D(ChunkData.World.ChunkSize.X, ChunkData.World.ChunkSize.Y, ChunkData.World.TileSize.X, ChunkData.World.TileSize.Y, tilesheet, TileBatch2DWrapMode.None);
 
             TileBatch.BeginBuild();
 
