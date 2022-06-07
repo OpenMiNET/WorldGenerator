@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
 using ImGuiNET;
 using Microsoft.Xna.Framework.Graphics;
@@ -19,72 +20,26 @@ namespace MiMap.Viewer.DesktopGL.Components
         private int[] _cursorRegion = new int[2];
         private int _cursorBlockBiomeId;
 
+        private bool _imgui_styleeditor;
         private void DrawImGui_StyleEditor()
         {
-            if (Begin("ImGui Style Editor"))
+            if (_imgui_styleeditor && Begin("ImGui Style Editor", ref _imgui_styleeditor))
             {
-                if (BeginTableEx("styleeditor", 2))
-                {
-                    var io = GetIO();
-                    io.ConfigWindowsResizeFromEdges = true;
-                    var style = GetStyle();
-
-                    TableRowEditor(nameof(style.Alpha), ref style.Alpha);
-                    TableRowEditor(nameof(style.AntiAliasedFill), ref style.AntiAliasedFill);
-                    TableRowEditor(nameof(style.AntiAliasedLines), ref style.AntiAliasedLines);
-                    TableRowEditor(nameof(style.AntiAliasedLinesUseTex), ref style.AntiAliasedLinesUseTex);
-                    TableRowEditor(nameof(style.ButtonTextAlign), ref style.ButtonTextAlign);
-                    TableRowEditor(nameof(style.CellPadding), ref style.CellPadding);
-                    TableRowEditor(nameof(style.ChildBorderSize), ref style.ChildBorderSize);
-                    TableRowEditor(nameof(style.ChildRounding), ref style.ChildRounding);
-                    TableRowEditor(nameof(style.CircleTessellationMaxError), ref style.CircleTessellationMaxError);
-                    // TableRowEditor(nameof(style.ColorButtonPosition), ref style.ColorButtonPosition);
-                    // TableRowEditor(nameof(style.Colors), ref style.Colors);
-                    TableRowEditor(nameof(style.ColumnsMinSpacing), ref style.ColumnsMinSpacing);
-                    TableRowEditor(nameof(style.CurveTessellationTol), ref style.CurveTessellationTol);
-                    TableRowEditor(nameof(style.DisabledAlpha), ref style.DisabledAlpha);
-                    TableRowEditor(nameof(style.DisplaySafeAreaPadding), ref style.DisplaySafeAreaPadding);
-                    TableRowEditor(nameof(style.FrameBorderSize), ref style.FrameBorderSize);
-                    TableRowEditor(nameof(style.FramePadding), ref style.FramePadding);
-                    TableRowEditor(nameof(style.FrameRounding), ref style.FrameRounding);
-                    TableRowEditor(nameof(style.GrabMinSize), ref style.GrabMinSize);
-                    TableRowEditor(nameof(style.GrabRounding), ref style.GrabRounding);
-                    TableRowEditor(nameof(style.IndentSpacing), ref style.IndentSpacing);
-                    TableRowEditor(nameof(style.ItemInnerSpacing), ref style.ItemInnerSpacing);
-                    TableRowEditor(nameof(style.ItemSpacing), ref style.ItemSpacing);
-                    TableRowEditor(nameof(style.LogSliderDeadzone), ref style.LogSliderDeadzone);
-                    TableRowEditor(nameof(style.MouseCursorScale), ref style.MouseCursorScale);
-                    TableRowEditor(nameof(style.PopupBorderSize), ref style.PopupBorderSize);
-                    TableRowEditor(nameof(style.PopupRounding), ref style.PopupRounding);
-                    TableRowEditor(nameof(style.ScrollbarRounding), ref style.ScrollbarRounding);
-                    TableRowEditor(nameof(style.ScrollbarSize), ref style.ScrollbarSize);
-                    TableRowEditor(nameof(style.SelectableTextAlign), ref style.SelectableTextAlign);
-                    TableRowEditor(nameof(style.TabBorderSize), ref style.TabBorderSize);
-                    TableRowEditor(nameof(style.TabMinWidthForCloseButton), ref style.TabMinWidthForCloseButton);
-                    TableRowEditor(nameof(style.TabRounding), ref style.TabRounding);
-                    TableRowEditor(nameof(style.TouchExtraPadding), ref style.TouchExtraPadding);
-                    TableRowEditor(nameof(style.WindowBorderSize), ref style.WindowBorderSize);
-                    TableRowEditor(nameof(style.WindowPadding), ref style.WindowPadding);
-                    TableRowEditor(nameof(style.WindowRounding), ref style.WindowRounding);
-                    TableRowEditor(nameof(style.WindowMinSize), ref style.WindowMinSize);
-                    TableRowEditor(nameof(style.WindowTitleAlign), ref style.WindowTitleAlign);
-                    TableRowEditor(nameof(style.DisplayWindowPadding), ref style.DisplayWindowPadding);
-
-                    EndTable();
-                }
+                ShowStyleEditor();
 
                 End();
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool BeginTableEx(string name, int columns, ImGuiTableFlags flags = ImGuiTableFlags.Resizable | ImGuiTableFlags.BordersInner | ImGuiTableFlags.BordersOuter | ImGuiTableFlags.SizingFixedFit)
         {
             if (BeginTable(name, columns, flags))
             {
-                TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed);
+                TableSetupColumn(null, ImGuiTableColumnFlags.WidthFixed);
                 for (int i = 0; i < columns; i++)
                 {
-                    TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
+                    TableSetupColumn(null, ImGuiTableColumnFlags.WidthStretch);
                 }
 
                 return true;
@@ -93,71 +48,13 @@ namespace MiMap.Viewer.DesktopGL.Components
             return false;
         }
 
-        private void TableRowEditor(string label, ref string value)
-        {
-            TableNextRow();
-            TableNextColumn();
-            Text(label);
-
-            TableNextColumn();
-            InputText(null, ref value, 0);
-        }
-
-        private void TableRowEditor(string label, ref int value)
-        {
-            TableNextRow();
-            TableNextColumn();
-            Text(label);
-
-            TableNextColumn();
-            InputInt(null, ref value);
-        }
-
-        private void TableRowEditor(string label, ref float value)
-        {
-            TableNextRow();
-            TableNextColumn();
-            Text(label);
-
-            TableNextColumn();
-            DragFloat(null, ref value);
-        }
-
-        private void TableRowEditor(string label, ref bool value)
-        {
-            TableNextRow();
-            TableNextColumn();
-            Text(label);
-
-            TableNextColumn();
-            Checkbox(null, ref value);
-        }
-
-        private void TableRowEditor(string label, ref System.Numerics.Vector2 value)
-        {
-            TableNextRow();
-            TableNextColumn();
-            Text(label);
-
-            TableNextColumn();
-            DragFloat2(null, ref value);
-        }
-
-        private void TableRowEditor(string label, ref System.Numerics.Vector3 value)
-        {
-            TableNextRow();
-            TableNextColumn();
-            Text(label);
-
-            TableNextColumn();
-            DragFloat3(null, ref value);
-        }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void TableRowEx(string label, params Action[] columns)
         {
             TableNextRow();
             TableNextColumn();
-            Text(label);
+            //Text(label);
+            LabelText(label, null);
 
             for (int i = 0; i < columns.Length; i++)
             {
@@ -166,6 +63,7 @@ namespace MiMap.Viewer.DesktopGL.Components
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void TableRowEx(params Action[] columns)
         {
             TableNextRow();
@@ -195,6 +93,7 @@ namespace MiMap.Viewer.DesktopGL.Components
                 DrawImGui_Info();
                 DrawImGui_MapViewer();
                 DrawImGui_BiomeColors();
+                DrawImGui_StyleEditor();
             }
             catch (Exception ex)
             {
@@ -203,24 +102,55 @@ namespace MiMap.Viewer.DesktopGL.Components
         }
 
         private bool _wireframe;
+        private CullMode _cullMode;
         private void DrawImGui_MainMenu()
         {
             if (BeginMainMenuBar())
             {
                 if (BeginMenu("View"))
                 {
+                    if (MenuItem("Reset Camera", "r"))
+                    {
+                        Camera.ResetPosition();
+                    }
+                    
                     if (BeginMenu("Windows"))
                     {
-                        MenuItem("Info", null, ref _imgui_info);
-                        MenuItem("Map Viewer", null, ref _imgui_mapviewer);
-                        MenuItem("Biome Colours", null, ref _imgui_biomecolors);
+                        if (MenuItem("Info")) _imgui_info = !_imgui_info;
+                        if (MenuItem("Map Viewer")) _imgui_mapviewer = !_imgui_mapviewer;
+                        if (MenuItem("Biome Colours")) _imgui_biomecolors = !_imgui_biomecolors;
+                        Separator();
+                        if (MenuItem("GUI Style Editor")) _imgui_styleeditor = !_imgui_styleeditor;
 
                         EndMenu();
                     }
 
                     if(MenuItem("Wireframe", "w", ref _wireframe))
                     {
-                        EnableWireframe(_wireframe);
+                        UpdateRasterizerState();
+                    }
+
+                    if (BeginMenu("Cull Mode"))
+                    {
+                        if (MenuItem("None", null, (_cullMode == CullMode.None)))
+                        {
+                            _cullMode = CullMode.None;
+                            UpdateRasterizerState();
+                        }
+
+                        if (MenuItem("Clockwise", null, (_cullMode == CullMode.CullClockwiseFace)))
+                        {
+                            _cullMode = CullMode.CullClockwiseFace;
+                            UpdateRasterizerState();
+                        }
+
+                        if (MenuItem("Counter Clockwise", null, (_cullMode == CullMode.CullCounterClockwiseFace)))
+                        {
+                            _cullMode = CullMode.CullCounterClockwiseFace;
+                            UpdateRasterizerState();
+                        }
+                        
+                        EndMenu();
                     }
 
                     if (BeginMenu("Camera Mode"))
@@ -243,13 +173,13 @@ namespace MiMap.Viewer.DesktopGL.Components
             }
         }
 
-        private bool _imgui_mapviewer;
+        private bool _imgui_mapviewer = true;
 
         private void DrawImGui_MapViewer()
         {
-            if (Begin("Map Viewer", ref _imgui_mapviewer, ImGuiWindowFlags.DockNodeHost))
+            if (_imgui_mapviewer && Begin("Map Viewer", ref _imgui_mapviewer, ImGuiWindowFlags.DockNodeHost))
             {
-                if (BeginTable("mapviewtable", 2, ImGuiTableFlags.Resizable | ImGuiTableFlags.BordersInner | ImGuiTableFlags.SizingStretchProp))
+                if (BeginTableEx("mapviewtable", 2))
                 {
                     var bounds = MapBounds;
                     var boundsValues = new int[] { bounds.X, bounds.Y, bounds.Width, bounds.Height };
@@ -258,6 +188,11 @@ namespace MiMap.Viewer.DesktopGL.Components
                     Text("Map Bounds");
                     TableNextColumn();
                     InputInt4("##value", ref boundsValues[0], ImGuiInputTextFlags.ReadOnly);
+                    
+                    // TableRowEx("Map Bounds", () =>
+                    // {
+                    //     InputInt4("##value", ref boundsValues[0], ImGuiInputTextFlags.ReadOnly);
+                    // });
 
                     var worldBounds = Camera.VisibleWorldBounds;
                     var minX = worldBounds.X >> 4;
@@ -407,11 +342,11 @@ namespace MiMap.Viewer.DesktopGL.Components
             }
         }
 
-        private bool _imgui_info;
+        private bool _imgui_info = true;
 
         private void DrawImGui_Info()
         {
-            if (Begin("Info", ref _imgui_info))
+            if (_imgui_info && Begin("Info", ref _imgui_info))
             {
                 Text("At Cursor");
                 InputInt3("Block", ref _cursorBlock[0], ImGuiInputTextFlags.ReadOnly);
@@ -477,7 +412,7 @@ namespace MiMap.Viewer.DesktopGL.Components
 
         private void DrawImGui_BiomeColors()
         {
-            if (Begin("Biome Colors", ref _imgui_biomecolors))
+            if (_imgui_biomecolors && Begin("Biome Colors", ref _imgui_biomecolors))
             {
                 if (BeginTable("biomeclr", 3, ImGuiTableFlags.Resizable | ImGuiTableFlags.BordersInner | ImGuiTableFlags.SizingStretchProp))
                 {

@@ -27,7 +27,9 @@ namespace MiMap.Viewer.DesktopGL.Components
         private readonly Game _game;
         private Vector3 _position = new Vector3(0, 512, 0);
         private CameraViewMode _viewMode = CameraViewMode.Top;
+        private float _offsetDistance = 512f;
         private float _scale = 1f;
+        private Matrix _offsetMatrix = Matrix.Identity;
 
         public Vector3 Position
         {
@@ -37,6 +39,17 @@ namespace MiMap.Viewer.DesktopGL.Components
                 if(value == _position) return;
                 
                 _position = value;
+                UpdateTransforms();
+            }
+        }        
+        public float OffsetDistance
+        {
+            get => _offsetDistance;
+            set
+            {
+                if(value == _offsetDistance) return;
+                
+                _offsetDistance = value;
                 UpdateTransforms();
             }
         }
@@ -99,47 +112,51 @@ namespace MiMap.Viewer.DesktopGL.Components
 
         private void UpdateDirection()
         {
-            GetDirection(out var forward, out var up);
+            GetDirection(out var forward, out var up, out var matrix);
             Forward = forward;
             Up = up;
+            _offsetMatrix = matrix;
             UpdateTransforms();
         }
         
-        private void GetDirection(out Vector3 forward, out Vector3 up)
+        private void GetDirection(out Vector3 forward, out Vector3 up, out Matrix matrix)
         {
             switch (ViewMode)
             {
                 case CameraViewMode.Top:
                     forward = Vector3.Down;
                     up = Vector3.Backward;
+                    matrix = Matrix.CreateFromYawPitchRoll(0f, -MathHelper.PiOver2, 0f);
                     break;
                 case CameraViewMode.Isometric45:
-                    GetIsometricDirection(45.0f, out forward, out up);
+                    GetIsometricDirection(45.0f, out forward, out up, out matrix);
                     break;
                 case CameraViewMode.Isometric135:
-                    GetIsometricDirection(135.0f, out forward, out up);
+                    GetIsometricDirection(135.0f, out forward, out up, out matrix);
                     break;
                 case CameraViewMode.Isometric225:
-                    GetIsometricDirection(225.0f, out forward, out up);
+                    GetIsometricDirection(225.0f, out forward, out up, out matrix);
                     break;
                 case CameraViewMode.Isometric315:
-                    GetIsometricDirection(315.0f, out forward, out up);
+                    GetIsometricDirection(315.0f, out forward, out up, out matrix);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }    
         }
 
-        private void GetIsometricDirection(float angleInDegrees, out Vector3 forward, out Vector3 up)
+        public void ResetPosition()
+        {
+            Position = Vector3.Zero;
+        }
+
+        private void GetIsometricDirection(float angleInDegrees, out Vector3 forward, out Vector3 up, out Matrix matrix)
         {
             var a = MathHelper.ToRadians(angleInDegrees);
-            //var m = Matrix.CreateRotationY(a)
-            //    * Matrix.CreateRotationX(MathHelper.Pi / 6f);
-
-            var m = Matrix.CreateFromYawPitchRoll(MathHelper.ToRadians(angleInDegrees), MathHelper.Pi / 6f, 0f);
+            matrix = Matrix.CreateFromYawPitchRoll(a, MathHelper.Pi / 6f, 0f);
             
-            forward = Vector3.TransformNormal(Vector3.Backward, m);
-            up = Vector3.TransformNormal(Vector3.Up, m);
+            forward = Vector3.TransformNormal(Vector3.Backward, matrix);
+            up = Vector3.TransformNormal(Vector3.Up, matrix);
         } 
         
         private void UpdateTransforms()
@@ -148,14 +165,17 @@ namespace MiMap.Viewer.DesktopGL.Components
             var f = Forward;
             var u = Up;
             var s = Scale;
-            var b = (_game.Window.ClientBounds.Size.ToVector2() / _scale).ToPoint();
+            var b = _game.Window.ClientBounds;
+            var v = (b.Size.ToVector2() / s).ToPoint();
+            //
+            // var world = Matrix.CreateTranslation(-p)
+            //             * Matrix.CreateScale(s, s, s)
+            //             * Matrix.CreateTranslation(p * s);
 
-            var world = Matrix.CreateTranslation(-p)
-                        * Matrix.CreateScale(s, s, s)
-                        * Matrix.CreateTranslation(p * s);
+            var pOffset = (Forward * _offsetDistance);
             
-            View = Matrix.CreateLookAt(p, p + f, u);
-            Projection = Matrix.CreateOrthographic(b.X, b.Y, MinDepth, MaxDepth);
+            View = Matrix.CreateLookAt(p - pOffset, p, u);
+            Projection = Matrix.CreateOrthographic(v.X, v.Y, MinDepth, MaxDepth);
             BoundingFrustum = new BoundingFrustum(View * Projection);
             VisibleWorldBounds = CalculateVisibleWorldBounds();
         }

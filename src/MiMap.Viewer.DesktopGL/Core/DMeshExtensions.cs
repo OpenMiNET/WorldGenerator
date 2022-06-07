@@ -62,8 +62,7 @@ namespace MiMap.Viewer.DesktopGL.Core
 
             return new RawMesh<VertexPositionColor>(vertices, indices);
         }
-
-        public static void AppendCube(this DMesh3 mesh, Vector3i nz, int biome)
+        public static void AppendCube(this DMesh3 mesh, Vector3i nz, int biome, Func<Index3i, bool> checkNeighbor = null)
         {
             int[] vertices = new int[4];
             for (int fi = 0; fi < 6; ++fi)
@@ -73,6 +72,10 @@ namespace MiMap.Viewer.DesktopGL.Core
 
                 // checks dependent on neighbours
                 Index3i nbr = nz + gIndices.GridOffsets6[fi];
+                if (checkNeighbor?.Invoke(nbr) ?? true)
+                {
+                    continue;
+                }
 
                 int ni = gIndices.BoxFaceNormals[fi];
                 Vector3f n = (Vector3f)(Math.Sign(ni) * cube.Axis(Math.Abs(ni) - 1));
@@ -81,7 +84,6 @@ namespace MiMap.Viewer.DesktopGL.Core
                 vi.bHaveC = true;
                 vi.uv = new Vector2f(biome, 0);
                 vi.bHaveUV = true;
-
 
                 for (int j = 0; j < 4; ++j)
                 {
@@ -94,6 +96,22 @@ namespace MiMap.Viewer.DesktopGL.Core
                 mesh.AppendTriangle(t0, biome);
                 mesh.AppendTriangle(t1, biome);
             }
+        }
+        public static void AppendCube2(this MeshEditor meshEditor, Vector3i nz, int biome)
+        {
+            var c = new Colorf((biome & 0xFF) / 255f, ((biome >> 8) & 0xFF) / 255f, ((biome >> 16) & 0xFF) / 255f);
+            var uv = new Vector2f(biome, 0);
+            
+            TrivialBox3Generator trivialBox3Generator = new TrivialBox3Generator();
+            trivialBox3Generator.Box = new Box3d(new Frame3f(new Vector3f(nz.x, nz.y, nz.z)), Vector3d.One);
+            trivialBox3Generator.NoSharedVertices = false;
+            trivialBox3Generator.Generate();
+            DMesh3 dmesh3 = new DMesh3();
+            trivialBox3Generator.MakeMesh(dmesh3);
+            dmesh3.EnableTriangleGroups(biome);
+            dmesh3.EnableVertexColors(c);
+            dmesh3.EnableVertexUVs(uv);
+            meshEditor.AppendMesh((IMesh) dmesh3, meshEditor.Mesh.AllocateTriangleGroup());
         }
 
         public static RawMesh<VertexPositionColorTexture> ToXnaMesh_VertexPositionColorTexture(this DMesh3 d3)

@@ -86,18 +86,21 @@ namespace MiMap.Viewer.DesktopGL.Components
 
         private void EnableWireframe(bool enable)
         {
-            var cn = RasterizerState.CullNone;
+            _wireframe = enable;
+        }
+
+        private void UpdateRasterizerState()
+        {
             _rasterizerState = new RasterizerState()
             {
-                CullMode = CullMode.CullCounterClockwiseFace,
-                DepthBias = cn.DepthBias,
-                FillMode = enable ? FillMode.WireFrame : FillMode.Solid,
-                DepthClipEnable = cn.DepthClipEnable,
-                ScissorTestEnable = cn.ScissorTestEnable,
-                MultiSampleAntiAlias = cn.MultiSampleAntiAlias,
-                SlopeScaleDepthBias = cn.SlopeScaleDepthBias,
+                CullMode = _cullMode,
+                DepthBias = RasterizerState.CullNone.SlopeScaleDepthBias,
+                FillMode = _wireframe ? FillMode.WireFrame : FillMode.Solid,
+                DepthClipEnable = false,
+                ScissorTestEnable = false,
+                MultiSampleAntiAlias = RasterizerState.CullNone.MultiSampleAntiAlias,
+                SlopeScaleDepthBias = RasterizerState.CullNone.SlopeScaleDepthBias,
             };
-            
         }
         
         public override void Initialize()
@@ -111,13 +114,10 @@ namespace MiMap.Viewer.DesktopGL.Components
             _effect = new BasicEffect(GraphicsDevice)
             {
                 TextureEnabled = true,
-                AmbientLightColor = new Vector3(.75f,.75f,.75f),
-                LightingEnabled = true,
-                VertexColorEnabled = true
+                AmbientLightColor = new Vector3(1f,1f,1f),
+                VertexColorEnabled = true,
             };
-            _effect.DirectionalLight0.Direction = Vector3.Down;
-            _effect.DirectionalLight0.SpecularColor = new Vector3(1f,1f,1f);
-            _effect.DirectionalLight0.Enabled = true;
+            _effect.EnableDefaultLighting();
 
             InitializeTexture();
             
