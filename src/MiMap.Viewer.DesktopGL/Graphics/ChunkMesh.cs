@@ -167,10 +167,10 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     vi.n = -Vector3f.AxisX;
 
                     // @formatter:off
-                    vi.v = new Vector3d(x    , tHeight, z + 1); vertices[0] = mesh.AppendVertex(vi);
-                    vi.v = new Vector3d(x    ,  height, z + 1); vertices[1] = mesh.AppendVertex(vi);
-                    vi.v = new Vector3d(x    ,  height, z    ); vertices[2] = mesh.AppendVertex(vi);
-                    vi.v = new Vector3d(x    , tHeight, z    ); vertices[3] = mesh.AppendVertex(vi);
+                    vi.v = new Vector3d(x    , tHeight, z    ); vertices[0] = mesh.AppendVertex(vi);
+                    vi.v = new Vector3d(x    ,  height, z    ); vertices[1] = mesh.AppendVertex(vi);
+                    vi.v = new Vector3d(x    ,  height, z + 1); vertices[2] = mesh.AppendVertex(vi);
+                    vi.v = new Vector3d(x    , tHeight, z + 1); vertices[3] = mesh.AppendVertex(vi);
 
                     mesh.AppendTriangle(new Index3i(vertices[0], vertices[1], vertices[2]), biome);
                     mesh.AppendTriangle(new Index3i(vertices[0], vertices[2], vertices[3]), biome);
@@ -201,8 +201,8 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     vi.v = new Vector3d(x + 1,  height, z + 1); vertices[2] = mesh.AppendVertex(vi);
                     vi.v = new Vector3d(x + 1, tHeight, z + 1); vertices[3] = mesh.AppendVertex(vi);
 
-                    mesh.AppendTriangle(new Index3i(vertices[0], vertices[1], vertices[2]), biome);
-                    mesh.AppendTriangle(new Index3i(vertices[0], vertices[2], vertices[3]), biome);
+                    mesh.AppendTriangle(new Index3i(vertices[0], vertices[2], vertices[1]), biome);
+                    mesh.AppendTriangle(new Index3i(vertices[0], vertices[3], vertices[2]), biome);
                     // @formatter:on
                 }
             }
@@ -225,10 +225,10 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     vi.n = -Vector3f.AxisZ;
 
                     // @formatter:off
-                    vi.v = new Vector3d(x + 1, tHeight, z    ); vertices[0] = mesh.AppendVertex(vi);
-                    vi.v = new Vector3d(x + 1,  height, z    ); vertices[1] = mesh.AppendVertex(vi);
-                    vi.v = new Vector3d(x    ,  height, z    ); vertices[2] = mesh.AppendVertex(vi);
-                    vi.v = new Vector3d(x    , tHeight, z    ); vertices[3] = mesh.AppendVertex(vi);
+                    vi.v = new Vector3d(x    , tHeight, z    ); vertices[0] = mesh.AppendVertex(vi);
+                    vi.v = new Vector3d(x    ,  height, z    ); vertices[1] = mesh.AppendVertex(vi);
+                    vi.v = new Vector3d(x + 1,  height, z    ); vertices[2] = mesh.AppendVertex(vi);
+                    vi.v = new Vector3d(x + 1, tHeight, z    ); vertices[3] = mesh.AppendVertex(vi);
 
                     mesh.AppendTriangle(new Index3i(vertices[0], vertices[1], vertices[2]), biome);
                     mesh.AppendTriangle(new Index3i(vertices[0], vertices[2], vertices[3]), biome);
@@ -259,8 +259,8 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     vi.v = new Vector3d(x + 1,  height, z + 1); vertices[2] = mesh.AppendVertex(vi);
                     vi.v = new Vector3d(x + 1, tHeight, z + 1); vertices[3] = mesh.AppendVertex(vi);
 
-                    mesh.AppendTriangle(new Index3i(vertices[0], vertices[1], vertices[2]), biome);
-                    mesh.AppendTriangle(new Index3i(vertices[0], vertices[2], vertices[3]), biome);
+                    mesh.AppendTriangle(new Index3i(vertices[0], vertices[2], vertices[1]), biome);
+                    mesh.AppendTriangle(new Index3i(vertices[0], vertices[3], vertices[2]), biome);
                     // @formatter:on
                 }
             }

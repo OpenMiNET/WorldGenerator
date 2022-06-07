@@ -15,21 +15,24 @@
         <ApplicationIcon>Icon.ico</ApplicationIcon>
     </PropertyGroup>
     <ItemGroup>
-        <None Remove="Icon.ico" />
-        <None Remove="Icon.bmp" />
-        <EmbeddedResource Include="Icon.ico" />
-        <EmbeddedResource Include="Icon.bmp" />
+        <None Remove="Icon.ico"/>
+        <None Remove="Icon.bmp"/>
+        <EmbeddedResource Include="Icon.ico"/>
+        <EmbeddedResource Include="Icon.bmp"/>
         <None Update="NLog.config">
-          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
         <None Update="biomeColors.json">
-          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+    </ItemGroup>
+    <ItemGroup>
+        <MonoGameContentReference Include="Content\Content.mgcb"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\MiMap.Viewer.Core\MiMap.Viewer.Core.csproj" />
-        <ProjectReference Include="..\OpenAPI.WorldGenerator\OpenAPI.WorldGenerator.csproj" />
+        <ProjectReference Include="..\MiMap.Viewer.Core\MiMap.Viewer.Core.csproj"/>
+        <ProjectReference Include="..\OpenAPI.WorldGenerator\OpenAPI.WorldGenerator.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -43,16 +46,18 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Remove="**\*.xaml" />
+        <None Remove="**\*.xaml"/>
         <EmbeddedResource Include="**\*.xaml">
             <DependentUpon Condition="Exists('%(Filename).cs')">%(Filename).cs</DependentUpon>
         </EmbeddedResource>
     </ItemGroup>
 
-    <ItemGroup>    
-      <PackageReference Include="ImGui.NET" Version="1.87.3" />    
-      <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1641" />
-      <PackageReference Include="NLog" Version="5.0.0" />
+    <ItemGroup>
+        <PackageReference Include="ImGui.NET" Version="1.87.3"/>
+        <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1641"/>
+        <PackageReference Include="MonoGame.Framework.Content.Pipeline" Version="3.8.0.1641"/>
+        <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.0.1641"/>
+        <PackageReference Include="NLog" Version="5.0.0"/>
     </ItemGroup>
-    
+
 </Project>

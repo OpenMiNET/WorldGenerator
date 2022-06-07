@@ -38,7 +38,7 @@ namespace MiMap.Viewer.DesktopGL.Components
         private SpriteBatch _spriteBatch;
 
         public CameraComponent Camera { get; }
-        
+
         public Rectangle Bounds
         {
             get => _bounds;
@@ -102,32 +102,51 @@ namespace MiMap.Viewer.DesktopGL.Components
                 SlopeScaleDepthBias = RasterizerState.CullNone.SlopeScaleDepthBias,
             };
         }
-        
+
         public override void Initialize()
         {
             base.Initialize();
-            
+
             Camera.Initialize();
-            
+
             EnableWireframe(false);
-            
+
             _effect = new BasicEffect(GraphicsDevice)
             {
                 TextureEnabled = true,
-                AmbientLightColor = new Vector3(1f,1f,1f),
+                AmbientLightColor = new Vector3(1f, 1f, 1f),
                 VertexColorEnabled = true,
             };
             _effect.EnableDefaultLighting();
 
             InitializeTexture();
-            
+
             Game.GraphicsDevice.DeviceReset += (s, o) => UpdateBounds();
             Game.Activated += (s, o) => UpdateBounds();
             Game.Window.ClientSizeChanged += (s, o) => UpdateBounds();
-            
+
             UpdateBounds();
 
             _map.StartBackgroundGeneration();
+        }
+
+        protected override void LoadContent()
+        {
+            base.LoadContent();
+            _gizmoModel = Game.Content.Load<Model>("Gizmos");
+            foreach (var modelMesh in _gizmoModel.Meshes)
+            {
+                foreach (var modelMeshEffect in modelMesh.Effects)
+                {
+                    if (modelMeshEffect is BasicEffect basicEffect)
+                    {
+                        basicEffect.Alpha = 1.0f;
+                        basicEffect.VertexColorEnabled = true;
+                        basicEffect.TextureEnabled = false;
+                        basicEffect.EnableDefaultLighting();
+                    }
+                }
+            }
         }
 
         private double _dt;
@@ -154,6 +173,8 @@ namespace MiMap.Viewer.DesktopGL.Components
                 DrawMap(gameTime);
             }
 
+            DrawGizmo(gameTime);
+
             using (GraphicsContext.CreateContext(GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.None, RasterizerState.CullNone, SamplerState.LinearClamp))
             {
                 _gui.BeforeLayout(gameTime);
@@ -164,12 +185,36 @@ namespace MiMap.Viewer.DesktopGL.Components
             }
         }
 
+        private Model _gizmoModel;
+        private Viewport _gizmoViewport;
+
+        private void DrawGizmo(GameTime gameTime)
+        {
+            if (_gizmoModel != null)
+            {
+                _gizmoViewport = new Viewport(0, 0, 200, 200, 0f, 25f);
+                
+                using (var cxt = GraphicsContext.CreateContext(GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.Default, RasterizerState.CullNone, SamplerState.LinearWrap))
+                {
+                    cxt.Viewport = _gizmoViewport;
+
+                    _gizmoModel.Draw(Matrix.Identity 
+                                     * Matrix.CreateTranslation(Vector3.Zero)
+                                     * Matrix.CreateScale(1f)
+                                     * Camera.RotationMatrix, 
+                        Matrix.CreateLookAt(Vector3.Backward, Vector3.Zero, Camera.Up), 
+                        Matrix.CreateOrthographicOffCenter(-1, 1, -1, 1, _gizmoViewport.MinDepth, _gizmoViewport.MaxDepth));
+                }
+            }
+        }
+
         private void DrawMap(GameTime gameTime)
         {
             DrawMap_Region(gameTime);
         }
 
         private RasterizerState _rasterizerState;
+
         private void InitializeTexture()
         {
             var biomes = _map.BiomeRegistry.GetBiomes();
@@ -194,18 +239,18 @@ namespace MiMap.Viewer.DesktopGL.Components
             _texture = texture;
             _effect.Texture = texture;
         }
-        
+
         private void DrawMap_Region(GameTime gameTime)
         {
-            using (var cxt = GraphicsContext.CreateContext(GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.DepthRead, _rasterizerState, SamplerState.PointClamp))
+            using (var cxt = GraphicsContext.CreateContext(GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.DepthRead, _rasterizerState, SamplerState.AnisotropicClamp))
             {
                 _effect.Projection = Camera.Projection;
                 _effect.View = Camera.View;
-                
+
                 foreach (var chunk in Map.Chunks.Values)
                 {
                     _effect.World = chunk.World;
-                    
+
                     foreach (var pass in _effect.CurrentTechnique.Passes)
                     {
                         pass.Apply();
@@ -321,9 +366,9 @@ namespace MiMap.Viewer.DesktopGL.Components
             var worldBounds = Camera.VisibleWorldBounds;
             var minX = worldBounds.X >> 4;
             var minY = worldBounds.Y >> 4;
-            var maxX = (worldBounds.X + worldBounds.Width) >> 4; 
+            var maxX = (worldBounds.X + worldBounds.Width) >> 4;
             var maxY = (worldBounds.Y + worldBounds.Height) >> 4;
-            var chunkBounds = new Rectangle(minX, minY, maxX-minX, maxY-minY);
+            var chunkBounds = new Rectangle(minX, minY, maxX - minX, maxY - minY);
             Map.GenerateMissingChunks(chunkBounds);
         }
 
@@ -340,9 +385,9 @@ namespace MiMap.Viewer.DesktopGL.Components
             {
                 var oldPos = Camera.Unproject(previousCursorPosition);
                 var newPos = Camera.Unproject(cursorPosition);
-                
+
                 var delta = oldPos - newPos;
-                
+
                 Camera.MoveLocal(delta);
             }
         }

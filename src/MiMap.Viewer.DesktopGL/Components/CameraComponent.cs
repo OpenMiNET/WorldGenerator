@@ -29,7 +29,7 @@ namespace MiMap.Viewer.DesktopGL.Components
         private CameraViewMode _viewMode = CameraViewMode.Top;
         private float _offsetDistance = 512f;
         private float _scale = 1f;
-        private Matrix _offsetMatrix = Matrix.Identity;
+        private Matrix _rotationMatrix = Matrix.Identity;
 
         public Vector3 Position
         {
@@ -84,6 +84,10 @@ namespace MiMap.Viewer.DesktopGL.Components
 
         public Matrix View { get; private set; }
         public Matrix Projection { get; private set; }
+        public Matrix RotationMatrix
+        {
+            get => _rotationMatrix;
+        }
         
         public Rectangle VisibleWorldBounds { get; private set; }
         public BoundingFrustum BoundingFrustum { get; private set; }
@@ -115,7 +119,7 @@ namespace MiMap.Viewer.DesktopGL.Components
             GetDirection(out var forward, out var up, out var matrix);
             Forward = forward;
             Up = up;
-            _offsetMatrix = matrix;
+            _rotationMatrix = matrix;
             UpdateTransforms();
         }
         

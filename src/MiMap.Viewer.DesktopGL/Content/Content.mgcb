@@ -29,6 +29,6 @@
 /processorParam:RotationZ=0
 /processorParam:Scale=1
 /processorParam:SwapWindingOrder=False
-/processorParam:TextureFormat=Color
+/processorParam:TextureFormat=Compressed
 /build:Gizmos.fbx
 
