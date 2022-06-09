@@ -13,6 +13,12 @@
 
 #---------------------------------- Content ---------------------------------#
 
+#begin Effects/PostProcess/EdgeFilter.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/PostProcess/EdgeFilter.fx
+
 #begin Gizmos.fbx
 /importer:FbxImporter
 /processor:ModelProcessor

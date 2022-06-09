@@ -24,7 +24,6 @@ namespace MiMap.Viewer.DesktopGL
 
         public IWorldGenerator WorldGenerator { get; private set; }
         public Map Map { get; private set; }
-        public IRegionMeshManager RegionMeshManager { get; private set; }
         private GuiMapViewer _mapViewer;
 
         public MiMapViewer() : base()
@@ -71,7 +70,6 @@ namespace MiMap.Viewer.DesktopGL
             ImGuiRenderer = new ImGuiRenderer(this);
             ImGuiRenderer.RebuildFontAtlas();
             
-            RegionMeshManager = new RegionMeshManager(GraphicsDevice);
             _mapViewer = new GuiMapViewer(this, Map);
             _mapViewer.Initialize();
             Components.Add(_mapViewer);
@@ -155,7 +153,6 @@ namespace MiMap.Viewer.DesktopGL
         {
             base.Dispose(disposing);
             _mapViewer?.Dispose();
-            RegionMeshManager?.Dispose();
             Map?.Dispose();
         }
 

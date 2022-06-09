@@ -31,6 +31,7 @@ namespace MiMap.Viewer.DesktopGL.Components
         private float _scale = 1f;
         private Matrix _rotationMatrix = Matrix.Identity;
 
+        public Viewport Viewport => _game.GraphicsDevice.Viewport;
         public Vector3 Position
         {
             get => _position;
@@ -83,6 +84,7 @@ namespace MiMap.Viewer.DesktopGL.Components
         }
 
         public Matrix View { get; private set; }
+        public Matrix InverseView { get; private set; }
         public Matrix Projection { get; private set; }
         public Matrix RotationMatrix
         {
@@ -179,6 +181,7 @@ namespace MiMap.Viewer.DesktopGL.Components
             var pOffset = (Forward * _offsetDistance);
             
             View = Matrix.CreateLookAt(p - pOffset, p, u);
+            InverseView = Matrix.Invert(View);
             Projection = Matrix.CreateOrthographic(v.X, v.Y, MinDepth, MaxDepth);
             BoundingFrustum = new BoundingFrustum(View * Projection);
             VisibleWorldBounds = CalculateVisibleWorldBounds();

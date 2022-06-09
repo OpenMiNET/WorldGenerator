@@ -5,6 +5,8 @@ namespace MiMap.Viewer.Element.MiMapTiles
         public event EventHandler<T> ItemCompleted;
         public event EventHandler<T> ItemStarted;
 
+        public bool TrackCompletedTasks { get; }
+
         private readonly int _threadCount;
         private readonly Action<T> _processWorkItem;
         private object _chunksSync = new object();
@@ -20,8 +22,14 @@ namespace MiMap.Viewer.Element.MiMapTiles
         {
         }
 
-        public ConcurrentWorkItemQueue(int threadCount, Action<T> processWorkItem)
+        public ConcurrentWorkItemQueue(int threadCount, Action<T> processWorkItem) : this(processWorkItem, threadCount, false)
         {
+        }
+
+        public ConcurrentWorkItemQueue(Action<T> processWorkItem, int threadCount = -1, bool trackCompletedTasks = false)
+        {
+            threadCount = threadCount > 0 ? threadCount : Environment.ProcessorCount;
+            TrackCompletedTasks = trackCompletedTasks;
             _threadCount = threadCount;
             _processWorkItem = processWorkItem;
             _pending = new Queue<T>();
@@ -67,7 +75,10 @@ namespace MiMap.Viewer.Element.MiMapTiles
         {
             lock (_chunksSync)
             {
-                if (_pending.Contains(item) || _inProgress.Contains(item) || _completed.Contains(item))
+                if (_pending.Contains(item) || _inProgress.Contains(item))
+                    return false;
+
+                if (TrackCompletedTasks && _completed.Contains(item))
                     return false;
 
                 _pending.Enqueue(item);
@@ -101,7 +112,8 @@ namespace MiMap.Viewer.Element.MiMapTiles
             lock (_chunksSync)
             {
                 _inProgress.Remove(item);
-                _completed.Add(item);
+                if (TrackCompletedTasks)
+                    _completed.Add(item);
             }
         }
 

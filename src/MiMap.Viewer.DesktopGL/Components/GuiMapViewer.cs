@@ -16,6 +16,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MiMap.Viewer.DesktopGL.Core;
 using MiMap.Viewer.DesktopGL.Graphics;
+using MiMap.Viewer.DesktopGL.Graphics.Effects;
 using NLog;
 using OpenAPI.WorldGenerator.Generators.Biomes;
 using OpenAPI.WorldGenerator.Utils;
@@ -24,13 +25,15 @@ namespace MiMap.Viewer.DesktopGL.Components
 {
     public partial class GuiMapViewer : DrawableGameComponent
     {
+        internal static GuiMapViewer Instance { get; private set; }
+
         private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
         private float _scale = 0.5f;
         private bool _chunksDirty = false;
         private Map _map;
-        private IRegionMeshManager _regionMeshManager;
         private BasicEffect _effect;
+        private EdgeFilter _edgeFilter;
         private ImGuiRenderer _gui;
         private Rectangle _bounds;
         private MouseState _mouseState;
@@ -39,6 +42,8 @@ namespace MiMap.Viewer.DesktopGL.Components
 
         public CameraComponent Camera { get; }
 
+        public float ZoomSensitivity { get; set; } = 0.05f;
+        
         public Rectangle Bounds
         {
             get => _bounds;
@@ -60,26 +65,14 @@ namespace MiMap.Viewer.DesktopGL.Components
             get => _map;
             set
             {
-                if (_map != default)
-                {
-                    _map.RegionGenerated -= OnRegionGenerated;
-                    _map.ChunkGenerated -= OnChunkGenerated;
-                }
-
                 _map = value;
-
-                if (_map != default)
-                {
-                    _map.RegionGenerated += OnRegionGenerated;
-                    _map.ChunkGenerated += OnChunkGenerated;
-                }
             }
         }
 
         public GuiMapViewer(MiMapViewer game, Map map) : base(game)
         {
+            Instance = this;
             Map = map;
-            _regionMeshManager = game.RegionMeshManager;
             _gui = game.ImGuiRenderer;
             Camera = new CameraComponent(game);
         }
@@ -118,6 +111,11 @@ namespace MiMap.Viewer.DesktopGL.Components
                 VertexColorEnabled = true,
             };
             _effect.EnableDefaultLighting();
+            _edgeFilter = new EdgeFilter(Game.Content)
+            {
+                SilhouetteColor = new Vector4(0, 0, 0, 1),
+                CreaseColor = new Vector4(0, 0, 0, 1)
+            };
 
             InitializeTexture();
 
@@ -127,6 +125,7 @@ namespace MiMap.Viewer.DesktopGL.Components
 
             UpdateBounds();
 
+            _map.Initialize(GraphicsDevice);
             _map.StartBackgroundGeneration();
         }
 
@@ -154,7 +153,7 @@ namespace MiMap.Viewer.DesktopGL.Components
         public override void Update(GameTime gameTime)
         {
             UpdateBounds();
-            UpdateMouseInput();
+            UpdateMouseInput(gameTime);
 
             if (Map == default) return;
 
@@ -192,17 +191,18 @@ namespace MiMap.Viewer.DesktopGL.Components
         {
             if (_gizmoModel != null)
             {
-                _gizmoViewport = new Viewport(0, 0, 200, 200, 0f, 25f);
-                
+                var cameraViewport = Camera.Viewport;
+                _gizmoViewport = new Viewport(cameraViewport.Bounds.Right - 225, 25, 200, 200, 0f, 5f);
+
                 using (var cxt = GraphicsContext.CreateContext(GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.Default, RasterizerState.CullNone, SamplerState.LinearWrap))
                 {
                     cxt.Viewport = _gizmoViewport;
 
-                    _gizmoModel.Draw(Matrix.Identity 
+                    _gizmoModel.Draw(Matrix.Identity
                                      * Matrix.CreateTranslation(Vector3.Zero)
                                      * Matrix.CreateScale(1f)
-                                     * Camera.RotationMatrix, 
-                        Matrix.CreateLookAt(Vector3.Backward, Vector3.Zero, Camera.Up), 
+                                     * Camera.RotationMatrix,
+                        Matrix.CreateLookAt(Vector3.Backward, Vector3.Zero, Camera.Up),
                         Matrix.CreateOrthographicOffCenter(-1, 1, -1, 1, _gizmoViewport.MinDepth, _gizmoViewport.MaxDepth));
                 }
             }
@@ -242,11 +242,11 @@ namespace MiMap.Viewer.DesktopGL.Components
 
         private void DrawMap_Region(GameTime gameTime)
         {
-            using (var cxt = GraphicsContext.CreateContext(GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.DepthRead, _rasterizerState, SamplerState.AnisotropicClamp))
+            using (var cxt = GraphicsContext.CreateContext(GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.DepthRead, _rasterizerState, SamplerState.LinearWrap))
             {
                 _effect.Projection = Camera.Projection;
                 _effect.View = Camera.View;
-
+                
                 foreach (var chunk in Map.Chunks.Values)
                 {
                     _effect.World = chunk.World;
@@ -255,21 +255,11 @@ namespace MiMap.Viewer.DesktopGL.Components
                     {
                         pass.Apply();
 
-                        chunk.Draw();
+                        chunk.Draw(GraphicsDevice);
+                        //_edgeFilter.Apply(Camera);
                     }
                 }
             }
-
-            // _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, _spriteBatchEffect, Transform);
-            //
-            // _spriteBatch.DrawRectangle(new Rectangle(_cursorBlock[0], _cursorBlock[2], 1, 1), Color.White);
-            // _spriteBatch.DrawRectangle(new Rectangle(_cursorChunk[0] << 4, _cursorChunk[1] << 4, 16, 16), Color.Yellow);
-            // _spriteBatch.DrawRectangle(new Rectangle(_cursorRegion[0] << 9, _cursorRegion[1] << 9, 512, 512), Color.PaleGreen);
-            //
-            // _spriteBatch.DrawLine(1f, new Vector2(_mapBounds.X, _cursorBlock[2]), new Vector2(_mapBounds.X + _mapBounds.Width, _cursorBlock[2]), Color.DarkSlateGray * 0.65f);
-            // _spriteBatch.DrawLine(1f, new Vector2(_cursorBlock[0], _mapBounds.Y), new Vector2(_cursorBlock[0], _mapBounds.Y + _mapBounds.Height), Color.DarkSlateGray * 0.65f);
-            //
-            // _spriteBatch.End();
         }
 
         #endregion
@@ -282,7 +272,6 @@ namespace MiMap.Viewer.DesktopGL.Components
             if (clientBounds != _previousClientBounds)
             {
                 Bounds = new Rectangle(Point.Zero, Game.Window.ClientBounds.Size);
-                RecalculateMapBounds();
             }
         }
 
@@ -302,34 +291,11 @@ namespace MiMap.Viewer.DesktopGL.Components
                 //_effect.Projection = Matrix.CreateOrthographicOffCenter(0, screenBounds.Width, screenBounds.Height, 0, 0f, 1000f);
             }
         }
-
-        private void OnRegionGenerated(object sender, Point regionPosition)
-        {
-            //_chunksDirty = true;
-            // var region = Map.GetRegion(regionPosition);
-            // if (region != null)
-            // {
-            //     _regions.Add(_regionMeshManager.CacheRegion(region));
-            //
-            //     Log.Info($"Region generated: {regionPosition.X:000}, {regionPosition.Y:000}");
-            // }
-        }
-
-        private void OnChunkGenerated(object sender, Point chunkPosition)
-        {
-            // _chunksDirty = true;
-            // var chunk = Map.GetChunk(chunkPosition);
-            // if (chunk != null)
-            // {
-            //     // _pendingChunks.Enqueue(chunk);
-            //
-            //     Log.Debug($"Chunk generated: {chunkPosition.X:000}, {chunkPosition.Y:000}");
-            // }
-        }
+        
 
         #region Mouse Events
 
-        private void UpdateMouseInput()
+        private void UpdateMouseInput(GameTime gameTime)
         {
             if (ImGui.GetIO().WantCaptureMouse)
                 return;
@@ -339,6 +305,12 @@ namespace MiMap.Viewer.DesktopGL.Components
             if (_mouseState.LeftButton == ButtonState.Pressed && newState.LeftButton == ButtonState.Released)
             {
                 OnCursorClicked();
+            }
+
+            var vScrollDelta = newState.ScrollWheelValue - _mouseState.ScrollWheelValue;
+            if (Math.Abs(vScrollDelta) > 0.01)
+            {
+                Camera.Scale += (float)(vScrollDelta * ZoomSensitivity);
             }
 
             if (_mouseState.Position != newState.Position)
@@ -360,6 +332,7 @@ namespace MiMap.Viewer.DesktopGL.Components
 
             _mouseState = newState;
         }
+
 
         private void OnCursorClicked()
         {
