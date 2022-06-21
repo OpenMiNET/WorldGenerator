@@ -21,7 +21,7 @@ namespace MiMap.Viewer.DesktopGL.Components
     {
         public const float MinScale = 0.25f;
         public const float MaxScale = 16f;
-        public const float MinDepth = -1000f;
+        public const float MinDepth = 0f;
         public const float MaxDepth = 1000f;
 
         private readonly Game _game;
@@ -178,11 +178,9 @@ namespace MiMap.Viewer.DesktopGL.Components
             var b = _game.GraphicsDevice.Viewport.Bounds;
             var v = (b.Size.ToVector2() / _scale);
 
-            var pOffset = (Forward * _offsetDistance);
-
-            View = Matrix.CreateLookAt(p - pOffset, p, u);
+            View = Matrix.CreateLookAt(p, p + Forward, Vector3.Up);
             InverseView = Matrix.Invert(View);
-            Projection = Matrix.CreateOrthographicOffCenter(-v.X, v.X, -v.Y, v.Y, MinDepth, MaxDepth);// Matrix.CreateOrthographic(v.X, v.Y, MinDepth, MaxDepth);
+            Projection = Matrix.CreateOrthographic(v.X, v.Y, -v.Y, v.Y);
             
             BoundingFrustum = new BoundingFrustum(View * Projection);
             VisibleWorldBounds = CalculateVisibleWorldBounds();

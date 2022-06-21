@@ -390,35 +390,9 @@ namespace MiMap.Viewer.DesktopGL.Components
             _mouseState = newState;
         }
 
-        private SemaphoreSlim _generateSemaphoreSlim = new SemaphoreSlim(1);
+
         private void Generate()
         {
-            if (!_generateSemaphoreSlim.Wait(0))
-                return;
-            
-            new Thread(() =>
-            {
-                try
-                {
-                    var worldBounds = Camera.VisibleWorldBounds;
-                    var minX = worldBounds.X >> 4;
-                    var minY = worldBounds.Y >> 4;
-                    var maxX = (worldBounds.X + worldBounds.Width) >> 4;
-                    var maxY = (worldBounds.Y + worldBounds.Height) >> 4;
-                    var chunkBounds = new Rectangle(minX, minY, maxX - minX, maxY - minY);
-                    Map.GenerateMissingChunks(chunkBounds);
-                }
-                finally
-                {
-                    _generateSemaphoreSlim.Release();
-                }
-            }).Start();
-        }
-
-        private void OnCursorClicked()
-        {
-            if (!_autoGenerate) return;
-            
             var worldBounds = Camera.VisibleWorldBounds;
             var minX = worldBounds.X >> 4;
             var minY = worldBounds.Y >> 4;
@@ -426,6 +400,13 @@ namespace MiMap.Viewer.DesktopGL.Components
             var maxY = (worldBounds.Y + worldBounds.Height) >> 4;
             var chunkBounds = new Rectangle(minX, minY, maxX - minX, maxY - minY);
             Map.GenerateMissingChunks(chunkBounds);
+        }
+
+        private void OnCursorClicked()
+        {
+            if (!_autoGenerate) return;
+
+            Generate();
         }
 
         private Point Unproject(Point cursor)

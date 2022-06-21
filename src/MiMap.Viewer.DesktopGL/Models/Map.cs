@@ -38,17 +38,17 @@ namespace MiMap.Viewer.DesktopGL
         private ConcurrentWorkItemQueue<ChunkCoordinates> _workItemQueue;        
         private ConcurrentBag<ChunkMesh> _newChunks;
         
-        private ConcurrentWorkItemQueue<ChunkMesh> _remeshChunkQueue;
+    //    private ConcurrentWorkItemQueue<ChunkMesh> _remeshChunkQueue;
         private ConcurrentBag<ChunkMesh> _updatedChunks;
 
         public Map(IWorldGenerator worldGenerator)
         {
             _worldGenerator = worldGenerator;
             
-            _workItemQueue = new ConcurrentWorkItemQueue<ChunkCoordinates>(GenerateChunk, threadCount: Environment.ProcessorCount -1, trackCompletedTasks: true);
+            _workItemQueue = new ConcurrentWorkItemQueue<ChunkCoordinates>(GenerateChunk, threadCount: Environment.ProcessorCount, trackCompletedTasks: true);
             _newChunks = new ConcurrentBag<ChunkMesh>();
             
-            _remeshChunkQueue = new ConcurrentWorkItemQueue<ChunkMesh>(RemeshChunk, threadCount: 1);
+          //  _remeshChunkQueue = new ConcurrentWorkItemQueue<ChunkMesh>(RemeshChunk, threadCount: Environment.ProcessorCount / 2);
             _updatedChunks = new ConcurrentBag<ChunkMesh>();
             
             ChunkMeshBuilder.InitializeColorMap(BiomeRegistry);
@@ -69,12 +69,14 @@ namespace MiMap.Viewer.DesktopGL
         
         public void StartBackgroundGeneration()
         {
-            _workItemQueue.Start();
-            _remeshChunkQueue.Start();
+         //   _workItemQueue.Start();
+         //   _remeshChunkQueue.Start();
         }
         
         public void EnqueueChunk(ChunkCoordinates chunkCoords)
         {
+            if (Chunks.ContainsKey(chunkCoords))
+                return;
             if (!_workItemQueue.TryEnqueue(chunkCoords))
                 return;
 
@@ -82,10 +84,10 @@ namespace MiMap.Viewer.DesktopGL
         }
         public void EnqueueRemeshChunk(ChunkMesh chunk)
         {
-            if (!_remeshChunkQueue.TryEnqueue(chunk))
-                return;
+          //  if (!_remeshChunkQueue.TryEnqueue(chunk))
+           //     return;
 
-            Log.Debug($"Enqueue Remesh for Chunk: {chunk.X:N2}, {chunk.Z:N2}");
+         //   Log.Debug($"Enqueue Remesh for Chunk: {chunk.X:N2}, {chunk.Z:N2}");
         }
         private void GenerateChunk(ChunkCoordinates chunkCoords)
         {
@@ -98,6 +100,9 @@ namespace MiMap.Viewer.DesktopGL
             {
                 csw.Stop(); t1 = csw.ElapsedMilliseconds; csw.Restart();
                 ExtractMapChunk(ref mapChunk, chunk);
+                
+                foreach(var section in chunk)
+                    section?.Dispose();
             }
 
             ChunkMeshBuilder.GenerateMesh(this, ref mapChunk);
@@ -116,13 +121,32 @@ namespace MiMap.Viewer.DesktopGL
             }
             
         }
-
+        
+        private SemaphoreSlim _generateSemaphoreSlim = new SemaphoreSlim(1);
         public void GenerateMissingChunks(Rectangle bounds)
         {
-            foreach (var chunkCoords in Spiral.FillRegionFromCenter(bounds))
+            if (!_generateSemaphoreSlim.Wait(0))
+                return;
+            
+            new Thread(() =>
             {
-                EnqueueChunk(new ChunkCoordinates(chunkCoords.X, chunkCoords.Y));
-            }
+                try
+                {
+                    foreach (var chunkCoords in Spiral.FillRegionFromCenter(bounds))
+                    {
+                        var cc = new ChunkCoordinates(chunkCoords.X, chunkCoords.Y);
+
+                        if (Chunks.TryGetValue(cc, out _))
+                            continue;
+
+                        EnqueueChunk(cc);
+                    }
+                }
+                finally
+                {
+                    _generateSemaphoreSlim.Release();
+                }
+            }).Start();
         }
 
         public void GenerateMissingChunks(ChunkCoordinates position, int radius)
@@ -157,7 +181,6 @@ namespace MiMap.Viewer.DesktopGL
             _updatedChunks.Add(chunk);
         }
 
-        private List<ChunkMesh> _addedchunks = new List<ChunkMesh>();
         public void Update()
         {
             if (_graphicsDevice != null)
@@ -165,21 +188,23 @@ namespace MiMap.Viewer.DesktopGL
                 var sw = Stopwatch.StartNew();
                 while (sw.ElapsedMilliseconds < 8 && _newChunks.TryTake(out var chunk))
                 {
-                    _addedchunks.Add(chunk);
-                    chunk.Reload(_graphicsDevice);
-                    Chunks.Add(chunk.ChunkCoordinates, chunk);
+                    //_addedchunks.Add(chunk);
+                    if (Chunks.TryAdd(chunk.ChunkCoordinates, chunk))
+                    {
+                        chunk.Reload(_graphicsDevice);
+                        //RemeshNeighborChunks(chunk.ChunkCoordinates);
+                        ChunkMeshAdded?.Invoke(this, chunk);
+                    }
                 }
-
-                foreach (var chunk in _addedchunks)
-                {
-                    RemeshNeighborChunks(chunk.ChunkCoordinates);
-                    ChunkMeshAdded?.Invoke(this, chunk);
-                }
-                _addedchunks.Clear();
-
+                
+sw.Restart();
                 while (sw.ElapsedMilliseconds < 8 && _updatedChunks.TryTake(out var chunk))
                 {
                     chunk.Reload(_graphicsDevice);
+                    
+                    //if (!chunk.HasAllMeshNeighbors)
+                       // RemeshNeighborChunks(chunk.ChunkCoordinates);
+                    
                     ChunkMeshUpdated?.Invoke(this, chunk);
                 }
             }
@@ -188,7 +213,7 @@ namespace MiMap.Viewer.DesktopGL
         public void Dispose()
         {
             _workItemQueue.Dispose();
-            _remeshChunkQueue.Dispose();
+            //_remeshChunkQueue.Dispose();
         }
 
         public ChunkMesh GetChunk(ChunkCoordinates chunkCoordinates)

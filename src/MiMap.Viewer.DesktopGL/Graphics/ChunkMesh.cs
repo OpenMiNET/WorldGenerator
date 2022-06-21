@@ -13,7 +13,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
 {
     public class ChunkMesh : MapChunk, IDisposable
     {
-        public static bool OnlyLoadWhenAllNeighborChunks { get; set; } = true;
+        public static bool OnlyLoadWhenAllNeighborChunks { get; set; } = false;
         public Matrix World { get; private set; }
 
         public bool HasAllMeshNeighbors
