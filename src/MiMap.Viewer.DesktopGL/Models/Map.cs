@@ -45,10 +45,10 @@ namespace MiMap.Viewer.DesktopGL
         {
             _worldGenerator = worldGenerator;
             
-            _workItemQueue = new ConcurrentWorkItemQueue<ChunkCoordinates>(GenerateChunk, trackCompletedTasks: true);
+            _workItemQueue = new ConcurrentWorkItemQueue<ChunkCoordinates>(GenerateChunk, threadCount: Environment.ProcessorCount / 3, trackCompletedTasks: true);
             _newChunks = new ConcurrentBag<ChunkMesh>();
             
-            _remeshChunkQueue = new ConcurrentWorkItemQueue<ChunkMesh>(RemeshChunk, threadCount: 2);
+            _remeshChunkQueue = new ConcurrentWorkItemQueue<ChunkMesh>(RemeshChunk, threadCount: (Environment.ProcessorCount / 3) * 2);
             _updatedChunks = new ConcurrentBag<ChunkMesh>();
             
             ChunkMeshBuilder.InitializeColorMap(BiomeRegistry);
@@ -157,6 +157,7 @@ namespace MiMap.Viewer.DesktopGL
             _updatedChunks.Add(chunk);
         }
 
+        private List<ChunkMesh> _addedchunks = new List<ChunkMesh>();
         public void Update()
         {
             if (_graphicsDevice != null)
@@ -164,11 +165,17 @@ namespace MiMap.Viewer.DesktopGL
                 var sw = Stopwatch.StartNew();
                 while (sw.ElapsedMilliseconds < 8 && _newChunks.TryTake(out var chunk))
                 {
+                    _addedchunks.Add(chunk);
                     chunk.Reload(_graphicsDevice);
                     Chunks.Add(chunk.ChunkCoordinates, chunk);
+                }
+
+                foreach (var chunk in _addedchunks)
+                {
                     RemeshNeighborChunks(chunk.ChunkCoordinates);
                     ChunkMeshAdded?.Invoke(this, chunk);
                 }
+                _addedchunks.Clear();
 
                 while (sw.ElapsedMilliseconds < 8 && _updatedChunks.TryTake(out var chunk))
                 {

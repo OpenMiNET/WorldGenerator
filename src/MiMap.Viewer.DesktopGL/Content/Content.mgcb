@@ -1,11 +1,11 @@
 
 #----------------------------- Global Properties ----------------------------#
 
-/outputDir:bin
-/intermediateDir:obj
-/platform:Windows
+/outputDir:../bin/$(Configuration)/net6.0/Content
+/intermediateDir:../obj/$(Configuration)/net6.0/Content
+/platform:DesktopGL
 /config:
-/profile:Reach
+/profile:HiDef
 /compress:False
 
 #-------------------------------- References --------------------------------#
@@ -13,11 +13,29 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin Effects/PostProcess/EdgeFilter.fx
+#begin Cubemap.dds
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Cubemap.dds
+
+#begin Effects/BlockEffect.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:Effects/PostProcess/EdgeFilter.fx
+/build:Effects/BlockEffect.fx
+
+#begin Effects/CustomEffect.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/CustomEffect.fx
 
 #begin Gizmos.fbx
 /importer:FbxImporter

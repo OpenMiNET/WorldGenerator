@@ -1,0 +1,243 @@
+
+float3 CamPos;
+
+float4x4 World;
+float3x3 WorldRot;
+float4x4 ViewProjection;
+
+float Tesselation;
+float Radius;
+float Test;
+
+//TextureCube CubeMap;
+//SamplerState CubeSampler;
+
+bool EnableTexture;
+Texture2D Texture;
+SamplerState TextureSampler;
+
+//================================================================================================
+// Vertex Shader
+//================================================================================================
+struct VS_IN
+{
+    float3 pos : POSITION;
+    float3 norm : NORMAL;
+    float2 texCoord : TEXCOORD;
+};
+
+struct VS_OUT
+{
+    float4 pos : SV_POSITION;
+    float3 worldPos : TEXCOORD0;
+    float3 norm : NORMAL;
+    float2 texCoord : TEXCOORD1;
+};
+
+VS_OUT VS(VS_IN input)
+{
+    VS_OUT output;
+
+    // pass the corner points through to the hull shader unaltered
+    output.pos = float4(input.pos, 1);
+    output.worldPos = input.pos;
+    output.norm = input.norm;
+    output.texCoord = input.texCoord;
+
+    return output;
+}
+
+//================================================================================================
+// Hull Shader
+//================================================================================================
+struct HS_OUT
+{
+    float4 pos : SV_POSITION;
+    float3 worldPos : TEXCOORD0;
+    float3 norm : NORMAL;
+    float3 sphereCenter : TEXCOORD1;
+    float3 roundingEdge[3] : TEXCOORD2;
+    float2 texCoord : TEXCOORD5;
+    float2 roundingTexCoord[2] : TEXCOORD6;   
+};
+
+struct PatchConstOut
+{
+	float tessEdge[4] : SV_TessFactor;
+	float tessInside[2]: SV_InsideTessFactor;
+};
+
+PatchConstOut PatchConstantFunc(InputPatch<VS_OUT, 4> cp, uint patchID : SV_PrimitiveID)
+{
+	PatchConstOut output;
+
+    output.tessEdge[0] = Tesselation;
+    output.tessEdge[1] = Tesselation;
+    output.tessEdge[2] = Tesselation;
+    output.tessEdge[3] = Tesselation;
+    
+    output.tessInside[0] = Tesselation;
+    output.tessInside[1] = Tesselation;
+    
+	return output;
+}
+
+[domain("quad")]  // tri  quad  isoline
+[partitioning("fractional_odd")] // fractional_even  fractional_odd  pow2
+[outputtopology("triangle_cw")]  // triangle_cw  triangle_ccw  line
+[patchconstantfunc("PatchConstantFunc")]
+[outputcontrolpoints(4)]
+[maxtessfactor(60.0)]
+HS_OUT HS(InputPatch<VS_OUT, 4> cp, uint i : SV_OutputControlPointID, uint patchID : SV_PrimitiveID)
+{
+    HS_OUT output;
+
+    float3 pos = cp[i].worldPos;
+    float3 norm = cp[i].norm;
+    
+    // adjacent edges
+    int indNext = (i + 1) % 4;
+    int indPrev = (i - 1) % 4;
+    
+    float3 posNext = cp[indNext].worldPos;
+    float3 posPrev = cp[indPrev].worldPos;
+    
+    float3 dirToNext = posNext - pos;
+    float3 dirToPrev = posPrev - pos;
+    
+    float lengthNext = length(dirToNext);
+    float lengthPrev = length(dirToPrev);
+    
+    dirToNext /= lengthNext;
+    dirToPrev /= lengthPrev;
+    
+    // rounding sphere
+    float3 patchNorm = normalize(cross(dirToPrev, dirToNext));  
+    float sphereShift = Radius / dot(norm, patchNorm);
+    float3 sphereCenter = pos - sphereShift * norm;
+    
+    float3 sphereTouchPatch = sphereCenter + patchNorm * Radius;
+    float3 posToTouch = sphereTouchPatch - pos;
+    
+    float roundingLengthNext = dot(posToTouch, dirToNext);
+    float roundingLengthPrev = dot(posToTouch, dirToPrev);
+    
+    // tex coords   
+    float2 texCoord = cp[i].texCoord;
+    float2 texChangeNext = cp[indNext].texCoord - texCoord;
+    float2 texChangePrev = cp[indPrev].texCoord - texCoord;
+  /*  
+    float roundingEdgeFractionNext = roundingLengthNext / lengthNext;
+    float roundingEdgeFractionPrev = roundingLengthPrev / lengthPrev;
+    
+    float2 roundingTexChangeNext = texChangeNext * roundingEdgeFractionNext;
+    float2 roundingTexChangePrev = texChangePrev * roundingEdgeFractionPrev;
+*/
+    // output
+    output.pos = float4(pos, 1);
+    output.worldPos = pos;
+    output.norm = norm;
+    output.sphereCenter = sphereCenter;
+    output.roundingEdge[0] = dirToNext * roundingLengthNext;
+    output.roundingEdge[1] = dirToPrev * roundingLengthPrev;
+    output.roundingEdge[2] = posToTouch;
+    output.texCoord = cp[i].texCoord;
+    output.roundingTexCoord[0] = texChangeNext / lengthNext; //roundingTexChangeNext;
+    output.roundingTexCoord[1] = texChangePrev / lengthPrev; //roundingTexChangePrev;
+    
+	return output;
+}
+
+//================================================================================================
+// Domain Shader
+//================================================================================================
+struct DS_OUT
+{
+    float4 pos : SV_POSITION;
+    float3 worldPos : TEXCOORD0;
+    float2 texCoord : TEXCOORD1;
+    float3 norm : NORMAL;
+    float3 color : COLOR;
+};
+
+[domain("quad")]
+DS_OUT DS(const OutputPatch<HS_OUT, 4> controlPoints, float2 uv : SV_DomainLocation, PatchConstOut patchConst)
+{
+    DS_OUT output;
+    
+    // calculate distance from the corner 
+    float2 uvCornerDist = min(uv, 1 - uv) * 2;
+    float2 uvSign = sign(uv - 0.5);
+
+    // determine array indices depending on which corner we are in
+    int2 inds = uvSign.x > 0 ?
+                uvSign.y > 0 ? int2(1, 1) : int2(2, 0):
+                uvSign.y > 0 ? int2(0, 0) : int2(3, 1);
+    
+    int cornerInd = inds.x;
+    int edgeIndX = inds.y;
+    int edgeIndY = 1 - inds.y;
+    
+    HS_OUT cp = controlPoints[cornerInd];
+
+    // calculate position & normal
+    float3 edgeX = cp.roundingEdge[edgeIndX];
+    float3 edgeY = cp.roundingEdge[edgeIndY];
+    float3 edgeMid = cp.roundingEdge[2];
+       
+    float3 xStart = edgeX * uvCornerDist.x;
+    float3 xEnd = edgeY + (edgeMid - edgeY) * uvCornerDist.x;
+    float3 cornerToPos = lerp(xStart, xEnd, uvCornerDist.y);
+    float3 flatPos = cp.worldPos + cornerToPos;
+    
+    float3 norm = normalize(flatPos - cp.sphereCenter);
+    float3 pos = cp.sphereCenter + norm * Radius;
+    
+    // calculate texcoord
+    float2 texCoord = cp.texCoord +
+        cp.roundingTexCoord[edgeIndX] * dot(cornerToPos, normalize(edgeX)) +
+        cp.roundingTexCoord[edgeIndY] * dot(cornerToPos, normalize(edgeY));
+    
+    // output
+    output.worldPos = mul(float4(pos, 1), World).xyz;
+    output.pos = mul(float4(output.worldPos, 1), ViewProjection);
+    output.norm = mul(norm, WorldRot);
+    output.color = norm;
+    output.texCoord = texCoord;
+
+    return output;
+}
+
+//================================================================================================
+// Pixel Shader
+//================================================================================================
+float4 PS(DS_OUT input) : SV_TARGET
+{
+    float3 col = input.color;
+    
+    // multiply texture
+    float3 tex = EnableTexture ? Texture.Sample(TextureSampler, input.texCoord).xyz : 1;
+    col *= tex;
+     
+    // add cubemap reflection
+//    float3 eyeVec = normalize(CamPos - input.worldPos);
+//    float3 reflectVec = normalize(reflect(eyeVec, input.norm));  
+//    float reflectStrength = 0.2f + tex.x * 0.8f;
+//    col += CubeMap.Sample(CubeSampler, reflectVec).xyz * reflectStrength;
+    
+    return float4(col, 1);
+}
+
+//================================================================================================
+// Techniques
+//================================================================================================
+technique Tech0
+{
+    pass Pass0
+    {
+        VertexShader = compile vs_4_0 VS();
+		HullShader   = compile hs_5_0 HS();
+		DomainShader = compile ds_5_0 DS();
+        PixelShader  = compile ps_4_0 PS();
+    }
+}

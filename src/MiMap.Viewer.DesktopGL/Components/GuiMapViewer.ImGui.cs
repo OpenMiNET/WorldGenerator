@@ -21,6 +21,7 @@ namespace MiMap.Viewer.DesktopGL.Components
         private int _cursorBlockBiomeId;
 
         private bool _imgui_styleeditor;
+
         private void DrawImGui_StyleEditor()
         {
             if (_imgui_styleeditor && Begin("ImGui Style Editor", ref _imgui_styleeditor))
@@ -94,6 +95,7 @@ namespace MiMap.Viewer.DesktopGL.Components
                 DrawImGui_MapViewer();
                 DrawImGui_BiomeColors();
                 DrawImGui_StyleEditor();
+                DrawImGui_Shader();
             }
             catch (Exception ex)
             {
@@ -102,30 +104,15 @@ namespace MiMap.Viewer.DesktopGL.Components
         }
 
         private bool _wireframe;
-        private CullMode _cullMode;
+        private CullMode _cullMode = CullMode.CullClockwiseFace;
+
         private void DrawImGui_MainMenu()
         {
             if (BeginMainMenuBar())
             {
                 if (BeginMenu("View"))
                 {
-                    if (MenuItem("Reset Camera", "r"))
-                    {
-                        Camera.ResetPosition();
-                    }
-                    
-                    if (BeginMenu("Windows"))
-                    {
-                        if (MenuItem("Info")) _imgui_info = !_imgui_info;
-                        if (MenuItem("Map Viewer")) _imgui_mapviewer = !_imgui_mapviewer;
-                        if (MenuItem("Biome Colours")) _imgui_biomecolors = !_imgui_biomecolors;
-                        Separator();
-                        if (MenuItem("GUI Style Editor")) _imgui_styleeditor = !_imgui_styleeditor;
-
-                        EndMenu();
-                    }
-
-                    if(MenuItem("Wireframe", "w", ref _wireframe))
+                    if (MenuItem("Wireframe", "w", ref _wireframe))
                     {
                         UpdateRasterizerState();
                     }
@@ -149,22 +136,37 @@ namespace MiMap.Viewer.DesktopGL.Components
                             _cullMode = CullMode.CullCounterClockwiseFace;
                             UpdateRasterizerState();
                         }
-                        
-                        EndMenu();
-                    }
 
-                    if (BeginMenu("Camera Mode"))
-                    {
-                        var vm = Camera.ViewMode;
-                        if (MenuItem("Top-down", null, vm == CameraViewMode.Top)) Camera.ViewMode = CameraViewMode.Top;
-                        if (MenuItem("Isometric 45°", null, vm == CameraViewMode.Isometric45)) Camera.ViewMode = CameraViewMode.Isometric45;
-                        if (MenuItem("Isometric 135°", null, vm == CameraViewMode.Isometric135)) Camera.ViewMode = CameraViewMode.Isometric135;
-                        if (MenuItem("Isometric 225°", null, vm == CameraViewMode.Isometric225)) Camera.ViewMode = CameraViewMode.Isometric225;
-                        if (MenuItem("Isometric 315°", null, vm == CameraViewMode.Isometric315)) Camera.ViewMode = CameraViewMode.Isometric315;
-                        
                         EndMenu();
                     }
-                    
+                    EndMenu();
+                }
+                
+                if (BeginMenu("Camera"))
+                {
+                    if (MenuItem("Reset Camera", "r"))
+                    {
+                        Camera.ResetPosition();
+                    }
+                    Separator();
+                    var vm = Camera.ViewMode;
+                    if (MenuItem("Top-down", null, vm == CameraViewMode.Top)) Camera.ViewMode = CameraViewMode.Top;
+                    if (MenuItem("Isometric 45°", null, vm == CameraViewMode.Isometric45)) Camera.ViewMode = CameraViewMode.Isometric45;
+                    if (MenuItem("Isometric 135°", null, vm == CameraViewMode.Isometric135)) Camera.ViewMode = CameraViewMode.Isometric135;
+                    if (MenuItem("Isometric 225°", null, vm == CameraViewMode.Isometric225)) Camera.ViewMode = CameraViewMode.Isometric225;
+                    if (MenuItem("Isometric 315°", null, vm == CameraViewMode.Isometric315)) Camera.ViewMode = CameraViewMode.Isometric315;
+
+                    EndMenu();
+                }
+                if (BeginMenu("Windows"))
+                {
+                    if (MenuItem("Info")) _imgui_info = !_imgui_info;
+                    if (MenuItem("Map Viewer")) _imgui_mapviewer = !_imgui_mapviewer;
+                    if (MenuItem("Biome Colours")) _imgui_biomecolors = !_imgui_biomecolors;
+                    if (MenuItem("Shader")) _imgui_shader = !_imgui_shader;
+                    Separator();
+                    if (MenuItem("GUI Style Editor")) _imgui_styleeditor = !_imgui_styleeditor;
+
                     EndMenu();
                 }
 
@@ -188,7 +190,7 @@ namespace MiMap.Viewer.DesktopGL.Components
                     Text("Map Bounds");
                     TableNextColumn();
                     InputInt4("##value", ref boundsValues[0], ImGuiInputTextFlags.ReadOnly);
-                    
+
                     // TableRowEx("Map Bounds", () =>
                     // {
                     //     InputInt4("##value", ref boundsValues[0], ImGuiInputTextFlags.ReadOnly);
@@ -353,6 +355,17 @@ namespace MiMap.Viewer.DesktopGL.Components
                 InputInt2("Chunk", ref _cursorChunk[0], ImGuiInputTextFlags.ReadOnly);
                 InputInt2("Region", ref _cursorRegion[0], ImGuiInputTextFlags.ReadOnly);
 
+                Separator();
+
+                Checkbox("Auto-Generate visible chunks", ref _autoGenerate);
+                
+                if (Button("Generate visible chunks"))
+                {
+                    Generate();
+                }
+                
+                Separator();
+                
                 SetNextItemOpen(true, ImGuiCond.FirstUseEver);
                 if (TreeNode("Biome Info"))
                 {
@@ -407,6 +420,45 @@ namespace MiMap.Viewer.DesktopGL.Components
             }
         }
 
+        private bool _imgui_shader = true;
+
+        private void DrawImGui_Shader()
+        {
+            if (_imgui_shader && Begin("Shader", ref _imgui_shader))
+            {
+                var effectLightingEnabled = _effect.LightingEnabled;
+                Checkbox("LightingEnabled", ref effectLightingEnabled);
+                if (IsItemEdited())
+                    _effect.LightingEnabled = effectLightingEnabled;
+
+                var effectDiffuseColor = _effect.DiffuseColor.ToNumerics();
+                ColorEdit3("DiffuseColor", ref effectDiffuseColor);
+                if (IsItemEdited())
+                    _effect.DiffuseColor = effectDiffuseColor.ToXna();
+
+                var effectAmbientColor = _effect.AmbientLightColor.ToNumerics();
+                ColorEdit3("AmbientLightColor", ref effectAmbientColor);
+                if (IsItemEdited())
+                    _effect.AmbientLightColor = effectAmbientColor.ToXna();
+                
+                var effectSpecularColor = _effect.SpecularColor.ToNumerics();
+                ColorEdit3("AmbientSpecularColor", ref effectSpecularColor);
+                if (IsItemEdited())
+                    _effect.SpecularColor = effectSpecularColor.ToXna();
+
+                var effectSpecularPower = _effect.SpecularPower;
+                SliderFloat("SpecularPower", ref effectSpecularPower, 0, 1f);
+                if (IsItemEdited())
+                    _effect.SpecularPower = effectSpecularPower;
+
+                var preferPerPixel = _effect.PreferPerPixelLighting;
+                Checkbox("PreferPerPixelLighting", ref preferPerPixel);
+                if (IsItemEdited())
+                    _effect.PreferPerPixelLighting = preferPerPixel;
+                
+                End();
+            }
+        }
 
         private bool _imgui_biomecolors;
 

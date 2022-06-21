@@ -9,59 +9,6 @@ using OpenAPI.WorldGenerator.Generators.Biomes;
 
 namespace MiMap.Viewer.DesktopGL.Core
 {
-    public class XnaMesh
-    {
-        public GraphicsDevice GraphicsDevice { get; }
-        public VertexBuffer VertexBuffer { get; set; }
-        public IndexBuffer IndexBuffer { get; set; }
-        public int NumberOfVertices { get; set; }
-        public int NumberOfPrimitives { get; set; }
-
-        public Effect Effect { get; set; }
-
-        public void Draw()
-        {
-        }
-    }
-
-    public interface IRawMesh
-    {
-        int[] Indices { get; }
-        int TriangleCount { get; }
-        int VertexCount { get; }
-        int IndexCount { get; }
-
-        void CreateBuffers(GraphicsDevice graphicsDevice, out VertexBuffer vertexBuffer, out IndexBuffer indexBuffer, out int primitiveCount);
-    }
-
-    public class RawMesh<TVertex> : IRawMesh
-        where TVertex : struct, IVertexType
-    {
-        public TVertex[] Vertices { get; }
-        public int[] Indices { get; }
-        public int TriangleCount { get; }
-        public int VertexCount { get; }
-        public int IndexCount { get; }
-        
-        public RawMesh(TVertex[] vertices, int[] indices)
-        {
-            Vertices = vertices;
-            Indices = indices;
-            VertexCount = vertices.Length;
-            IndexCount = indices.Length;
-            TriangleCount = indices.Length / 3;
-        }
-        
-        public void CreateBuffers(GraphicsDevice graphicsDevice, out VertexBuffer vertexBuffer, out IndexBuffer indexBuffer, out int primitiveCount)
-        {
-            vertexBuffer = new VertexBuffer(graphicsDevice, default(TVertex).VertexDeclaration, VertexCount, BufferUsage.WriteOnly);
-            indexBuffer = new IndexBuffer(graphicsDevice, IndexElementSize.ThirtyTwoBits, IndexCount, BufferUsage.WriteOnly);
-            primitiveCount = TriangleCount;
-            
-            vertexBuffer.SetData(Vertices);
-            indexBuffer.SetData(Indices);
-        }
-    }
 
     public static class DMeshExtensions
     {
@@ -73,7 +20,7 @@ namespace MiMap.Viewer.DesktopGL.Core
             foreach (var mesh in meshes)
             {
                 tVertices += mesh.VertexCount;
-                tTriangles += mesh.TriangleCount;
+                tTriangles += mesh.PrimitiveCount;
                 tIndices += mesh.IndexCount;
             }
 

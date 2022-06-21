@@ -32,18 +32,23 @@ namespace MiMap.Viewer.DesktopGL.Components
         private float _scale = 0.5f;
         private bool _chunksDirty = false;
         private Map _map;
+
+        private TextureCube _textureCube;
+
+        // private CustomEffect _effect;
         private BasicEffect _effect;
-        private EdgeFilter _edgeFilter;
+        private BlockEffect _blockEffect;
         private ImGuiRenderer _gui;
         private Rectangle _bounds;
         private MouseState _mouseState;
         private Texture2D _texture;
         private SpriteBatch _spriteBatch;
+        private bool _autoGenerate = false;
 
         public CameraComponent Camera { get; }
 
-        public float ZoomSensitivity { get; set; } = 0.05f;
-        
+        public float ZoomSensitivity { get; set; } = 0.025f;
+
         public Rectangle Bounds
         {
             get => _bounds;
@@ -63,10 +68,7 @@ namespace MiMap.Viewer.DesktopGL.Components
         public Map Map
         {
             get => _map;
-            set
-            {
-                _map = value;
-            }
+            set { _map = value; }
         }
 
         public GuiMapViewer(MiMapViewer game, Map map) : base(game)
@@ -104,18 +106,36 @@ namespace MiMap.Viewer.DesktopGL.Components
 
             EnableWireframe(false);
 
+            // _effect = new CustomEffect()
+            // {
+            //     Tesselation = 1,
+            //     Radius = 0.1f,
+            //     Test = 1,
+            // };
+            //_textureCube = Game.Content.Load<TextureCube>("Cubemap");
+            //_effect.CubeMap = _textureCube;
             _effect = new BasicEffect(GraphicsDevice)
             {
                 TextureEnabled = true,
-                AmbientLightColor = new Vector3(1f, 1f, 1f),
-                VertexColorEnabled = true,
+                // AmbientLightColor = new Vector3(1f, 1f, 1f),
+                VertexColorEnabled = false,
+                LightingEnabled = true,
+                DiffuseColor = Vector3.One / 2f,
+                AmbientLightColor = new Vector3(.75f, .75f, .75f),
+                SpecularPower = 0
             };
-            _effect.EnableDefaultLighting();
-            _edgeFilter = new EdgeFilter(Game.Content)
+            //_effect.EnableDefaultLighting();
+
+            _blockEffect = new BlockEffect()
             {
-                SilhouetteColor = new Vector4(0, 0, 0, 1),
-                CreaseColor = new Vector4(0, 0, 0, 1)
+                VertexColorEnabled = true,
+                FogEnabled = false,
+                ReferenceAlpha = 249,
+                AlphaFunction = CompareFunction.Always,
+                AmbientLightColor = Color.White,
+                AmbientLightDirection = new Vector3(0f, -0.25f, -1f)
             };
+
 
             InitializeTexture();
 
@@ -194,16 +214,21 @@ namespace MiMap.Viewer.DesktopGL.Components
                 var cameraViewport = Camera.Viewport;
                 _gizmoViewport = new Viewport(cameraViewport.Bounds.Right - 225, 25, 200, 200, 0f, 5f);
 
-                using (var cxt = GraphicsContext.CreateContext(GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.Default, RasterizerState.CullNone, SamplerState.LinearWrap))
+                using (var cxt = GraphicsContext.CreateContext(GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.Default, RasterizerState.CullNone, SamplerState.LinearClamp))
                 {
                     cxt.Viewport = _gizmoViewport;
 
-                    _gizmoModel.Draw(Matrix.Identity
-                                     * Matrix.CreateTranslation(Vector3.Zero)
-                                     * Matrix.CreateScale(1f)
-                                     * Camera.RotationMatrix,
-                        Matrix.CreateLookAt(Vector3.Backward, Vector3.Zero, Camera.Up),
-                        Matrix.CreateOrthographicOffCenter(-1, 1, -1, 1, _gizmoViewport.MinDepth, _gizmoViewport.MaxDepth));
+                    _gizmoModel.Draw(
+                        Matrix.Identity
+                        * Matrix.CreateTranslation(Vector3.Zero)
+                        * Matrix.CreateScale(1f)
+                        ,
+                        // Matrix.CreateWorld(Camera.Position, Vector3.Backward, Vector3.Up),
+                        //Matrix.CreateLookAt(Vector3.Backward, Vector3.Zero, Vector3.Up),
+                        Matrix.CreateBillboard(Vector3.Zero, Vector3.Backward, Camera.Up, Camera.Forward),
+                        // Camera.View,
+                        Matrix.CreateOrthographicOffCenter(-1, 1, -1, 1, _gizmoViewport.MinDepth, _gizmoViewport.MaxDepth)
+                        );
                 }
             }
         }
@@ -238,15 +263,46 @@ namespace MiMap.Viewer.DesktopGL.Components
             texture.SetData(raw);
             _texture = texture;
             _effect.Texture = texture;
+            _blockEffect.Texture = texture;
+            // _effect.EnableTexture = true;
+            _effect.TextureEnabled = true;
         }
+
+        private SamplerState _samplerState = new SamplerState()
+        {
+            Filter = TextureFilter.PointMipLinear,
+            AddressU = TextureAddressMode.Wrap,
+            AddressV = TextureAddressMode.Wrap,
+            FilterMode = TextureFilterMode.Default,
+            AddressW = TextureAddressMode.Wrap,
+            ComparisonFunction = CompareFunction.Never,
+            MaxAnisotropy = 16,
+            BorderColor = Color.Black
+        };
+
+        private DepthStencilState _depthStencilState = new DepthStencilState()
+        {
+            DepthBufferEnable = true,
+            DepthBufferWriteEnable = true,
+            DepthBufferFunction = CompareFunction.Less,
+        };
 
         private void DrawMap_Region(GameTime gameTime)
         {
-            using (var cxt = GraphicsContext.CreateContext(GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.DepthRead, _rasterizerState, SamplerState.LinearWrap))
+            using (var cxt = GraphicsContext.CreateContext(GraphicsDevice, BlendState.Opaque, DepthStencilState.Default, _rasterizerState, SamplerState.LinearWrap))
             {
-                _effect.Projection = Camera.Projection;
+                // _effect.CamPos = Camera.Position;
+                // _effect.WorldRot = Matrix.Identity;
+                // _effect.ViewProjection = Camera.View * Camera.Projection;
                 _effect.View = Camera.View;
-                
+                _effect.Projection = Camera.Projection;
+
+                _blockEffect.View = Camera.View;
+                _blockEffect.Projection = Camera.Projection;
+                _blockEffect.CameraPosition = Camera.Position;
+                _blockEffect.CameraFarDistance = Camera.Viewport.MaxDepth;
+
+
                 foreach (var chunk in Map.Chunks.Values)
                 {
                     _effect.World = chunk.World;
@@ -256,9 +312,19 @@ namespace MiMap.Viewer.DesktopGL.Components
                         pass.Apply();
 
                         chunk.Draw(GraphicsDevice);
-                        //_edgeFilter.Apply(Camera);
                     }
                 }
+                // foreach (var chunk in Map.Chunks.Values)
+                // {
+                //     _blockEffect.World = chunk.World;
+                //     
+                //     foreach (var pass in _blockEffect.CurrentTechnique.Passes)
+                //     {
+                //         pass.Apply();
+                //
+                //         chunk.Draw(GraphicsDevice);
+                //     }
+                // }
             }
         }
 
@@ -291,7 +357,7 @@ namespace MiMap.Viewer.DesktopGL.Components
                 //_effect.Projection = Matrix.CreateOrthographicOffCenter(0, screenBounds.Width, screenBounds.Height, 0, 0f, 1000f);
             }
         }
-        
+
 
         #region Mouse Events
 
@@ -313,6 +379,9 @@ namespace MiMap.Viewer.DesktopGL.Components
                 Camera.Scale += (float)(vScrollDelta * ZoomSensitivity);
             }
 
+            var isPressed = _mouseState.LeftButton == ButtonState.Pressed;
+            if (_isDragging && !isPressed) _isDragging = false;
+
             if (_mouseState.Position != newState.Position)
             {
                 var bounds = Game.Window.ClientBounds;
@@ -323,7 +392,6 @@ namespace MiMap.Viewer.DesktopGL.Components
 
                 var currPos = new Point(newState.X, newState.Y);
                 var prevPos = new Point(_mouseState.X, _mouseState.Y);
-                var isPressed = _mouseState.LeftButton == ButtonState.Pressed;
 
                 OnCursorMove_ImGui(currPos, prevPos, isPressed);
                 OnCursorMove(currPos, prevPos, isPressed);
@@ -333,9 +401,21 @@ namespace MiMap.Viewer.DesktopGL.Components
             _mouseState = newState;
         }
 
+        private void Generate()
+        {
+            var worldBounds = Camera.VisibleWorldBounds;
+            var minX = worldBounds.X >> 4;
+            var minY = worldBounds.Y >> 4;
+            var maxX = (worldBounds.X + worldBounds.Width) >> 4;
+            var maxY = (worldBounds.Y + worldBounds.Height) >> 4;
+            var chunkBounds = new Rectangle(minX, minY, maxX - minX, maxY - minY);
+            Map.GenerateMissingChunks(chunkBounds);
+        }
 
         private void OnCursorClicked()
         {
+            if (!_autoGenerate) return;
+            
             var worldBounds = Camera.VisibleWorldBounds;
             var minX = worldBounds.X >> 4;
             var minY = worldBounds.Y >> 4;
@@ -352,9 +432,19 @@ namespace MiMap.Viewer.DesktopGL.Components
             return new Point((int)v.X, (int)v.Z);
         }
 
+        private bool _isDragging;
+
         private void OnCursorMove(Point cursorPosition, Point previousCursorPosition, bool isCursorDown)
         {
-            if (isCursorDown)
+            if (!_isDragging && isCursorDown)
+            {
+                if (Bounds.Contains(cursorPosition))
+                {
+                    _isDragging = true;
+                }
+            }
+
+            if (_isDragging)
             {
                 var oldPos = Camera.Unproject(previousCursorPosition);
                 var newPos = Camera.Unproject(cursorPosition);

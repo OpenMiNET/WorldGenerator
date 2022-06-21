@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiMap.Viewer.DesktopGL.Core;
 using OpenAPI.WorldGenerator.Generators.Biomes;
+using Vector3i = MiMap.Viewer.DesktopGL.Primitive.Vector3i;
 
 namespace MiMap.Viewer.DesktopGL.Graphics
 {
@@ -12,7 +13,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
     {
         public static Color[] biomeColorMap;
         public static Vector3f[] biomeColorMapVector3f;
-        public static Vector2f[] biomeUvMapVector2f;
+        public static Vector2[] biomeUvMapVector2;
 
         public static void InitializeColorMap(BiomeRegistry registry)
         {
@@ -20,12 +21,13 @@ namespace MiMap.Viewer.DesktopGL.Graphics
             var maxBiome = biomes.Max(b => b.Id);
             biomeColorMap = new Color[maxBiome + 1];
             biomeColorMapVector3f = new Vector3f[maxBiome + 1];
-            biomeUvMapVector2f = new Vector2f[maxBiome + 1];
+            biomeUvMapVector2 = new Vector2[maxBiome + 1];
             for (int i = 0; i <= maxBiome; i++)
             {
                 biomeColorMap[i] = Color.Magenta;
                 biomeColorMapVector3f[i] = Color.Magenta.ToVector3f();
-                biomeUvMapVector2f[i] = new Vector2f(i, 0);
+                biomeUvMapVector2[i] = new Vector2(i / (float)maxBiome, 0);
+                //biomeUvMapVector2[i] = new Vector2(i, 0);
             }
 
             foreach (var biome in biomes)
@@ -43,25 +45,23 @@ namespace MiMap.Viewer.DesktopGL.Graphics
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void CheckAndAddFaces(DMesh3 mesh, MapChunk chunk, int x, int z)
+        public static void CheckAndAddFaces(ICubeMeshBuilder cubeMeshBuilder, MapChunk chunk, int x, int z)
         {
             int tIdx, idx;
             int tBiome, biome;
             int tHeight, height;
-            int[] vertices = new int[4];
-            NewVertexInfo vi = new NewVertexInfo();
+            Vector3i pos;
+            Vector2 uv;
+            Color color;
+
 
             idx = GetXZIndex(x, z);
             biome = chunk.Biomes[idx];
             height = chunk.Heights[idx];
-
-            vi.bHaveC = true;
-            vi.c = biomeColorMapVector3f[biome];
-            // vi.c = new Colorf((biome & 0xFF) / 255f, ((biome >> 8) & 0xFF) / 255f, ((biome >> 16) & 0xFF) / 255f);
             
-            vi.bHaveUV = true;
-            vi.uv = biomeUvMapVector2f[biome];
-
+            pos = new Vector3i(x, height, z);
+            uv = biomeUvMapVector2[biome];
+            color = biomeColorMap[biome];
 
             // -X
             if (x > 0)
@@ -77,18 +77,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                 // add side
                 if (height > tHeight)
                 {
-                    vi.bHaveN = true;
-                    vi.n = -Vector3f.AxisX;
-
-                    // @formatter:off
-                    vi.v = new Vector3d(x    , tHeight, z    ); vertices[0] = mesh.AppendVertex(vi);
-                    vi.v = new Vector3d(x    ,  height, z    ); vertices[1] = mesh.AppendVertex(vi);
-                    vi.v = new Vector3d(x    ,  height, z + 1); vertices[2] = mesh.AppendVertex(vi);
-                    vi.v = new Vector3d(x    , tHeight, z + 1); vertices[3] = mesh.AppendVertex(vi);
-
-                    mesh.AppendTriangle(new Index3i(vertices[0], vertices[1], vertices[2]), biome);
-                    mesh.AppendTriangle(new Index3i(vertices[0], vertices[2], vertices[3]), biome);
-                    // @formatter:on
+                    cubeMeshBuilder.AddCubeFace(pos, CubeFace.West, tHeight - height, uv, color);
                 }
             }
 
@@ -106,18 +95,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                 // add side
                 if (height > tHeight)
                 {
-                    vi.bHaveN = true;
-                    vi.n = Vector3f.AxisX;
-
-                    // @formatter:off
-                    vi.v = new Vector3d(x + 1, tHeight, z    ); vertices[0] = mesh.AppendVertex(vi);
-                    vi.v = new Vector3d(x + 1,  height, z    ); vertices[1] = mesh.AppendVertex(vi);
-                    vi.v = new Vector3d(x + 1,  height, z + 1); vertices[2] = mesh.AppendVertex(vi);
-                    vi.v = new Vector3d(x + 1, tHeight, z + 1); vertices[3] = mesh.AppendVertex(vi);
-
-                    mesh.AppendTriangle(new Index3i(vertices[0], vertices[2], vertices[1]), biome);
-                    mesh.AppendTriangle(new Index3i(vertices[0], vertices[3], vertices[2]), biome);
-                    // @formatter:on
+                    cubeMeshBuilder.AddCubeFace(pos, CubeFace.East, tHeight - height, uv, color);
                 }
             }
 
@@ -135,18 +113,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                 // add side
                 if (height > tHeight)
                 {
-                    vi.bHaveN = true;
-                    vi.n = -Vector3f.AxisZ;
-
-                    // @formatter:off
-                    vi.v = new Vector3d(x    , tHeight, z    ); vertices[0] = mesh.AppendVertex(vi);
-                    vi.v = new Vector3d(x    ,  height, z    ); vertices[1] = mesh.AppendVertex(vi);
-                    vi.v = new Vector3d(x + 1,  height, z    ); vertices[2] = mesh.AppendVertex(vi);
-                    vi.v = new Vector3d(x + 1, tHeight, z    ); vertices[3] = mesh.AppendVertex(vi);
-
-                    mesh.AppendTriangle(new Index3i(vertices[0], vertices[1], vertices[2]), biome);
-                    mesh.AppendTriangle(new Index3i(vertices[0], vertices[2], vertices[3]), biome);
-                    // @formatter:on
+                    cubeMeshBuilder.AddCubeFace(pos, CubeFace.South, tHeight - height, uv, color);
                 }
             }
 
@@ -164,48 +131,27 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                 // add side
                 if (height > tHeight)
                 {
-                    vi.bHaveN = true;
-                    vi.n = Vector3f.AxisZ;
-
-                    // @formatter:off
-                    vi.v = new Vector3d(x    , tHeight, z + 1); vertices[0] = mesh.AppendVertex(vi);
-                    vi.v = new Vector3d(x    ,  height, z + 1); vertices[1] = mesh.AppendVertex(vi);
-                    vi.v = new Vector3d(x + 1,  height, z + 1); vertices[2] = mesh.AppendVertex(vi);
-                    vi.v = new Vector3d(x + 1, tHeight, z + 1); vertices[3] = mesh.AppendVertex(vi);
-
-                    mesh.AppendTriangle(new Index3i(vertices[0], vertices[2], vertices[1]), biome);
-                    mesh.AppendTriangle(new Index3i(vertices[0], vertices[3], vertices[2]), biome);
-                    // @formatter:on
+                    cubeMeshBuilder.AddCubeFace(pos, CubeFace.North, tHeight - height, uv, color);
                 }
             }
 
             // +Y
             {
-                vi.bHaveN = true;
-                vi.n = Vector3f.AxisY;
-
-                // @formatter:off
-                vi.v = new Vector3d(x    ,  height, z    ); vertices[0] = mesh.AppendVertex(vi);
-                vi.v = new Vector3d(x    ,  height, z + 1); vertices[1] = mesh.AppendVertex(vi);
-                vi.v = new Vector3d(x + 1,  height, z + 1); vertices[2] = mesh.AppendVertex(vi);
-                vi.v = new Vector3d(x + 1,  height, z    ); vertices[3] = mesh.AppendVertex(vi);
-
-                mesh.AppendTriangle(new Index3i(vertices[0], vertices[1], vertices[2]), biome);
-                mesh.AppendTriangle(new Index3i(vertices[0], vertices[2], vertices[3]), biome);
-                // @formatter:on
+                cubeMeshBuilder.AddCubeFace(pos, CubeFace.Up, 1, uv, color);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void CheckAndAddBoundaryFaces(DMesh3 mesh, Map map, ChunkMesh chunk)
+        private static void CheckAndAddBoundaryFaces(ICubeMeshBuilder cubeMeshBuilder, Map map, ChunkMesh chunk)
         {
             ChunkMesh tChunk;
             int x, z, tX, tZ;
             int tIdx, idx;
             int tBiome, biome;
             int tHeight, height;
-            int[] vertices = new int[4];
-            NewVertexInfo vi = new NewVertexInfo();
+            Vector3i pos;
+            Vector2 uv;
+            Color color;
             
             int neighborCount = 0;
 
@@ -223,12 +169,9 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     biome = chunk.Biomes[idx];
                     height = chunk.Heights[idx];
 
-                    vi.bHaveC = true;
-                    vi.c = biomeColorMapVector3f[biome];
-                    // vi.c = new Colorf((biome & 0xFF) / 255f, ((biome >> 8) & 0xFF) / 255f, ((biome >> 16) & 0xFF) / 255f);
-            
-                    vi.bHaveUV = true;
-                    vi.uv = biomeUvMapVector2f[biome];
+                    pos = new Vector3i(x, height, z);
+                    uv = biomeUvMapVector2[biome];
+                    color = biomeColorMap[biome];
 
 
                     tIdx = GetXZIndex(tX, tZ);
@@ -242,18 +185,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     // add side
                     if (height > tHeight)
                     {
-                        vi.bHaveN = true;
-                        vi.n = -Vector3f.AxisX;
-
-                        // @formatter:off
-                        vi.v = new Vector3d(x    , tHeight, z    ); vertices[0] = mesh.AppendVertex(vi);
-                        vi.v = new Vector3d(x    ,  height, z    ); vertices[1] = mesh.AppendVertex(vi);
-                        vi.v = new Vector3d(x    ,  height, z + 1); vertices[2] = mesh.AppendVertex(vi);
-                        vi.v = new Vector3d(x    , tHeight, z + 1); vertices[3] = mesh.AppendVertex(vi);
-
-                        mesh.AppendTriangle(new Index3i(vertices[0], vertices[1], vertices[2]), biome);
-                        mesh.AppendTriangle(new Index3i(vertices[0], vertices[2], vertices[3]), biome);
-                        // @formatter:on
+                        cubeMeshBuilder.AddCubeFace(pos, CubeFace.West, tHeight-height, uv, color);
                     }
                 }
             }
@@ -271,6 +203,9 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     idx = GetXZIndex(x, z);
                     biome = chunk.Biomes[idx];
                     height = chunk.Heights[idx];
+                    pos = new Vector3i(x, height, z);
+                    uv = biomeUvMapVector2[biome];
+                    color = biomeColorMap[biome];
 
                     tIdx = GetXZIndex(tX, tZ);
                     tBiome = tChunk.Biomes[tIdx];
@@ -283,18 +218,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     // add side
                     if (height > tHeight)
                     {
-                        vi.bHaveN = true;
-                        vi.n = Vector3f.AxisX;
-
-                        // @formatter:off
-                        vi.v = new Vector3d(x + 1, tHeight, z    ); vertices[0] = mesh.AppendVertex(vi);
-                        vi.v = new Vector3d(x + 1,  height, z    ); vertices[1] = mesh.AppendVertex(vi);
-                        vi.v = new Vector3d(x + 1,  height, z + 1); vertices[2] = mesh.AppendVertex(vi);
-                        vi.v = new Vector3d(x + 1, tHeight, z + 1); vertices[3] = mesh.AppendVertex(vi);
-
-                        mesh.AppendTriangle(new Index3i(vertices[0], vertices[2], vertices[1]), biome);
-                        mesh.AppendTriangle(new Index3i(vertices[0], vertices[3], vertices[2]), biome);
-                        // @formatter:on
+                        cubeMeshBuilder.AddCubeFace(pos, CubeFace.East, tHeight-height, uv, color);
                     }
                 }
             }
@@ -312,6 +236,9 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     idx = GetXZIndex(x, z);
                     biome = chunk.Biomes[idx];
                     height = chunk.Heights[idx];
+                    pos = new Vector3i(x, height, z);
+                    uv = biomeUvMapVector2[biome];
+                    color = biomeColorMap[biome];
 
                     tIdx = GetXZIndex(tX, tZ);
                     tBiome = tChunk.Biomes[tIdx];
@@ -324,18 +251,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     // add side
                     if (height > tHeight)
                     {
-                        vi.bHaveN = true;
-                        vi.n = -Vector3f.AxisZ;
-
-                        // @formatter:off
-                        vi.v = new Vector3d(x    , tHeight, z    ); vertices[0] = mesh.AppendVertex(vi);
-                        vi.v = new Vector3d(x    ,  height, z    ); vertices[1] = mesh.AppendVertex(vi);
-                        vi.v = new Vector3d(x + 1,  height, z    ); vertices[2] = mesh.AppendVertex(vi);
-                        vi.v = new Vector3d(x + 1, tHeight, z    ); vertices[3] = mesh.AppendVertex(vi);
-
-                        mesh.AppendTriangle(new Index3i(vertices[0], vertices[1], vertices[2]), biome);
-                        mesh.AppendTriangle(new Index3i(vertices[0], vertices[2], vertices[3]), biome);
-                        // @formatter:on
+                        cubeMeshBuilder.AddCubeFace(pos, CubeFace.South, tHeight-height, uv, color);
                     }
                 }
             }
@@ -353,6 +269,9 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     idx = GetXZIndex(x, z);
                     biome = chunk.Biomes[idx];
                     height = chunk.Heights[idx];
+                    pos = new Vector3i(x, height, z);
+                    uv = biomeUvMapVector2[biome];
+                    color = biomeColorMap[biome];
 
                     tIdx = GetXZIndex(tX, tZ);
                     tBiome = tChunk.Biomes[tIdx];
@@ -365,18 +284,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     // add side
                     if (height > tHeight)
                     {
-                        vi.bHaveN = true;
-                        vi.n = Vector3f.AxisZ;
-
-                        // @formatter:off
-                        vi.v = new Vector3d(x    , tHeight, z + 1); vertices[0] = mesh.AppendVertex(vi);
-                        vi.v = new Vector3d(x    ,  height, z + 1); vertices[1] = mesh.AppendVertex(vi);
-                        vi.v = new Vector3d(x + 1,  height, z + 1); vertices[2] = mesh.AppendVertex(vi);
-                        vi.v = new Vector3d(x + 1, tHeight, z + 1); vertices[3] = mesh.AppendVertex(vi);
-
-                        mesh.AppendTriangle(new Index3i(vertices[0], vertices[2], vertices[1]), biome);
-                        mesh.AppendTriangle(new Index3i(vertices[0], vertices[3], vertices[2]), biome);
-                        // @formatter:on
+                        cubeMeshBuilder.AddCubeFace(pos, CubeFace.North, tHeight-height, uv, color);
                     }
                 }
             }
@@ -386,25 +294,20 @@ namespace MiMap.Viewer.DesktopGL.Graphics
 
         public static void GenerateMesh(Map map, ref ChunkMesh chunk)
         {
-            var msh = new DMesh3(MeshComponents.All);
-
-            msh.EnableTriangleGroups();
-            while (msh.MaxGroupID <= biomeColorMap.Length)
-            {
-                msh.AllocateTriangleGroup();
-            }
+            
 
             int z, x;
+            var meshBuilder = new CubeMeshBuilder();
 
             for (z = 0; z < 16; z++)
             {
                 for (x = 0; x < 16; x++)
                 {
-                    CheckAndAddFaces(msh, chunk, x, z);
+                    CheckAndAddFaces(meshBuilder, chunk, x, z);
                 }
             }
 
-            CheckAndAddBoundaryFaces(msh, map, chunk);
+            CheckAndAddBoundaryFaces(meshBuilder, map, chunk);
 
             // var resultMesh = new DMesh3(MeshComponents.VertexColors | MeshComponents.VertexUVs);
             // resultMesh.CompactCopy(msh, false, true, true);
@@ -429,7 +332,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
             //     r.BasicRemeshPass();
             // }
 
-            chunk.UpdateMesh(msh.ToXnaMesh_VertexPositionColorTexture());
+            chunk.UpdateMesh(meshBuilder.BuildTriangulatedMesh());
         }
     }
 }

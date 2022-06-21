@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
@@ -62,8 +63,60 @@ namespace MiMap.Viewer.DesktopGL.Graphics
             };
 
             SetupInput();
+            SetupTheme();
         }
 
+        #region Custom
+
+        private void SetupTheme()
+        {
+            var io = ImGui.GetIO();
+            ImGui.StyleColorsDark();
+            var style = ImGui.GetStyle();
+            style.WindowPadding.X = 10;
+            style.WindowPadding.Y = 10;
+            style.FramePadding.X = 6;
+            style.FramePadding.Y = 4;
+            style.CellPadding.X = 4;
+            style.CellPadding.Y = 4;
+            style.ItemSpacing.X = 8;
+            style.ItemSpacing.Y = 2;
+            style.ItemInnerSpacing.X = 4;
+            style.ItemInnerSpacing.Y = 4;
+            style.IndentSpacing = 21;
+            style.ScrollbarSize = 14;
+            style.GrabMinSize = 10;
+            
+            style.WindowBorderSize = 1;
+            style.ChildBorderSize = 1;
+            style.PopupBorderSize = 1;
+            style.FrameBorderSize = 1;
+            style.TabBorderSize = 1;
+            
+            style.WindowRounding = 5;
+            style.ChildRounding = 0;
+            style.FrameRounding = 3;
+            style.PopupRounding = 0;
+            style.ScrollbarRounding = 12;
+            style.GrabRounding = 4;
+            style.LogSliderDeadzone = 4;
+            style.TabRounding = 1;
+
+            style.WindowTitleAlign.X = 0;
+            style.WindowTitleAlign.Y = 0.5f;
+            style.WindowMenuButtonPosition = ImGuiDir.Left;
+            style.ColorButtonPosition = ImGuiDir.Right;
+            style.ButtonTextAlign.X = 0.5f;
+            style.ButtonTextAlign.Y = 0.5f;
+            style.SelectableTextAlign.X = 0f;
+            style.SelectableTextAlign.Y = 0f;
+            
+            style.DisplaySafeAreaPadding.X = 5;
+            style.DisplaySafeAreaPadding.Y = 5;
+        }
+
+        #endregion
+        
         #region ImGuiRenderer
 
         /// <summary>

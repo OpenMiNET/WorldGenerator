@@ -29,6 +29,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
         private bool _hasAllMeshNeighbors = false;
         public bool Initialized { get; private set; } = false;
         private IRawMesh _mesh;
+        private PrimitiveType _primitiveType;
 
         public ChunkMesh(ChunkCoordinates chunkCoordinates) : base(chunkCoordinates)
         {
@@ -36,8 +37,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     * Matrix.CreateTranslation(new Vector3((chunkCoordinates.X << 4), 0f, (chunkCoordinates.Z << 4)));
         }
 
-        internal void UpdateMesh<TVertex>(RawMesh<TVertex> mesh)
-            where TVertex : struct, IVertexType
+        internal void UpdateMesh(IRawMesh mesh)
         {
             _mesh = mesh;
             Initialized = false;
@@ -57,7 +57,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                 _indexBuffer?.Dispose();
                 _indexBuffer = null;
 
-                _mesh.CreateBuffers(graphicsDevice, out _vertexBuffer, out _indexBuffer, out _primitiveCount);
+                _mesh.CreateBuffers(graphicsDevice, out _vertexBuffer, out _indexBuffer, out _primitiveCount, out _primitiveType);
                 _mesh = null;
                 Initialized = true;
             }
@@ -75,7 +75,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
 
             graphicsDevice.SetVertexBuffer(_vertexBuffer);
             graphicsDevice.Indices = _indexBuffer;
-            graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _primitiveCount);
+            graphicsDevice.DrawIndexedPrimitives(_primitiveType, 0, 0, _primitiveCount);
         }
 
         public void Dispose()
