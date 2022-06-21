@@ -10,6 +10,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -37,7 +38,6 @@ namespace MiMap.Viewer.DesktopGL.Components
 
         // private CustomEffect _effect;
         private BasicEffect _effect;
-        private BlockEffect _blockEffect;
         private ImGuiRenderer _gui;
         private Rectangle _bounds;
         private MouseState _mouseState;
@@ -86,7 +86,10 @@ namespace MiMap.Viewer.DesktopGL.Components
 
         private void UpdateRasterizerState()
         {
-            _rasterizerState = new RasterizerState()
+            var a = RasterizerState.CullClockwise;
+            _rasterizerState = a;
+           
+            /*_rasterizerState = new RasterizerState()
             {
                 CullMode = _cullMode,
                 DepthBias = RasterizerState.CullNone.SlopeScaleDepthBias,
@@ -95,7 +98,7 @@ namespace MiMap.Viewer.DesktopGL.Components
                 ScissorTestEnable = false,
                 MultiSampleAntiAlias = RasterizerState.CullNone.MultiSampleAntiAlias,
                 SlopeScaleDepthBias = RasterizerState.CullNone.SlopeScaleDepthBias,
-            };
+            };*/
         }
 
         public override void Initialize()
@@ -122,21 +125,13 @@ namespace MiMap.Viewer.DesktopGL.Components
                 LightingEnabled = true,
                 DiffuseColor = Vector3.One / 2f,
                 AmbientLightColor = new Vector3(.75f, .75f, .75f),
-                SpecularPower = 0
+                SpecularPower = 0,
+                DirectionalLight0 = { Enabled = true, Direction = new Vector3(-3, -1, -2)},
+                DirectionalLight1 = { Enabled = false},
+                DirectionalLight2 = { Enabled = false}
             };
             //_effect.EnableDefaultLighting();
-
-            _blockEffect = new BlockEffect()
-            {
-                VertexColorEnabled = true,
-                FogEnabled = false,
-                ReferenceAlpha = 249,
-                AlphaFunction = CompareFunction.Always,
-                AmbientLightColor = Color.White,
-                AmbientLightDirection = new Vector3(0f, -0.25f, -1f)
-            };
-
-
+            
             InitializeTexture();
 
             Game.GraphicsDevice.DeviceReset += (s, o) => UpdateBounds();
@@ -194,7 +189,7 @@ namespace MiMap.Viewer.DesktopGL.Components
 
             DrawGizmo(gameTime);
 
-            using (GraphicsContext.CreateContext(GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.None, RasterizerState.CullNone, SamplerState.LinearClamp))
+            using (GraphicsContext.CreateContext(GraphicsDevice, BlendState.NonPremultiplied, DepthStencilState.None, RasterizerState.CullNone, SamplerState.LinearClamp))
             {
                 _gui.BeforeLayout(gameTime);
 
@@ -263,7 +258,7 @@ namespace MiMap.Viewer.DesktopGL.Components
             texture.SetData(raw);
             _texture = texture;
             _effect.Texture = texture;
-            _blockEffect.Texture = texture;
+            
             // _effect.EnableTexture = true;
             _effect.TextureEnabled = true;
         }
@@ -296,12 +291,6 @@ namespace MiMap.Viewer.DesktopGL.Components
                 // _effect.ViewProjection = Camera.View * Camera.Projection;
                 _effect.View = Camera.View;
                 _effect.Projection = Camera.Projection;
-
-                _blockEffect.View = Camera.View;
-                _blockEffect.Projection = Camera.Projection;
-                _blockEffect.CameraPosition = Camera.Position;
-                _blockEffect.CameraFarDistance = Camera.Viewport.MaxDepth;
-
 
                 foreach (var chunk in Map.Chunks.Values)
                 {
@@ -401,15 +390,29 @@ namespace MiMap.Viewer.DesktopGL.Components
             _mouseState = newState;
         }
 
+        private SemaphoreSlim _generateSemaphoreSlim = new SemaphoreSlim(1);
         private void Generate()
         {
-            var worldBounds = Camera.VisibleWorldBounds;
-            var minX = worldBounds.X >> 4;
-            var minY = worldBounds.Y >> 4;
-            var maxX = (worldBounds.X + worldBounds.Width) >> 4;
-            var maxY = (worldBounds.Y + worldBounds.Height) >> 4;
-            var chunkBounds = new Rectangle(minX, minY, maxX - minX, maxY - minY);
-            Map.GenerateMissingChunks(chunkBounds);
+            if (!_generateSemaphoreSlim.Wait(0))
+                return;
+            
+            new Thread(() =>
+            {
+                try
+                {
+                    var worldBounds = Camera.VisibleWorldBounds;
+                    var minX = worldBounds.X >> 4;
+                    var minY = worldBounds.Y >> 4;
+                    var maxX = (worldBounds.X + worldBounds.Width) >> 4;
+                    var maxY = (worldBounds.Y + worldBounds.Height) >> 4;
+                    var chunkBounds = new Rectangle(minX, minY, maxX - minX, maxY - minY);
+                    Map.GenerateMissingChunks(chunkBounds);
+                }
+                finally
+                {
+                    _generateSemaphoreSlim.Release();
+                }
+            }).Start();
         }
 
         private void OnCursorClicked()

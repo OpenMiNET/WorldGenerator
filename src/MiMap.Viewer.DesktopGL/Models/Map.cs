@@ -45,10 +45,10 @@ namespace MiMap.Viewer.DesktopGL
         {
             _worldGenerator = worldGenerator;
             
-            _workItemQueue = new ConcurrentWorkItemQueue<ChunkCoordinates>(GenerateChunk, threadCount: Environment.ProcessorCount / 3, trackCompletedTasks: true);
+            _workItemQueue = new ConcurrentWorkItemQueue<ChunkCoordinates>(GenerateChunk, threadCount: Environment.ProcessorCount -1, trackCompletedTasks: true);
             _newChunks = new ConcurrentBag<ChunkMesh>();
             
-            _remeshChunkQueue = new ConcurrentWorkItemQueue<ChunkMesh>(RemeshChunk, threadCount: (Environment.ProcessorCount / 3) * 2);
+            _remeshChunkQueue = new ConcurrentWorkItemQueue<ChunkMesh>(RemeshChunk, threadCount: 1);
             _updatedChunks = new ConcurrentBag<ChunkMesh>();
             
             ChunkMeshBuilder.InitializeColorMap(BiomeRegistry);

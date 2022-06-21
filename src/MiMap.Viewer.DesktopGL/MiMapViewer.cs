@@ -33,16 +33,16 @@ namespace MiMap.Viewer.DesktopGL
             {
                 PreferredBackBufferHeight = 720,
                 PreferredBackBufferWidth = 1280,
-                PreferMultiSampling = true,
-                GraphicsProfile = GraphicsProfile.HiDef
+            //    PreferMultiSampling = true,
+             //   GraphicsProfile = GraphicsProfile.HiDef
             };
             _graphics.PreparingDeviceSettings += (sender, args) =>
             {
                 //_graphics.PreferredBackBufferFormat = SurfaceFormat.Color;
-                _graphics.PreferMultiSampling = true;
-                _graphics.PreferredBackBufferHeight = 720;
+              //  _graphics.PreferMultiSampling = true;
+               _graphics.PreferredBackBufferHeight = 720;
                 _graphics.PreferredBackBufferWidth = 1280;
-                _graphics.GraphicsProfile = GraphicsProfile.HiDef;
+             //   _graphics.GraphicsProfile = GraphicsProfile.HiDef;
             };
             
             Content.RootDirectory = "Content";

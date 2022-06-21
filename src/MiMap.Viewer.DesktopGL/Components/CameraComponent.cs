@@ -21,13 +21,13 @@ namespace MiMap.Viewer.DesktopGL.Components
     {
         public const float MinScale = 0.25f;
         public const float MaxScale = 16f;
-        public const float MinDepth = -100f;
+        public const float MinDepth = -1000f;
         public const float MaxDepth = 1000f;
 
         private readonly Game _game;
-        private Vector3 _position = new Vector3(0, 0, 0);
+        private Vector3 _position = new Vector3(0, 0f, 0);
         private CameraViewMode _viewMode = CameraViewMode.Isometric45;
-        private float _offsetDistance = 64f;
+        private float _offsetDistance = 1f;//64f;
         private float _scale = 1f;
         private Matrix _rotationMatrix = Matrix.Identity;
 
@@ -88,7 +88,7 @@ namespace MiMap.Viewer.DesktopGL.Components
         public Matrix View { get; private set; }
         public Matrix InverseView { get; private set; }
         public Matrix Projection { get; private set; }
-
+        public Matrix World { get; private set; }
         public Matrix RotationMatrix
         {
             get => _rotationMatrix;
@@ -175,14 +175,15 @@ namespace MiMap.Viewer.DesktopGL.Components
             var f = Forward;
             var u = Up;
             var s = Scale;
-            var b = _game.Window.ClientBounds;
-            var v = (b.Size.ToVector2() / s).ToPoint();
+            var b = _game.GraphicsDevice.Viewport.Bounds;
+            var v = (b.Size.ToVector2() / _scale);
 
             var pOffset = (Forward * _offsetDistance);
-            
+
             View = Matrix.CreateLookAt(p - pOffset, p, u);
             InverseView = Matrix.Invert(View);
-            Projection = Matrix.CreateOrthographic(v.X, v.Y, MinDepth, MaxDepth);
+            Projection = Matrix.CreateOrthographicOffCenter(-v.X, v.X, -v.Y, v.Y, MinDepth, MaxDepth);// Matrix.CreateOrthographic(v.X, v.Y, MinDepth, MaxDepth);
+            
             BoundingFrustum = new BoundingFrustum(View * Projection);
             VisibleWorldBounds = CalculateVisibleWorldBounds();
         }

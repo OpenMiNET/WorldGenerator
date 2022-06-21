@@ -308,11 +308,6 @@ namespace MiMap.Viewer.DesktopGL.Graphics
             var lastViewport = _graphicsDevice.Viewport;
             var lastScissorBox = _graphicsDevice.ScissorRectangle;
 
-            _graphicsDevice.BlendFactor = Color.White;
-            _graphicsDevice.BlendState = BlendState.NonPremultiplied;
-            _graphicsDevice.RasterizerState = _rasterizerState;
-            _graphicsDevice.DepthStencilState = DepthStencilState.DepthRead;
-
             // Handle cases of screen coordinates != from framebuffer coordinates (e.g. retina displays)
             drawData.ScaleClipRects(ImGui.GetIO().DisplayFramebufferScale);
 
