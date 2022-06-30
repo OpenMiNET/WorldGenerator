@@ -177,7 +177,7 @@ namespace MiMap.Viewer.DesktopGL.Components
             var s = Scale;
             var b = _game.GraphicsDevice.Viewport.Bounds;
             var v = (b.Size.ToVector2() / _scale);
-            var d = Math.Max(v.Y, v.X) / _scale;
+            var d = Math.Max(v.Y, v.X) / (_scale > 1 ? 1 : _scale);
 
             View = Matrix.CreateLookAt(p, p + f, Vector3.Up);
             InverseView = Matrix.Invert(View);
