@@ -1,4 +1,4 @@
-namespace OpenAPI.WorldGenerator.Utils.Noise.Selectors
+namespace OpenMiNET.Noise.Selectors
 {
     public class SelectorModule
     {
