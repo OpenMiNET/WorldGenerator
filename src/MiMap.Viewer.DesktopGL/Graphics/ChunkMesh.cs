@@ -39,8 +39,8 @@ namespace MiMap.Viewer.DesktopGL.Graphics
 
         internal void UpdateMesh(IRawMesh mesh)
         {
-            _mesh = mesh;
             Initialized = false;
+            _mesh = mesh;
         }
 
         public void Reload(GraphicsDevice graphicsDevice)

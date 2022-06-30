@@ -344,11 +344,11 @@ namespace MiMap.Viewer.DesktopGL.Graphics
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static int GetField(MapChunk chunk, int x, int y, int z)
+        private static int? GetField(MapChunk chunk, int x, int y, int z)
         {
             var idx = GetXZIndex(x, z);
             var h = chunk.Heights[idx];
-            return y <= h ? chunk.Biomes[idx] : 0;
+            return y <= h ? chunk.Biomes[idx] : null;
         }
 
         public static void ReducedMesh(ICubeMeshBuilder cubeMeshBuilder, MapChunk chunk)
@@ -373,7 +373,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
 
                 int[] x = { 0, 0, 0 };
                 int[] q = { 0, 0, 0 };
-                int[] mask = new int[(dims[u] + 1) * (dims[v] + 1)];
+                int?[] mask = new int?[(dims[u] + 1) * (dims[v] + 1)];
 
 
                 q[d] = 1;
@@ -386,19 +386,19 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     {
                         for (x[u] = 0; x[u] < dims[u]; ++x[u], ++n)
                         {
-                            int vox1 = (int)GetField(chunk, x[0], x[1], x[2]);
-                            int vox2 = (int)GetField(chunk, x[0] + q[0], x[1] + q[1], x[2] + q[2]);
+                            int? vox1 = GetField(chunk, x[0], x[1], x[2]);
+                            int? vox2 = GetField(chunk, x[0] + q[0], x[1] + q[1], x[2] + q[2]);
 
 //                            mask[n] = vox1 != vox2 ? 1 : 0;
 
-                            int a = (0 <= x[d] ? vox1 : 0);
-                            int b = (x[d] < dims[d] - 1 ? vox2 : 0);
+                            int? a = (0 <= x[d] ? vox1 : null);
+                            int? b = (x[d] < dims[d] - 1 ? vox2 : null);
                             
-                            if ((vox1 != 0) == (vox2 != 0))
+                            if ((vox1.HasValue) == (vox2.HasValue))
                             {
-                                mask[n] = 0;
+                                mask[n] = null;
                             }
-                            else if ((a != 0))
+                            else if ((a.HasValue))
                             {
                                 mask[n] = vox1;
                             }
@@ -426,7 +426,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                         {
                             var c = mask[n];
 
-                            if (c != 0)
+                            if (c.HasValue)
                             {
                                 // compute width
                                 for (w = 1; mask[n + w] == c && (i + w) < dims[u]; ++w)
@@ -475,8 +475,8 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                                 Vector3 v3 = new Vector3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]);
                                 Vector3 v4 = new Vector3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]);
 
-                                var biomeUv = biomeUvMapVector2[c];
-                                var biomeColor = biomeColorMap[c];
+                                var biomeUv = biomeUvMapVector2[c.Value];
+                                var biomeColor = biomeColorMap[c.Value];
 
                                 cubeMeshBuilder.AddQuad((Vector3i)v1, (Vector3i)v2, (Vector3i)v3, (Vector3i)v4, 1, biomeUv, biomeColor);
 
@@ -484,7 +484,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                                 {
                                     for (k = 0; k < w; ++k)
                                     {
-                                        mask[n + k + l * dims[u]] = 0;
+                                        mask[n + k + l * dims[u]] = null;
                                     }
                                 }
 
