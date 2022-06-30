@@ -12,6 +12,6 @@ namespace MiMap.Viewer.DesktopGL.Core
         IRawMesh BuildQuadMesh();
 
         void OptimizeFaces();
-        void AddQuad(Vector3i v1, Vector3i v2, Vector3i v3, Vector3i v4, int height, Vector2 uv, Color color);
+        void AddQuad(Vector3i v1, Vector3i v2, Vector3i v3, Vector3i v4, Vector3 normal, Vector2 uv, Color color);
     }
 }
