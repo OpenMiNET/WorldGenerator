@@ -5,7 +5,7 @@ using OpenAPI.Utils;
 using OpenAPI.WorldGenerator.Generators.Biomes;
 using OpenAPI.WorldGenerator.Generators.Biomes.Config;
 using OpenAPI.WorldGenerator.Generators.Terrain;
-using OpenAPI.WorldGenerator.Utils.Noise;
+using OpenMiNET.Noise;
 
 namespace OpenAPI.WorldGenerator.Generators.Surfaces
 {

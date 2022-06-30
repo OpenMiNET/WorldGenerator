@@ -3,12 +3,12 @@ using MiNET.Blocks;
 using MiNET.Worlds;
 using OpenAPI.Utils;
 using OpenAPI.WorldGenerator.Generators.Biomes;
-using OpenAPI.WorldGenerator.Generators.Structures;
-using OpenAPI.WorldGenerator.Utils.Noise;
-using OpenAPI.WorldGenerator.Utils.Noise.Modules;
-using OpenAPI.WorldGenerator.Utils.Noise.Primitives;
+using OpenAPI.WorldGenerator.Generators.Decorators.Structures;
+using OpenMiNET.Noise;
+using OpenMiNET.Noise.Modules;
+using OpenMiNET.Noise.Primitives;
 using Biome = OpenAPI.WorldGenerator.Generators.Biomes.Biome;
-using Structure = OpenAPI.WorldGenerator.Generators.Structures.Structure;
+using Structure = OpenAPI.WorldGenerator.Generators.Decorators.Structures.Structure;
 
 namespace OpenAPI.WorldGenerator.Generators.Decorators
 {

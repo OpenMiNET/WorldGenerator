@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using MiNET.Utils.Vectors;
 using OpenAPI.WorldGenerator.Generators;
-using OpenAPI.WorldGenerator.Utils.Noise;
-using OpenAPI.WorldGenerator.Utils.Noise.Modules;
-using OpenAPI.WorldGenerator.Utils.Noise.Primitives;
-using OpenAPI.WorldGenerator.Utils.Noise.Transformers;
+using OpenMiNET.Noise;
+using OpenMiNET.Noise.Modules;
+using OpenMiNET.Noise.Primitives;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -24,9 +23,20 @@ namespace WorldGenerator.Tweaking
         static void Main(string[] args)
         {
             WorldGen = new OverworldGeneratorV2();
+            
+          //  NoisePreviewGame previewGame = new NoisePreviewGame(WorldGen, Radius, Resolution);
+          //  previewGame.Run();
+            
           // RunNoiseTest();
+        //  ShowNoisePreview();
             RunPreviewer();
             //Console.WriteLine($"Min Height: {gen.MinHeight} Max Height: {gen.MaxHeight}");
+        }
+
+        private static void ShowNoisePreview()
+        {
+            NoisePreviewGame previewGame = new NoisePreviewGame(WorldGen, Radius, Resolution); 
+            previewGame.Run();
         }
 
         private static void RunNoiseTest()

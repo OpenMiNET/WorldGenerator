@@ -2,7 +2,7 @@ using System;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using OpenAPI.WorldGenerator.Generators.Effects;
-using OpenAPI.WorldGenerator.Utils.Noise;
+using OpenMiNET.Noise;
 
 namespace OpenAPI.WorldGenerator.Generators.Terrain
 {

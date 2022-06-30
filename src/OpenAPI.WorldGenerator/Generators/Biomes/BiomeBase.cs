@@ -7,9 +7,9 @@ using OpenAPI.WorldGenerator.Generators.Biomes.Vanilla;
 using OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Beach;
 using OpenAPI.WorldGenerator.Generators.Surfaces;
 using OpenAPI.WorldGenerator.Generators.Terrain;
-using OpenAPI.WorldGenerator.Utils.Noise;
-using OpenAPI.WorldGenerator.Utils.Noise.Api;
-using OpenAPI.WorldGenerator.Utils.Noise.Cellular;
+using OpenMiNET.Noise;
+using OpenMiNET.Noise.Api;
+using OpenMiNET.Noise.Cellular;
 
 namespace OpenAPI.WorldGenerator.Generators.Biomes
 {

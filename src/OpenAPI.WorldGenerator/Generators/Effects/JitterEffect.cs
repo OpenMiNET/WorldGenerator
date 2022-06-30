@@ -1,6 +1,6 @@
 using System;
-using OpenAPI.WorldGenerator.Utils.Noise;
-using OpenAPI.WorldGenerator.Utils.Noise.Api;
+using OpenMiNET.Noise;
+using OpenMiNET.Noise.Api;
 
 namespace OpenAPI.WorldGenerator.Generators.Effects
 {

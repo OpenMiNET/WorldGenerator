@@ -1,6 +1,6 @@
 using OpenAPI.WorldGenerator.Generators.Effects;
 using OpenAPI.WorldGenerator.Generators.Utils;
-using OpenAPI.WorldGenerator.Utils.Noise;
+using OpenMiNET.Noise;
 
 namespace OpenAPI.WorldGenerator.Generators.Terrain
 {

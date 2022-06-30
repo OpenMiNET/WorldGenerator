@@ -99,7 +99,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
                 new BeachBiome().SetEdgeBiome(true), 
                 new ColdBeachBiome().SetEdgeBiome(true), 
                 new StoneBeachBiome().SetEdgeBiome(true), 
-            };
+            }.OrderBy(x => x.Id).ToArray();
 
             FastRandom rnd = new FastRandom();
             for (int i = 0; i < Biomes.Length; i++)
@@ -196,6 +196,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
 
         public int GetBiome(float temperature, float downfall, float selector)
         {
+            selector = MathF.Abs(selector);
             var biomes = GetBiomes();
             var weights = ArrayPool<float>.Shared.Rent(biomes.Length);
 
@@ -205,26 +206,40 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
 
                 for (int i = 0; i < biomes.Length; i++)
                 {
-                    var temperatureDifference = (biomes[i].Temperature - temperature);
-                    var humidityDifference = (biomes[i].Downfall - downfall);
+                    var temperatureDifference =  MathF.Abs(biomes[i].Temperature - temperature);
+                    var humidityDifference = MathF.Abs(biomes[i].Downfall - downfall);
 
-                    //temperatureDifference *= 7.5f;
-                    //humidityDifference *= 2.5f;
-
-                    var weight = (float) biomes[i].Config.Weight * MathF.Abs(
-                        (temperatureDifference * temperatureDifference + humidityDifference * humidityDifference));
-
-                    if (weight > 0f)
+                   // temperatureDifference *= 7.5f;
+                  //  humidityDifference *= 2.5f;
+                    
+                    var heatIndex = MathF.Abs(temperatureDifference * temperatureDifference + humidityDifference * humidityDifference);
+                    
+                    
+                  //  weight += heatIndex;
+                 // var weight = heatIndex;
+                    if (heatIndex > 0f)
                     {
+                       // weight *= ((float) biomes[i].Config.Weight / 10f);
+                       var weight = (float)biomes[i].Config.Weight  + (heatIndex * 0.15f);
+                       
                         weights[i] = weight;
 
                         sum += weight;
                     }
+                    
+                    else
+                    {
+                        weights[i] = 0f;
+                    }
                 }
 
-                selector *= sum;
+                for (int i = 0; i < weights.Length; i++)
+                    weights[i] /= sum;
+
+             //   selector *= sum;
 
                 float currentWeightIndex = 0;
+               // float maxWeight = 
 
                 for (int i = 0; i < biomes.Length; i++)
                 {

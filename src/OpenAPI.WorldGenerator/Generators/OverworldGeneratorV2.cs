@@ -9,12 +9,10 @@ using OpenAPI.WorldGenerator.Generators.Biomes;
 using OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Ocean;
 using OpenAPI.WorldGenerator.Generators.Decorators;
 using OpenAPI.WorldGenerator.Generators.Terrain;
-using OpenAPI.WorldGenerator.Utils.Noise;
-using OpenAPI.WorldGenerator.Utils.Noise.Api;
-using OpenAPI.WorldGenerator.Utils.Noise.Cellular;
-using OpenAPI.WorldGenerator.Utils.Noise.Modules;
-using OpenAPI.WorldGenerator.Utils.Noise.Primitives;
-using OpenAPI.WorldGenerator.Utils.Noise.Transformers;
+using OpenMiNET.Noise;
+using OpenMiNET.Noise.Cellular;
+using OpenMiNET.Noise.Modules;
+using OpenMiNET.Noise.Primitives;
 
 namespace OpenAPI.WorldGenerator.Generators
 {
@@ -153,10 +151,10 @@ namespace OpenAPI.WorldGenerator.Generators
 
             INoiseModule temperatureNoise = new VoronoiNoseModule(new SimplexPerlin(seed ^ 3, NoiseQuality.Fast))
             {
-                Distance = false, Frequency = 0.0325644f, Displacement = 2f
+                Distance = false, Frequency = 0.00325644f, Displacement = 2f
             };
             
-            temperatureNoise = new TurbulenceNoiseModule(temperatureNoise, distortNoise, distortNoise, distortNoise, 3.5f);
+       //     temperatureNoise = new TurbulenceNoiseModule(temperatureNoise, distortNoise, distortNoise, distortNoise, 1.25f);
             
             TemperatureNoise = new ScaledNoiseModule(temperatureNoise)
             {
@@ -166,26 +164,45 @@ namespace OpenAPI.WorldGenerator.Generators
             RainfallNoise = new ScaledNoiseModule(new VoronoiNoseModule(new SimplexPerlin(seed * seed ^ 2, NoiseQuality.Fast))
             {
                 Distance = false,
-                Frequency = 0.022776f,
+                Frequency = 0.0022776f,
                 Displacement = 1f
             })
             {
                 ScaleX = 1f / biomeScale, ScaleY = 1f / biomeScale, ScaleZ = 1f / biomeScale
             };
 
-            INoiseModule selectorNoise = new VoronoiNoseModule(new SimplexPerlin(seed * 69, NoiseQuality.Fast))
+            INoiseModule selectorNoise = new SimplexPerlin(seed * 69, NoiseQuality.Fast);
+           
+            /*selectorNoise = new VoronoiNoseModule(selectorNoise)
             {
-                Distance = false, Frequency = 0.245776f, Displacement = 1f
+              Frequency = .845776f,
+              Distance = false,
+              Displacement = 1
+              //OctaveCount = 2,
+             // Offset = 1f,
+             // Lacunarity = 1f,
+             // Gain = 2f,
+             // SpectralExponent = 0.9f
+            };*/
+           
+           // selectorNoise = new TurbulenceNoiseModule(selectorNoise, distortNoise, distortNoise, distortNoise, 4.25f);
+          // selectorNoise = new TurbulenceNoiseModule(distortNoise, distortNoise, distortNoise, distortNoise, 4.25f);
+         // selectorNoise = new SimplexPerlin(seed * 69, NoiseQuality.Fast);
+            SelectorNoise = new ScaledNoiseModule(new BillowNoiseModule(selectorNoise)
+            {
+                Scale = 1f / 6f
+            })
+            {
+                ScaleX = 1f / 128f, ScaleY = 1f /128f, ScaleZ = 1f / 128f,
+                OctaveCount = 4,
+                 Offset = 1f,
+                 Lacunarity = 1.3f,
+                 Gain = 2f,
+                 SpectralExponent = 0.9f,
+                 Frequency = 0.01245776f
             };
-            
-            selectorNoise = new TurbulenceNoiseModule(selectorNoise, distortNoise, distortNoise, distortNoise, 4f);
 
-            SelectorNoise = new ScaledNoiseModule(
-                    selectorNoise)
-            {
-                ScaleX = 1f / Preset.MainNoiseScaleX, ScaleY = 1f / Preset.MainNoiseScaleY, ScaleZ = 1f / Preset.MainNoiseScaleZ
-            };
-            
+            //SelectorNoise = selectorNoise;
             var d = new FoliageDecorator(Preset);
             d.SetSeed(seed);
             
@@ -211,9 +228,7 @@ namespace OpenAPI.WorldGenerator.Generators
 
             GenerateTerrain(column, landscape.Noise);
             
-            BlendBiomes(column, landscape);
-
-            // SetBiomeBlocks(column, landscape);
+            SetBiomeBlocks(column, landscape);
 
             return column;
         }
@@ -233,6 +248,7 @@ namespace OpenAPI.WorldGenerator.Generators
         
         public float MaxHeight = float.MinValue;
         public float MinHeight = float.MaxValue;
+
         private void CalculateBiomes(ChunkCoordinates coordinates, ChunkLandscape landscape)
         {
             int worldX = coordinates.X << 4;
@@ -241,6 +257,12 @@ namespace OpenAPI.WorldGenerator.Generators
             float[] weightedBiomes = new float[256];
 
             int[] biomes = new int[SampleArraySize * SampleArraySize];
+            
+            int GetIndex(int x, int z)
+            {
+                return  (x + SampleSize) * SampleArraySize + (z + SampleSize);
+            }
+
             for (int x = -SampleSize; x < SampleSize + 5; x++)
             {
                 for (int z = -SampleSize; z < SampleSize + 5; z++)
@@ -249,48 +271,25 @@ namespace OpenAPI.WorldGenerator.Generators
                     var zz   = worldZ + ((z * 8f));
 
                     var temp = MathF.Abs(TemperatureNoise.GetValue(xx, zz));
-                   var rain = MathF.Abs(RainfallNoise.GetValue(xx, zz));
-                  
-                   //Note for self: The temperature noise returns a value between -1 & 1 however we need the value to be between 0 & 2.
-                    //We do this by getting the absolute value (0 to 1) and multiplying it by 2.
-                  //  temp = MathF.Abs(temp) * 2f;
-
-                    /*
-                    if (temp > 2f)
-                    {
-                        var remainder = temp - 2f;
-                        temp = 2f - remainder;
-                    }*/
                     MaxTemp = MathF.Max(temp, MaxTemp);
                     MinTemp = MathF.Min(temp, MinTemp);
                     
-                    /*
-                    if (rain > 1f)
-                    {
-                        var remainder = rain - 1f;
-                        rain = 1f - remainder;
-                    }*/
-                    
+                    var rain = MathF.Abs(RainfallNoise.GetValue(xx, zz));
                     MaxRain = MathF.Max(rain, MaxRain);
                     MinRain = MathF.Min(rain, MinRain);
                     
                     _totalLookups++;
 
-                    var selector = MathF.Abs(SelectorNoise.GetValue(xx, zz));
-                    /*if (selector > 1f)
-                    {
-                        var remainder = selector - 1f;
-                        selector = 1f - remainder;
-                    }*/
-
+                    var selector =  MathF.Abs(SelectorNoise.GetValue(xx, zz));
                     MaxSelector = MathF.Max(selector, MaxSelector);
                     MinSelector = MathF.Min(selector, MinSelector);
 
-                    biomes[(x + SampleSize) * SampleArraySize + (z + SampleSize)] = (BiomeRegistry.GetBiome(
-                        (float) temp, (float) rain,  selector));
+                    var index = GetIndex(x, z);
+                    
+                     biomes[index] = (BiomeRegistry.GetBiome(
+                          (float) temp, (float) rain,  selector));
                 }
             }
-            
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++)
                 {
@@ -346,38 +345,9 @@ namespace OpenAPI.WorldGenerator.Generators
         
         public const int MAX_BIOMES = 256;
 
-        private void BlendBiomes(ChunkColumn column, ChunkLandscape landscape)
+        private void SetBiomeBlocks(ChunkColumn chunk, ChunkLandscape landscape)
         {
-            /*
-            ISimplexData2D jitterData = new SimplexData2D();
-            BiomeBase[] jitteredBiomes = new BiomeBase[256];
-            
-            BiomeBase jitterbiome, actualbiome;
-
-            for (int x = 0; x < 16; x++)
-            {
-                for (int z = 0; z < 16; z++)
-                {
-                    int realX = (column.X * 16) + x;
-                    int realZ = (column.Z * 16) + z;
-                    this.SimplexInstance(0).GetValue(realX, realZ, jitterData);
-                    int pX = (int) Math.Round(realX + jitterData.GetDeltaX() * BlendRadius);
-                    int pZ = (int) Math.Round(realZ + jitterData.GetDeltaY() * BlendRadius);
-                    actualbiome = landscape.Biome[(realX & 15) * 16 + (realZ & 15)];
-                    jitterbiome = landscape.Biome[(pX & 15) * 16 + (pZ & 15)];
-
-                    jitteredBiomes[x * 16 + z] = 
-                        (actualbiome.Config.SurfaceBlendIn && jitterbiome.Config.SurfaceBlendOut) ? jitterbiome :
-                            actualbiome;
-                }
-            }
-            */
-
-            SetBiomeBlocks(column, landscape, landscape.Biome);
-        }
-        
-        private void SetBiomeBlocks(ChunkColumn chunk, ChunkLandscape landscape, BiomeBase[] jitteredBiomes)
-        {
+            var jitteredBiomes = landscape.Biome;
             int worldX = chunk.X * 16;
             int worldZ = chunk.Z * 16;
 

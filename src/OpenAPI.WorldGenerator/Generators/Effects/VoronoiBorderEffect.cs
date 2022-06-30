@@ -1,4 +1,4 @@
-using OpenAPI.WorldGenerator.Utils.Noise.Cellular;
+using OpenMiNET.Noise.Cellular;
 
 namespace OpenAPI.WorldGenerator.Generators.Effects
 {

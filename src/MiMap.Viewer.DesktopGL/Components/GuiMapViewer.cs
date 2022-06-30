@@ -296,11 +296,18 @@ namespace MiMap.Viewer.DesktopGL.Components
                 {
                     _effect.World = chunk.World;
 
-                    foreach (var pass in _effect.CurrentTechnique.Passes)
-                    {
-                        pass.Apply();
+                    var min = new Vector3(chunk.ChunkCoordinates.X * 16, 0f, chunk.ChunkCoordinates.Z * 16);
+                    var max = min + new Vector3(16f);
 
-                        chunk.Draw(GraphicsDevice);
+                    if (Camera.BoundingFrustum.Contains(new BoundingBox(min, max)) != ContainmentType.Disjoint)
+                    {
+
+                        foreach (var pass in _effect.CurrentTechnique.Passes)
+                        {
+                            pass.Apply();
+
+                            chunk.Draw(GraphicsDevice);
+                        }
                     }
                 }
                 // foreach (var chunk in Map.Chunks.Values)
