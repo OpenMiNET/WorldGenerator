@@ -30,8 +30,8 @@ namespace MiMap.Viewer.DesktopGL.Core
             primitiveCount = PrimitiveCount;
             primitiveType = PrimitiveType;
 
-            vertexBuffer.SetData(Vertices);
-            indexBuffer.SetData(Indices);
+            vertexBuffer.SetData(Vertices, 0, VertexCount);
+            indexBuffer.SetData(Indices, 0, IndexCount);
         }
 
         private int GetPrimitiveSize(PrimitiveType primitiveType)
