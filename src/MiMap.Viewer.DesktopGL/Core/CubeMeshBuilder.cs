@@ -77,6 +77,32 @@ namespace MiMap.Viewer.DesktopGL.Core
             _indices.Add(indices);
         }
 
+        public void AddQuad(Vector3i v1, Vector3i v2, Vector3i v3, Vector3i v4, int height, Vector2 uv, Color color)
+        {
+            IndexQuad i = new IndexQuad();
+            i[0] = AppendVertex(new VertexPositionNormalTexture(v1, Vector3.Up, uv));
+            i[1] = AppendVertex(new VertexPositionNormalTexture(v2, Vector3.Up, uv));
+            i[2] = AppendVertex(new VertexPositionNormalTexture(v3, Vector3.Up, uv));
+            i[3] = AppendVertex(new VertexPositionNormalTexture(v4, Vector3.Up, uv));
+
+            _indices.Add(i);
+        }
+
+        public void OptimizeFaces()
+        {
+            var gMinX = (int)_vertices.Min(v => v.Position.X);
+            var gMaxX = (int)_vertices.Max(v => v.Position.X);
+            var gMinY = (int)_vertices.Min(v => v.Position.Y);
+            var gMaxY = (int)_vertices.Max(v => v.Position.Y);
+            var gMinZ = (int)_vertices.Min(v => v.Position.Z);
+            var gMaxZ = (int)_vertices.Max(v => v.Position.Z);
+
+            for (int x = gMinX; x <= gMaxX; x++)
+            {
+                
+            }
+        }
+
         private int AppendVertex(VertexPositionNormalTexture vertex)
         {
             _vertices.Add(vertex);

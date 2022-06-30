@@ -47,7 +47,7 @@ namespace MiMap.Viewer.DesktopGL.Components
 
         public CameraComponent Camera { get; }
 
-        public float ZoomSensitivity { get; set; } = 0.025f;
+        public float ZoomSensitivity { get; set; } = 0.005f;
 
         public Rectangle Bounds
         {
@@ -84,21 +84,29 @@ namespace MiMap.Viewer.DesktopGL.Components
             _wireframe = enable;
         }
 
+        private RasterizerState _rasterizerState_wireframe = new RasterizerState()
+        {
+            CullMode = CullMode.CullClockwiseFace,
+            FillMode = FillMode.WireFrame,
+            SlopeScaleDepthBias = default,
+            DepthClipEnable = default,
+            DepthBias = default,
+            ScissorTestEnable = default,
+            MultiSampleAntiAlias = default
+        };
+        private RasterizerState _rasterizerState_no_wireframe = new RasterizerState()
+        {
+            CullMode = CullMode.CullClockwiseFace,
+            FillMode = FillMode.Solid,
+            SlopeScaleDepthBias = default,
+            DepthClipEnable = default,
+            DepthBias = default,
+            ScissorTestEnable = default,
+            MultiSampleAntiAlias = default
+        };
         private void UpdateRasterizerState()
         {
-            var a = RasterizerState.CullClockwise;
-            _rasterizerState = a;
-           
-            /*_rasterizerState = new RasterizerState()
-            {
-                CullMode = _cullMode,
-                DepthBias = RasterizerState.CullNone.SlopeScaleDepthBias,
-                FillMode = _wireframe ? FillMode.WireFrame : FillMode.Solid,
-                DepthClipEnable = false,
-                ScissorTestEnable = false,
-                MultiSampleAntiAlias = RasterizerState.CullNone.MultiSampleAntiAlias,
-                SlopeScaleDepthBias = RasterizerState.CullNone.SlopeScaleDepthBias,
-            };*/
+            _rasterizerState = _wireframe ? _rasterizerState_wireframe : _rasterizerState_no_wireframe;
         }
 
         public override void Initialize()
@@ -124,7 +132,7 @@ namespace MiMap.Viewer.DesktopGL.Components
                 VertexColorEnabled = false,
                 LightingEnabled = true,
                 DiffuseColor = Vector3.One / 2f,
-                AmbientLightColor = new Vector3(.75f, .75f, .75f),
+                AmbientLightColor = new Vector3(.95f, .95f, .95f),
                 SpecularPower = 0,
                 DirectionalLight0 = { Enabled = true, Direction = new Vector3(-3, -1, -2)},
                 DirectionalLight1 = { Enabled = false},
@@ -207,7 +215,7 @@ namespace MiMap.Viewer.DesktopGL.Components
             if (_gizmoModel != null)
             {
                 var cameraViewport = Camera.Viewport;
-                _gizmoViewport = new Viewport(cameraViewport.Bounds.Right - 225, 25, 200, 200, 0f, 5f);
+                _gizmoViewport = new Viewport(cameraViewport.Bounds.Right - 225, 25, 200, 200, -5f, 5f);
 
                 using (var cxt = GraphicsContext.CreateContext(GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.Default, RasterizerState.CullNone, SamplerState.LinearClamp))
                 {
@@ -220,7 +228,8 @@ namespace MiMap.Viewer.DesktopGL.Components
                         ,
                         // Matrix.CreateWorld(Camera.Position, Vector3.Backward, Vector3.Up),
                         //Matrix.CreateLookAt(Vector3.Backward, Vector3.Zero, Vector3.Up),
-                        Matrix.CreateBillboard(Vector3.Zero, Vector3.Backward, Camera.Up, Camera.Forward),
+                        Matrix.CreateLookAt(-Camera.Forward, Vector3.Zero, Camera.Up),
+                        //Matrix.CreateBillboard(Vector3.Zero, Vector3.Backward, Camera.Up, Camera.Forward),
                         // Camera.View,
                         Matrix.CreateOrthographicOffCenter(-1, 1, -1, 1, _gizmoViewport.MinDepth, _gizmoViewport.MaxDepth)
                         );

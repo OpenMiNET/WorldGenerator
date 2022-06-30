@@ -196,17 +196,17 @@ namespace MiMap.Viewer.DesktopGL
                         ChunkMeshAdded?.Invoke(this, chunk);
                     }
                 }
-                
-sw.Restart();
-                while (sw.ElapsedMilliseconds < 8 && _updatedChunks.TryTake(out var chunk))
-                {
-                    chunk.Reload(_graphicsDevice);
-                    
-                    //if (!chunk.HasAllMeshNeighbors)
-                       // RemeshNeighborChunks(chunk.ChunkCoordinates);
-                    
-                    ChunkMeshUpdated?.Invoke(this, chunk);
-                }
+//                 
+// sw.Restart();
+//                 while (sw.ElapsedMilliseconds < 8 && _updatedChunks.TryTake(out var chunk))
+//                 {
+//                     chunk.Reload(_graphicsDevice);
+//                     
+//                     //if (!chunk.HasAllMeshNeighbors)
+//                        // RemeshNeighborChunks(chunk.ChunkCoordinates);
+//                     
+//                     ChunkMeshUpdated?.Invoke(this, chunk);
+//                 }
             }
         }
 
