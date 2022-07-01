@@ -5,6 +5,7 @@ using g3;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiMap.Viewer.DesktopGL.Core;
+using MiMap.Viewer.DesktopGL.Models;
 using MiNET.Worlds;
 using OpenAPI.WorldGenerator.Generators.Biomes;
 using Vector3i = MiMap.Viewer.DesktopGL.Primitive.Vector3i;
@@ -344,21 +345,13 @@ namespace MiMap.Viewer.DesktopGL.Graphics
             chunk.UpdateMesh(meshBuilder.BuildTriangulatedMesh());
         }
 
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static int? GetField(MapChunk chunk, int x, int y, int z)
-        {
-            var idx = GetXZIndex(x, z);
-            var h = chunk.Heights[idx];
-            return y <= h ? chunk.Biomes[idx] : null;
-        }
-
-        public static void ReducedMesh(ICubeMeshBuilder cubeMeshBuilder, MapChunk chunk)
+        public static void ReducedMesh(ICubeMeshBuilder cubeMeshBuilder, IMapChunkData chunk)
         {
             //   List<Vector2> uvs = new List<Vector2>();
             // List<Color> colors = new List<Color>();
 
-            int[] chunkSize = { 16, ChunkColumn.WorldHeight, 16 };
+            var s = chunk.ChunkSize;
+            int[] chunkSize = { s.X, s.Y, s.Z };
 
             //Sweep over 3-axes
             for (var d = 0; d < 3; d++)
@@ -382,8 +375,8 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     {
                         for (x[u] = 0; x[u] < chunkSize[u]; ++x[u], ++n)
                         {
-                            var vox1 = GetField(chunk, x[0], x[1], x[2]);
-                            var vox2 = GetField(chunk, x[0] + q[0], x[1] + q[1], x[2] + q[2]);
+                            var vox1 = chunk[x[0], x[1], x[2]];
+                            var vox2 = chunk[x[0] + q[0], x[1] + q[1], x[2] + q[2]];
 
 //                            mask[n] = vox1 != vox2 ? 1 : 0;
 
@@ -402,6 +395,18 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                             {
                                 mask[n] = -b;
                             }
+                            // if (vox1.HasValue == vox2.HasValue)
+                            // {
+                            //     mask[n] = null;
+                            // }
+                            // else if ((a.HasValue))
+                            // {
+                            //     mask[n] = vox1;
+                            // }
+                            // else
+                            // {
+                            //     mask[n] = vox2;
+                            // }
 
 
                             //    bool test = (0 <= x[d] ? (int)chunk.GetField(x[0], x[1], x[2]) : 0) !=

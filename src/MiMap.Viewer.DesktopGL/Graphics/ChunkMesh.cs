@@ -6,6 +6,7 @@ using gs;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiMap.Viewer.DesktopGL.Core;
+using MiMap.Viewer.DesktopGL.Primitive;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
@@ -31,10 +32,14 @@ namespace MiMap.Viewer.DesktopGL.Graphics
         private IRawMesh _mesh;
         private PrimitiveType _primitiveType;
 
-        public ChunkMesh(ChunkCoordinates chunkCoordinates) : base(chunkCoordinates)
+        public ChunkMesh(ChunkCoordinates position) : this(new Vector2i(position.X << 4, position.Z << 4), 16)
+        {
+        }
+
+        public ChunkMesh(Vector2i position, int sizeXZ) : base(position, sizeXZ)
         {
             World = Matrix.Identity
-                    * Matrix.CreateTranslation(new Vector3((chunkCoordinates.X << 4), 0f, (chunkCoordinates.Z << 4)));
+                    * Matrix.CreateTranslation(new Vector3(position.X, 0f, position.Z));
         }
 
         internal void UpdateMesh(IRawMesh mesh)

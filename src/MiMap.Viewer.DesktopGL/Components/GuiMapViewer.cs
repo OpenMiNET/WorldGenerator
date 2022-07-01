@@ -131,7 +131,7 @@ namespace MiMap.Viewer.DesktopGL.Components
                 // AmbientLightColor = new Vector3(1f, 1f, 1f),
                 VertexColorEnabled = false,
                 LightingEnabled = true,
-                DiffuseColor = Vector3.One / 2f,
+                DiffuseColor = Vector3.One * 0.85f,
                 AmbientLightColor = new Vector3(.95f, .95f, .95f),
                 SpecularPower = 0,
                 DirectionalLight0 = { Enabled = true, Direction = new Vector3(-3, -1, -2)},
@@ -403,10 +403,10 @@ namespace MiMap.Viewer.DesktopGL.Components
         private void Generate()
         {
             var worldBounds = Camera.VisibleWorldBounds;
-            var minX = worldBounds.X >> 4;
-            var minY = worldBounds.Y >> 4;
-            var maxX = (worldBounds.X + worldBounds.Width) >> 4;
-            var maxY = (worldBounds.Y + worldBounds.Height) >> 4;
+            var minX = worldBounds.X >> 9;
+            var minY = worldBounds.Y >> 9;
+            var maxX = (worldBounds.X + worldBounds.Width) >> 9;
+            var maxY = (worldBounds.Y + worldBounds.Height) >> 9;
             var chunkBounds = new Rectangle(minX, minY, maxX - minX, maxY - minY);
             Map.GenerateMissingChunks(chunkBounds);
         }

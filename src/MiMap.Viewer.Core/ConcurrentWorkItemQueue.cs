@@ -41,7 +41,7 @@ namespace MiMap.Viewer.Element.MiMapTiles
 
             DataQueue = new BufferBlock<T>(blockOptions);
             var actionBlock = new ActionBlock<T>(Process, blockOptions);
-            DataQueue.LinkTo(actionBlock, new DataflowLinkOptions() {PropagateCompletion = true});
+            DataQueue.LinkTo(actionBlock, new DataflowLinkOptions() {PropagateCompletion = true, Append = true});
         }
 
         public bool TryEnqueue(T item)
@@ -70,7 +70,7 @@ namespace MiMap.Viewer.Element.MiMapTiles
 
             _processWorkItem.Invoke(c);
 
-            MarkComplete(c);
+            //MarkComplete(c);
             ItemCompleted?.Invoke(this, c);
         }
         
