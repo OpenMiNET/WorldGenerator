@@ -111,7 +111,7 @@ namespace MiMap.Viewer.DesktopGL
                 chunkCoordinates = new ChunkCoordinates((regionCoords.X << 5) + x, (regionCoords.Z << 5) + z);
                 using (var chunk = _worldGenerator.GenerateChunkColumn(chunkCoordinates))
                 {
-                    ExtractMapChunk(ref regionMesh, chunk, (chunk.X & 0x1F) << 4, (chunk.Z & 0x1F) << 4);
+                    ExtractMapChunk(ref regionMesh, chunk, x << 4, z << 4);
                 }
             }
             
@@ -155,11 +155,10 @@ namespace MiMap.Viewer.DesktopGL
             for (int x = 0; x < 16; x++)
             for (int z = 0; z < 16; z++)
             {
-                i = (x * 16) + z;
-                idx = ((offsetX + x) * chunk.ChunkSize.Z) + (offsetZ + z);
+                i = (z * 16) + x;
                 
-                chunk.Biomes[idx] = chunkColumn.biomeId[i];
-                chunk.Heights[idx] = chunkColumn.height[i];
+                chunk.Biomes[offsetX + x, offsetZ+z] = chunkColumn.biomeId[i];
+                chunk.Heights[offsetX + x, offsetZ+z] = chunkColumn.height[i];
             }
 
             //chunk.Recalculate();
