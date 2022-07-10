@@ -11,6 +11,8 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Config
         public bool IsEdgeBiome { get; set; } = false;
 
         public int Weight { get; set; } = Weights.Common;
+
+        public float TreeDensity = 0.6f;
         
         public BiomeConfig()
         {

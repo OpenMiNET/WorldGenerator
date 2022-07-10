@@ -2,6 +2,12 @@
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
+        <LangVersion>10</LangVersion>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <DefineConstants />
+        <Optimize>true</Optimize>
     </PropertyGroup>
 
     <ItemGroup>

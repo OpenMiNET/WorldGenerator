@@ -1,5 +1,5 @@
-namespace OpenAPI.WorldGenerator.Generators.Terrain;
-
+namespace OpenAPI.WorldGenerator.Generators.Terrain
+{
 public class VanillaMesaPlateauTerrain : TerrainBase
 {
 	private readonly float[] _height;
@@ -23,4 +23,5 @@ public class VanillaMesaPlateauTerrain : TerrainBase
 	{
 		return TerrainPlateau(generator, x, y, river, _height, border, _strength, _heightLength, 100f, false);
 	}
+}
 }

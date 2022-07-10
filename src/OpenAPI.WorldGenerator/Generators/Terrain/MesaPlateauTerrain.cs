@@ -26,7 +26,7 @@ namespace OpenAPI.WorldGenerator.Generators.Terrain
         
         public override float GenerateNoise(OverworldGeneratorV2 generator, int passedX, int passedY, float border, float river)
         {
-            var jitterData = SimplexData2D.NewDisk();
+            var jitterData = new SimplexData2D();
             generator.SimplexInstance(1).GetValue(passedX / _jitterWavelength, passedY / _jitterWavelength, jitterData);
             float x = (float) (passedX + jitterData.GetDeltaX() * _jitterAmplitude);
             float y = (float) (passedY + jitterData.GetDeltaY() * _jitterAmplitude);

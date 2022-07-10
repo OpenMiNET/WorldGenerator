@@ -7,7 +7,6 @@ namespace OpenAPI.WorldGenerator.Generators.Effects
     */
     public class RaiseEffect : HeightEffect
     {
-
         // just adds a number
         public readonly float Height;
 
@@ -18,7 +17,6 @@ namespace OpenAPI.WorldGenerator.Generators.Effects
 
         public override float Added(OverworldGeneratorV2 generator, float x, float y)
         {
-
             return Height;
         }
     }

@@ -15,11 +15,6 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 			get { return "PineTree"; }
 		}
 
-		public override int MaxHeight
-		{
-			get { return 10; }
-		}
-
 		private static readonly int WoodId = new Wood()
 		{
 			WoodType = "oak"
@@ -30,43 +25,40 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 			OldLeafType = "oak"
 		}.GetRuntimeId();
 		
-		public override void Create(ChunkColumn column, int x, int y, int z)
+		public override void Create(StructurePlan plan, int x, int y, int z)
 		{
-			//var block = blocks[OverworldGenerator.GetIndex(x, y - 1, z)];
-			//if (block != 2 && block != 3) return;
-
+			CheckFloor(plan, x, y - 1, z);
 			var location = new Vector3(x, y, z);
-			if (!ValidLocation(location, _leafRadius)) return;
 
 			var height = Rnd.Next(7, 8);
-			GenerateColumn(column, location, height, WoodId);
+			GenerateColumn(plan, location, height, WoodId);
 			for (var Y = 1; Y < height; Y++)
 			{
 				if (Y % 2 == 0)
 				{
-					GenerateVanillaCircle(column, location + new Vector3(0, Y + 1, 0), _leafRadius - 1, LeafId, 1);
+					GenerateVanillaCircle(plan, location + new Vector3(0, Y + 1, 0), _leafRadius - 1, LeafId, 1);
 					continue;
 				}
-				GenerateVanillaCircle(column, location + new Vector3(0, Y + 1, 0), _leafRadius, LeafId, 1);
+				GenerateVanillaCircle(plan, location + new Vector3(0, Y + 1, 0), _leafRadius, LeafId, 1);
 			}
 
-			GenerateTopper(column, location + new Vector3(0, height, 0), 0x1);
+			GenerateTopper(plan, location + new Vector3(0, height, 0), 0x1);
 		}
 
-		protected void GenerateTopper(ChunkColumn chunk, Vector3 location, byte type = 0x0)
+		protected void GenerateTopper(StructurePlan plan, Vector3 location, byte type = 0x0)
 		{
 			var sectionRadius = 1;
-			GenerateCircle(chunk, location, sectionRadius, LeafId);
+			GenerateCircle(plan, location, sectionRadius, LeafId);
 			var top = location + new Vector3(0, 1, 0);
 			var x = (int)location.X;
 			var y = (int)location.Y + 1;
 			var z = (int)location.Z;
 
-			chunk.SetBlockByRuntimeId(x, y, z, LeafId);
+			plan.PlaceBlock(x, y, z, LeafId);
 			//chunk.SetMetadata(x, y, z, 1);
 			
 			if (type == 0x1 && y < 256)
-				GenerateVanillaCircle(chunk, new Vector3(x, y, z), sectionRadius, LeafId);
+				GenerateVanillaCircle(plan, new Vector3(x, y, z), sectionRadius, LeafId);
 		}
 	}
 }

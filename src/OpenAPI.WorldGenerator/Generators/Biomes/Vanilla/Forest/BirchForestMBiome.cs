@@ -2,8 +2,8 @@ using OpenAPI.WorldGenerator.Generators.Biomes.Config;
 using OpenAPI.WorldGenerator.Generators.Terrain;
 using OpenAPI.WorldGenerator.Utils;
 
-namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Forest;
-
+namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Forest
+{
 public class BirchForestMBiome : BiomeBase
 {
 	public BirchForestMBiome()
@@ -19,4 +19,5 @@ public class BirchForestMBiome : BiomeBase
 		
 		Color = ColorUtils.FromHtml("#589C6C");
 	}
+}
 }

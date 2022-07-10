@@ -771,7 +771,8 @@ namespace OpenAPI.WorldGenerator.Utils.Noise.Primitives
                 double gy = Gradients2D[gi + 1];
                 double extrp = gx * dx + gy * dy;
                 int giSph2 = _perm2DSph2[giP];
-                data.Request().Apply((float) attn, (float) extrp, (float) gx, (float) gy, giSph2, (float) dx, (float) dy);
+                
+                data.Request((float) attn, (float) extrp, (float) gx, (float) gy, giSph2, (float) dx, (float) dy);
             }
         }
         

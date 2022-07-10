@@ -25,6 +25,7 @@ namespace OpenAPI.WorldGenerator.Generators.Surfaces
         protected static readonly int AirId = new Air().Id;
         protected static readonly int StoneId = new Stone().Id;
         protected static readonly int WaterId = new Water().Id;
+        protected static readonly int SandRuntimeId = new Sand().GetRuntimeId();
         
         public SurfaceBase(BiomeConfig config, Block top, Block filler)
         {
@@ -42,7 +43,7 @@ namespace OpenAPI.WorldGenerator.Generators.Surfaces
         public virtual void PaintTerrain(ChunkColumn column, int blockX, int blockZ, int x, int z, int depth,
             OverworldGeneratorV2 generator, float[] noise, float river, BiomeBase[] biomes)
         {
-           // float c = TerrainBase.CalcCliff(x, z, noise);
+            //float c = TerrainBase.CalcCliff(x, z, noise);
            // bool cliff = c > 1.4f;
            
             for (int y = 255; y > -1; y--) {
@@ -53,8 +54,12 @@ namespace OpenAPI.WorldGenerator.Generators.Surfaces
                 }
                 else if (b == StoneId) {
                     depth++;
-
-                    if (depth == 0 && y > generator.Preset.SeaLevel - 2) {
+                    
+                    if (depth < 4 && river > 0.7)
+                    {
+                        column.SetBlockByRuntimeId(x,y, z, SandRuntimeId);
+                    } 
+                    else if (depth == 0 && y > generator.Preset.SeaLevel - 2) {
                         column.SetBlockByRuntimeId(x, y, z, TopBlock);
                     }
                     else if (depth < 4) {

@@ -15,10 +15,13 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes.Vanilla.Jungle
             Downfall = 0.9f;
             MinHeight = 0.1f;
             MaxHeight = 0.4f;
-
+            
+            Config.Weight = Weights.Common;
+            Config.TreeDensity = 0.4f;
+            
             Terrain = new JungleTerrain();
             Surface = new JungleSurface(Config, new Grass(), new Dirt(), 0f, 1.5f, 60f, 65f, 1.5f, new Podzol(), 0.09f);
-            Config.Weight = Weights.Common;
+            
             Color = OpenAPI.WorldGenerator.Utils.ColorUtils.FromHtml("#537B09");
             
             // Config.WeightMultiplier = 1.f;

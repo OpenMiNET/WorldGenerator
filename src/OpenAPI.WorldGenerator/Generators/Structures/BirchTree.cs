@@ -11,11 +11,6 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
             get { return "BirchTree"; }
         }
 
-        public override int MaxHeight
-        {
-            get { return 7; }
-        }
-
 		private const int LeafRadius = 2;
 		private static readonly int WoodId = new Wood()
 		{
@@ -27,18 +22,17 @@ namespace OpenAPI.WorldGenerator.Generators.Structures
 			OldLeafType = "birch"
 		}.GetRuntimeId();
 		
-		public override void Create(ChunkColumn column, int x, int y, int z)
+		public override void Create(StructurePlan plan, int x, int y, int z)
 	    {
 		//	var block = blocks[OverworldGenerator.GetIndex(x, y - 1, z)];
 		//	if (block != 2 && block != 3) return;
-
+			CheckFloor(plan, x, y - 1, z);
 			var location = new Vector3(x, y, z);
-			if (!ValidLocation(location, LeafRadius)) return;
 
-			int height = Rnd.Next(4, MaxHeight);
-			GenerateColumn(column, location, height, WoodId);
+			int height = Rnd.Next(4, 7);
+			GenerateColumn(plan, location, height, WoodId);
 			Vector3 leafLocation = location + new Vector3(0, height, 0);
-			GenerateVanillaLeaves(column, leafLocation, LeafRadius, LeafId);
+			GenerateVanillaLeaves(plan, leafLocation, LeafRadius, LeafId);
 		}
 	}
 }
