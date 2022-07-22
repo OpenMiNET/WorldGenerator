@@ -196,7 +196,6 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
 
         public int GetBiome(float temperature, float downfall, float selector)
         {
-            selector = MathF.Abs(selector);
             var biomes = GetBiomes();
             var weights = ArrayPool<float>.Shared.Rent(biomes.Length);
 
@@ -210,7 +209,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
                     var humidityDifference = MathF.Abs(biomes[i].Downfall - downfall);
 
                    // temperatureDifference *= 7.5f;
-                  //  humidityDifference *= 2.5f;
+                   // humidityDifference *= 2.5f;
                     
                     var heatIndex = MathF.Abs(temperatureDifference * temperatureDifference + humidityDifference * humidityDifference);
                     
@@ -233,10 +232,7 @@ namespace OpenAPI.WorldGenerator.Generators.Biomes
                     }
                 }
 
-                for (int i = 0; i < weights.Length; i++)
-                    weights[i] /= sum;
-
-             //   selector *= sum;
+                 selector *= sum;
 
                 float currentWeightIndex = 0;
                // float maxWeight = 

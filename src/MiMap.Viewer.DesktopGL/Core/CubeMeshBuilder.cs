@@ -146,8 +146,24 @@ namespace MiMap.Viewer.DesktopGL.Core
                 i[0], 
                 i[1]
             }).ToArray();
+            
+            var triangleCount = idx.Length / 3;
 
+            for (int f = 0; f < triangleCount; f++)
+            {
+                var index = f * 3;
+                var a = vtx[idx[index]].Position;
+                var b = vtx[idx[index + 1]].Position;
+                var c = vtx[idx[index + 2]].Position;
+
+                var n = Vector3.Normalize(Vector3.Cross(a - b, a - c));
+                vtx[idx[index]].Normal = n;
+                vtx[idx[index + 1]].Normal = n;
+                vtx[idx[index + 2]].Normal = n;
+            }
+            
             var mesh = new RawMesh<VertexPositionNormalTexture>(vtx, idx, PrimitiveType.TriangleList);
+            
             _vertices.Clear();
             _vertices = null;
             _indices.Clear();

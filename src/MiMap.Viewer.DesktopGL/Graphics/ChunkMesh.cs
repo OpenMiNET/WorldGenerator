@@ -39,6 +39,8 @@ namespace MiMap.Viewer.DesktopGL.Graphics
 
         internal void UpdateMesh(IRawMesh mesh)
         {
+            if (mesh.VertexCount == 0)
+                return;
             _mesh = mesh;
             Initialized = false;
         }
@@ -47,9 +49,11 @@ namespace MiMap.Viewer.DesktopGL.Graphics
         {
             if (OnlyLoadWhenAllNeighborChunks && !HasAllMeshNeighbors) 
                 return;
-            
-            if (_mesh != null)
+
+            var mesh = _mesh;
+            if (mesh != null)
             {
+                _mesh = null;
                 Initialized = false;
                 
                 _vertexBuffer?.Dispose();
@@ -57,8 +61,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                 _indexBuffer?.Dispose();
                 _indexBuffer = null;
 
-                _mesh.CreateBuffers(graphicsDevice, out _vertexBuffer, out _indexBuffer, out _primitiveCount, out _primitiveType);
-                _mesh = null;
+                mesh.CreateBuffers(graphicsDevice, out _vertexBuffer, out _indexBuffer, out _primitiveCount, out _primitiveType);
                 Initialized = true;
             }
         }

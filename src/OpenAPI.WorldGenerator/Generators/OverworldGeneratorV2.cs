@@ -13,6 +13,7 @@ using OpenMiNET.Noise;
 using OpenMiNET.Noise.Cellular;
 using OpenMiNET.Noise.Modules;
 using OpenMiNET.Noise.Primitives;
+using OpenMiNET.Noise.Transformers;
 
 namespace OpenAPI.WorldGenerator.Generators
 {
@@ -149,9 +150,11 @@ namespace OpenAPI.WorldGenerator.Generators
             BiomeRegistry = new BiomeRegistry();
             var biomeScale = 16f * Preset.BiomeSize;
 
-            INoiseModule temperatureNoise = new VoronoiNoseModule(new SimplexPerlin(seed ^ 3, NoiseQuality.Fast))
+            INoiseModule temperatureNoise = new BillowNoiseModule(new SimplexPerlin(seed ^ 3, NoiseQuality.Fast))
             {
-                Distance = false, Frequency = 0.00325644f, Displacement = 2f
+              //  Distance = false,
+                Frequency = 0.00255644f,
+              //  Displacement = 2f
             };
             
        //     temperatureNoise = new TurbulenceNoiseModule(temperatureNoise, distortNoise, distortNoise, distortNoise, 1.25f);
@@ -161,47 +164,36 @@ namespace OpenAPI.WorldGenerator.Generators
                 ScaleX = 1f / biomeScale, ScaleY = 1f / biomeScale, ScaleZ = 1f / biomeScale
             };
 
-            RainfallNoise = new ScaledNoiseModule(new VoronoiNoseModule(new SimplexPerlin(seed * seed ^ 2, NoiseQuality.Fast))
+            INoiseModule rainNoise = new BillowNoiseModule(new SimplexPerlin(seed * seed ^ 2, NoiseQuality.Fast))
             {
-                Distance = false,
-                Frequency = 0.0022776f,
-                Displacement = 1f
-            })
+             //  Distance = false, 
+               Frequency = 0.0027776f, 
+               //Displacement = 1f
+            };
+
+            RainfallNoise = new ScaledNoiseModule(rainNoise)
             {
                 ScaleX = 1f / biomeScale, ScaleY = 1f / biomeScale, ScaleZ = 1f / biomeScale
             };
 
             INoiseModule selectorNoise = new SimplexPerlin(seed * 69, NoiseQuality.Fast);
-           
-            /*selectorNoise = new VoronoiNoseModule(selectorNoise)
-            {
-              Frequency = .845776f,
-              Distance = false,
-              Displacement = 1
-              //OctaveCount = 2,
-             // Offset = 1f,
-             // Lacunarity = 1f,
-             // Gain = 2f,
-             // SpectralExponent = 0.9f
-            };*/
-           
-           // selectorNoise = new TurbulenceNoiseModule(selectorNoise, distortNoise, distortNoise, distortNoise, 4.25f);
-          // selectorNoise = new TurbulenceNoiseModule(distortNoise, distortNoise, distortNoise, distortNoise, 4.25f);
-         // selectorNoise = new SimplexPerlin(seed * 69, NoiseQuality.Fast);
-            SelectorNoise = new ScaledNoiseModule(new BillowNoiseModule(selectorNoise)
-            {
-                Scale = 1f / 6f
-            })
-            {
-                ScaleX = 1f / 128f, ScaleY = 1f /128f, ScaleZ = 1f / 128f,
-                OctaveCount = 4,
-                 Offset = 1f,
-                 Lacunarity = 1.3f,
-                 Gain = 2f,
-                 SpectralExponent = 0.9f,
-                 Frequency = 0.01245776f
-            };
 
+           
+            selectorNoise = new VoronoiNoseModule(selectorNoise) { Frequency = 1f / 8f };
+            selectorNoise = new ScaledNoiseModule(selectorNoise)
+            {
+                ScaleX = 1f / Preset.MainNoiseScaleX,
+                ScaleY = 1f / Preset.MainNoiseScaleY,
+                ScaleZ = 1f / Preset.MainNoiseScaleZ,
+                OctaveCount = 4,
+                Offset = 1f,
+                Lacunarity = 1f,
+                Gain = 1.2f,
+                SpectralExponent = 0.9f,
+            };
+           
+           // selectorNoise = new TurbulenceNoiseModule(selectorNoise, distortNoise, distortNoise, distortNoise, 8.25f);
+            SelectorNoise = selectorNoise;
             //SelectorNoise = selectorNoise;
             var d = new FoliageDecorator(Preset);
             d.SetSeed(seed);
@@ -280,7 +272,7 @@ namespace OpenAPI.WorldGenerator.Generators
                     
                     _totalLookups++;
 
-                    var selector =  MathF.Abs(SelectorNoise.GetValue(xx, zz));
+                    var selector =  MathF.Abs(SelectorNoise.GetValue(xx, zz))  / 4;
                     MaxSelector = MathF.Max(selector, MaxSelector);
                     MinSelector = MathF.Min(selector, MinSelector);
 
