@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using ImGuiNET;
 using Microsoft.Xna.Framework.Graphics;
 using MiMap.Viewer.DesktopGL.Core;
+using MiMap.Viewer.DesktopGL.Primitive;
 using MiNET.Utils.Vectors;
 using OpenAPI.WorldGenerator.Generators.Biomes;
 using static ImGuiNET.ImGui;
@@ -499,12 +500,12 @@ namespace MiMap.Viewer.DesktopGL.Components
             _cursorRegion[0] = _cursorBlock[0] >> 9;
             _cursorRegion[1] = _cursorBlock[2] >> 9;
 
-            var cursorBlockChunk = Map.GetChunk(new ChunkCoordinates(_cursorChunk[0], _cursorChunk[1]));
+            var cursorBlockChunk = Map.GetChunk(new Vector2i(_cursorRegion[0], _cursorRegion[1]));
             if (cursorBlockChunk != default)
             {
-                var x = _cursorBlock[0] % 16;
-                var z = _cursorBlock[2] % 16;
-                var idx = ((z & 0xF) << 4) + (x & 0xF);
+                var x = _cursorBlock[0] % 512;
+                var z = _cursorBlock[2] % 512;
+                var idx = ((z & 512) << 9) + (x & 512);
                 _cursorBlock[1] = (int)cursorBlockChunk.Heights[idx];
                 _cursorBlockBiomeId = (int)cursorBlockChunk.Biomes[idx];
                 _cursorBlockBiome = Map.BiomeRegistry.GetBiome(_cursorBlockBiomeId);

@@ -63,12 +63,12 @@ namespace MiMap.Viewer.DesktopGL.Core
 
             if (height == 0)
                 height = 1;
-            
+
             var size = new Vector3i(1, height, 1);
 
             for (int i = 0; i < 4; i++)
             {
-                indices[i] = AppendVertex(new VertexPositionNormalTexture(pos + (FaceVertexOffsets[faceOffsetsIndex, i] * size), 
+                indices[i] = AppendVertex(new VertexPositionNormalTexture(pos + (FaceVertexOffsets[faceOffsetsIndex, i] * size),
                     FaceNormal[faceOffsetsIndex],
                     uv
                 ));
@@ -77,13 +77,15 @@ namespace MiMap.Viewer.DesktopGL.Core
             _indices.Add(indices);
         }
 
-        public void AddQuad(Vector3i v1, Vector3i v2, Vector3i v3, Vector3i v4, int height, Vector2 uv, Color color)
+        public void AddQuad(Vector3i v1, Vector3i v2, Vector3i v3, Vector3i v4, Vector3 normal, Vector2 uv, Color color)
         {
             IndexQuad i = new IndexQuad();
-            i[0] = AppendVertex(new VertexPositionNormalTexture(v1, Vector3.Up, uv));
-            i[1] = AppendVertex(new VertexPositionNormalTexture(v2, Vector3.Up, uv));
-            i[2] = AppendVertex(new VertexPositionNormalTexture(v3, Vector3.Up, uv));
-            i[3] = AppendVertex(new VertexPositionNormalTexture(v4, Vector3.Up, uv));
+            // var normal = Vector3.Normalize(Vector3.Cross((v2 - v4), (v3 - v4)));
+
+            i[0] = AppendVertex(new VertexPositionNormalTexture(v1, normal, uv));
+            i[1] = AppendVertex(new VertexPositionNormalTexture(v2, normal, uv));
+            i[2] = AppendVertex(new VertexPositionNormalTexture(v3, normal, uv));
+            i[3] = AppendVertex(new VertexPositionNormalTexture(v4, normal, uv));
 
             _indices.Add(i);
         }
@@ -99,7 +101,6 @@ namespace MiMap.Viewer.DesktopGL.Core
 
             for (int x = gMinX; x <= gMaxX; x++)
             {
-                
             }
         }
 
@@ -114,16 +115,16 @@ namespace MiMap.Viewer.DesktopGL.Core
         {
             var vtx = _vertices.ToArray();
             var idx = _indices.SelectMany(i => i.ToArray()).ToArray();
-            
+
             var mesh = new RawMesh<VertexPositionNormalTexture>(vtx, idx, PrimitiveType.PatchListWith4ControlPoints);
             _vertices.Clear();
             _vertices = null;
             _indices.Clear();
             _indices = null;
-        
+
             return mesh;
         }
-        
+
         public IRawMesh BuildTriangulatedMesh()
         {
             // var vtx = _vertices.Select(v => new VertexPositionNormalTexture(v.Position, v.Normal, v.TextureCoordinate)).ToArray();
@@ -170,6 +171,27 @@ namespace MiMap.Viewer.DesktopGL.Core
             _indices = null;
 
             return mesh;
+        }
+
+        public void RecalculateNormals()
+        {
+            var quadCount = _indices.Count;
+            if (quadCount <= 0) return;
+
+            for (var quad = 0; quad < quadCount; quad++)
+            {
+                var q = _indices[quad];
+                var a = _vertices[q[3]];
+                var b = _vertices[q[0]];
+                var c = _vertices[q[1]];
+
+                var n = Vector3.Normalize(Vector3.Cross(b.Position - a.Position, c.Position - a.Position));
+
+                var v0 = _vertices[q[0]]; v0.Normal = n;
+                var v1 = _vertices[q[1]]; v1.Normal = n;
+                var v2 = _vertices[q[2]]; v2.Normal = n;
+                var v3 = _vertices[q[3]]; v3.Normal = n;
+            }
         }
     }
 }

@@ -1,9 +1,11 @@
+using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using g3;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiMap.Viewer.DesktopGL.Core;
+using MiMap.Viewer.DesktopGL.Models;
 using MiNET.Worlds;
 using OpenAPI.WorldGenerator.Generators.Biomes;
 using Vector3i = MiMap.Viewer.DesktopGL.Primitive.Vector3i;
@@ -44,7 +46,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
         {
             return ((z & 0xF) << 4) | (x & 0xF);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public static void CheckAndAddFaces(ICubeMeshBuilder cubeMeshBuilder, MapChunk chunk, int x, int z)
         {
@@ -59,7 +61,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
             idx = GetXZIndex(x, z);
             biome = chunk.Biomes[idx];
             height = chunk.Heights[idx];
-            
+
             pos = new Vector3i(x, height, z);
             uv = biomeUvMapVector2[biome];
             color = biomeColorMap[biome];
@@ -153,14 +155,14 @@ namespace MiMap.Viewer.DesktopGL.Graphics
             Vector3i pos;
             Vector2 uv;
             Color color;
-            
+
             int neighborCount = 0;
 
             // -X
             if (map.TryGetChunk(chunk.X - 1, chunk.Z, out tChunk))
             {
                 neighborCount++;
-                
+
                 x = 0;
                 tX = 15;
 
@@ -186,7 +188,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     // add side
                     if (height > tHeight)
                     {
-                        cubeMeshBuilder.AddCubeFace(pos, CubeFace.West, tHeight-height, uv, color);
+                        cubeMeshBuilder.AddCubeFace(pos, CubeFace.West, tHeight - height, uv, color);
                     }
                 }
             }
@@ -195,7 +197,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
             if (map.TryGetChunk(chunk.X + 1, chunk.Z, out tChunk))
             {
                 neighborCount++;
-                
+
                 x = 15;
                 tX = 0;
 
@@ -219,7 +221,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     // add side
                     if (height > tHeight)
                     {
-                        cubeMeshBuilder.AddCubeFace(pos, CubeFace.East, tHeight-height, uv, color);
+                        cubeMeshBuilder.AddCubeFace(pos, CubeFace.East, tHeight - height, uv, color);
                     }
                 }
             }
@@ -252,7 +254,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     // add side
                     if (height > tHeight)
                     {
-                        cubeMeshBuilder.AddCubeFace(pos, CubeFace.South, tHeight-height, uv, color);
+                        cubeMeshBuilder.AddCubeFace(pos, CubeFace.South, tHeight - height, uv, color);
                     }
                 }
             }
@@ -285,11 +287,11 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                     // add side
                     if (height > tHeight)
                     {
-                        cubeMeshBuilder.AddCubeFace(pos, CubeFace.North, tHeight-height, uv, color);
+                        cubeMeshBuilder.AddCubeFace(pos, CubeFace.North, tHeight - height, uv, color);
                     }
                 }
             }
-            
+
             chunk.HasAllMeshNeighbors = (neighborCount == 4);
         }
 
@@ -303,32 +305,32 @@ namespace MiMap.Viewer.DesktopGL.Graphics
             Vector3i pos;
             Vector2 uv;
             Color color;
-            
+
             for (x = 0; x < 16; x++)
             for (z = 0; z < 16; z++)
             {
-                if (!(x == 0 || x == 15) && !(z == 0 || z == 15)) 
+                if (!(x == 0 || x == 15) && !(z == 0 || z == 15))
                     continue;
-                
+
                 idx = GetXZIndex(x, z);
                 biome = chunk.Biomes[idx];
                 height = chunk.Heights[idx];
                 pos = new Vector3i(x, height, z);
                 uv = biomeUvMapVector2[biome];
                 color = biomeColorMap[biome];
-                
+
                 cubeMeshBuilder.AddCubeFace(pos, CubeFace.North, -height, uv, color);
             }
         }
-        
+
         public static void GenerateMesh(Map map, ref ChunkMesh chunk)
         {
             int z, x;
             var meshBuilder = new CubeMeshBuilder();
 
             ReducedMesh(meshBuilder, chunk);
-            
-            
+
+
             // for (z = 0; z < 16; z++)
             // {
             //     for (x = 0; x < 16; x++)
@@ -338,74 +340,73 @@ namespace MiMap.Viewer.DesktopGL.Graphics
             // }
             //
             // StretchBoundaryFacesToZero(meshBuilder, map, chunk);
+            //meshBuilder.RecalculateNormals();
 
             chunk.UpdateMesh(meshBuilder.BuildTriangulatedMesh());
         }
 
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static int GetField(MapChunk chunk, int x, int y, int z)
-        {
-            var idx = GetXZIndex(x, z);
-            var h = chunk.Heights[idx];
-            return y <= h ? chunk.Biomes[idx] : 0;
-        }
-
-        public static void ReducedMesh(ICubeMeshBuilder cubeMeshBuilder, MapChunk chunk)
+        public static void ReducedMesh(ICubeMeshBuilder cubeMeshBuilder, IMapChunkData chunk)
         {
             //   List<Vector2> uvs = new List<Vector2>();
             // List<Color> colors = new List<Color>();
 
-            int[] dims = { 16, ChunkColumn.WorldHeight, 16 };
+            var s = chunk.ChunkSize;
+            int[] chunkSize = { s.X, s.Y, s.Z };
 
             //Sweep over 3-axes
-            for (int d = 0; d < 3; d++)
+            for (var d = 0; d < 3; d++)
             {
-                int i = 0;
-                int j = 0;
-                int k = 0;
-                int l = 0;
-                int w = 0;
-                int h = 0;
+                int i, j, k, l, w, h;
 
-                int u = (d + 1) % 3;
-                int v = (d + 2) % 3;
+                var u = (d + 1) % 3;
+                var v = (d + 2) % 3;
 
                 int[] x = { 0, 0, 0 };
                 int[] q = { 0, 0, 0 };
-                int[] mask = new int[(dims[u] + 1) * (dims[v] + 1)];
-
+                var mask = new int?[(chunkSize[u] + 1) * (chunkSize[v] + 1)];
 
                 q[d] = 1;
 
-                for (x[d] = -1; x[d] < dims[d];)
+                for (x[d] = -1; x[d] < chunkSize[d];)
                 {
                     // Compute the mask
-                    int n = 0;
-                    for (x[v] = 0; x[v] < dims[v]; ++x[v])
+                    var n = 0;
+                    for (x[v] = 0; x[v] < chunkSize[v]; ++x[v])
                     {
-                        for (x[u] = 0; x[u] < dims[u]; ++x[u], ++n)
+                        for (x[u] = 0; x[u] < chunkSize[u]; ++x[u], ++n)
                         {
-                            int vox1 = (int)GetField(chunk, x[0], x[1], x[2]);
-                            int vox2 = (int)GetField(chunk, x[0] + q[0], x[1] + q[1], x[2] + q[2]);
+                            var vox1 = chunk[x[0], x[1], x[2]];
+                            var vox2 = chunk[x[0] + q[0], x[1] + q[1], x[2] + q[2]];
 
 //                            mask[n] = vox1 != vox2 ? 1 : 0;
 
-                            int a = (0 <= x[d] ? vox1 : 0);
-                            int b = (x[d] < dims[d] - 1 ? vox2 : 0);
-                            
-                            if ((vox1 != 0) == (vox2 != 0))
+                            var a = (0 <= x[d] ? vox1 : null);
+                            var b = (x[d] < chunkSize[d] - 1 ? vox2 : null);
+
+                            if (vox1.HasValue == vox2.HasValue)
                             {
-                                mask[n] = 0;
+                                mask[n] = null;
                             }
-                            else if ((a != 0))
+                            else if ((a.HasValue))
                             {
-                                mask[n] = vox1;
+                                mask[n] = a;
                             }
                             else
                             {
-                                mask[n] = vox2;
+                                mask[n] = -b;
                             }
+                            // if (vox1.HasValue == vox2.HasValue)
+                            // {
+                            //     mask[n] = null;
+                            // }
+                            // else if ((a.HasValue))
+                            // {
+                            //     mask[n] = vox1;
+                            // }
+                            // else
+                            // {
+                            //     mask[n] = vox2;
+                            // }
 
 
                             //    bool test = (0 <= x[d] ? (int)chunk.GetField(x[0], x[1], x[2]) : 0) !=
@@ -420,26 +421,27 @@ namespace MiMap.Viewer.DesktopGL.Graphics
 
                     // Generate mesh for mask using lexicographic ordering
                     n = 0;
-                    for (j = 0; j < dims[v]; ++j)
+                    for (j = 0; j < chunkSize[v]; ++j)
                     {
-                        for (i = 0; i < dims[u];)
+                        for (i = 0; i < chunkSize[u];)
                         {
                             var c = mask[n];
 
-                            if (c != 0)
+                            if (c.HasValue)
                             {
+                                var biome = Math.Abs(c.Value);
                                 // compute width
-                                for (w = 1; mask[n + w] == c && (i + w) < dims[u]; ++w)
+                                for (w = 1; mask[n + w] == c && (i + w) < chunkSize[u]; ++w)
                                 {
                                 }
 
                                 // compute height
-                                bool done = false;
-                                for (h = 1; (j + h) < dims[v]; ++h)
+                                var done = false;
+                                for (h = 1; (j + h) < chunkSize[v]; ++h)
                                 {
                                     for (k = 0; k < w; ++k)
                                     {
-                                        if (mask[n + k + h * dims[u]] != c)
+                                        if (mask[n + k + h * chunkSize[u]] != c)
                                         {
                                             done = true;
                                             break;
@@ -459,6 +461,7 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                                 int[] du = { 0, 0, 0 };
                                 int[] dv = { 0, 0, 0 };
 
+
                                 if (c > 0)
                                 {
                                     dv[v] = h;
@@ -470,21 +473,25 @@ namespace MiMap.Viewer.DesktopGL.Graphics
                                     dv[u] = w;
                                 }
 
-                                Vector3 v1 = new Vector3(x[0], x[1], x[2]);
-                                Vector3 v2 = new Vector3(x[0] + du[0], x[1] + du[1], x[2] + du[2]);
-                                Vector3 v3 = new Vector3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]);
-                                Vector3 v4 = new Vector3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]);
+                                // @formatter:off
+                                var v1 = new Vector3i(x[0]                , x[1]                , x[2]                ); // Top-Left
+                                var v2 = new Vector3i(x[0] + du[0]        , x[1] + du[1]        , x[2] + du[2]        ); // Top-Right
+                                var v3 = new Vector3i(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]); // Bottom-Right
+                                var v4 = new Vector3i(x[0]         + dv[0], x[1]         + dv[1], x[2]         + dv[2]); // Bottom-Left
+                                // @formatter:on
 
-                                var biomeUv = biomeUvMapVector2[c];
-                                var biomeColor = biomeColorMap[c];
+                                var biomeUv = biomeUvMapVector2[biome];
+                                var biomeColor = biomeColorMap[biome];
+                                var normal = new Vector3(q[0], q[1], q[2]) * (c > 0 ? 1 : -1);
+                                //var normal = Vector3.Normalize(Vector3.Cross(new Vector3(du[0], du[1], du[2]), new Vector3(dv[0], dv[1], dv[2])));
 
-                                cubeMeshBuilder.AddQuad((Vector3i)v1, (Vector3i)v2, (Vector3i)v3, (Vector3i)v4, 1, biomeUv, biomeColor);
+                                cubeMeshBuilder.AddQuad(v1, v2, v3, v4, normal, biomeUv, biomeColor);
 
                                 for (l = 0; l < h; ++l)
                                 {
                                     for (k = 0; k < w; ++k)
                                     {
-                                        mask[n + k + l * dims[u]] = 0;
+                                        mask[n + k + l * chunkSize[u]] = null;
                                     }
                                 }
 
