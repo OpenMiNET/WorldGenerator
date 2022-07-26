@@ -305,7 +305,7 @@ namespace MiMap.Viewer.DesktopGL.Components
                 {
                     _effect.World = chunk.World;
 
-                    var min = new Vector3(chunk.ChunkCoordinates.X * 16, 0f, chunk.ChunkCoordinates.Z * 16);
+                    var min = new Vector3(chunk.Position.X << 4, 0f, chunk.Position.Z << 4);
                     var max = min + new Vector3(16f);
 
                     if (Camera.BoundingFrustum.Contains(new BoundingBox(min, max)) != ContainmentType.Disjoint)
